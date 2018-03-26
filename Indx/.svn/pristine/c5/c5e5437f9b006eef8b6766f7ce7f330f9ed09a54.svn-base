@@ -1,0 +1,125 @@
+/**
+ * 学校资质管理
+ * @author wangyong
+ */
+package com.zhimu.service.manager.edu.school;
+
+import java.util.List;
+
+import javax.annotation.Resource;
+
+import org.springframework.stereotype.Service;
+
+import com.zhimu.commons.utils.PageData;
+import com.zhimu.commons.utils.mail.SimpleMailSender;
+import com.zhimu.dao.DaoSupport;
+import com.zhimu.dao.entity.school.SchoolAptitude;
+import com.zhimu.dao.entity.system.Page;
+import com.zhimu.dao.enums.AuditStatus;
+import com.zhimu.service.manager.system.user.impl.UserService;
+
+@Service("schoolAptitudeService")
+public class SchoolAptitudeService {
+
+	@Resource(name = "daoSupport")
+	private DaoSupport dao;
+	@Resource(name = "userService")
+	private UserService userService;
+
+	/**
+	 * 新增
+	 * 
+	 * @param pd
+	 * @throws Exception
+	 */
+	public void save(SchoolAptitude schoolAptitude) throws Exception {
+		dao.save("SchoolAptitudeMapper.save", schoolAptitude);
+	}
+
+	/**
+	 * 删除
+	 * 
+	 * @param pd
+	 * @throws Exception
+	 */
+	public void delete(PageData pd) throws Exception {
+		dao.delete("SchoolAptitudeMapper.delete", pd);
+	}
+
+	/**
+	 * 修改
+	 * 
+	 * @param pd
+	 * @throws Exception
+	 */
+	public void edit(PageData pd) throws Exception {
+		dao.update("SchoolAptitudeMapper.edit", pd);
+	}
+
+	/**
+	 * 审核
+	 * 
+	 * @param pd
+	 * @throws Exception
+	 */
+	public PageData audit(PageData pd) throws Exception {
+		// 更新审核状态
+		dao.update("SchoolAptitudeMapper.editStatus", pd);
+		// 审核结果
+		String result = pd.getString("result");
+		// 审核原因
+		String options = pd.getString("options");
+		// 查询学校资质信息
+		pd = (PageData) dao.findForObject("SchoolAptitudeMapper.findById", pd);
+		pd.put("title", "系统通知");
+		if (AuditStatus.PASS.toString().equals(result)) {// 审核通过
+			// 生成注册学校管理员账号
+			pd.put("sName", pd.getString("name"));
+			pd.put("pwdStrategy", "1");
+			pd.put("SCHOOL_ID", pd.getString("id"));
+			pd.put("SCHOOL_NAME", pd.getString("name"));
+			pd.put("TYPE", "2");// 标记为学校管理员
+			// 初始化学校管理员账号
+			this.userService.initeAccount(pd);
+			pd.put("content", "恭喜你，学校资质已通过平台审核。学校管理员平台登录账号：" + pd.getString("userName") + "  密码：" + pd.getString("password") + "  平台地址：");
+		} else if (AuditStatus.NOT.toString().equals(result)) {
+			pd.put("content", "很遗憾，学校资质未通过平台审核，具体原因如下：" + options);
+		}
+		// 发送邮件通知
+		SimpleMailSender.sendMessageToSchool(pd);
+		return pd;
+	}
+
+	/**
+	 * 列表
+	 * 
+	 * @param page
+	 * @throws Exception
+	 */
+	@SuppressWarnings("unchecked")
+	public List<PageData> list(Page page) throws Exception {
+		return (List<PageData>) dao.findForList("SchoolAptitudeMapper.datalistPage", page);
+	}
+
+	/**
+	 * 通过id获取数据
+	 * 
+	 * @param pd
+	 * @throws Exception
+	 */
+	public PageData findById(PageData pd) throws Exception {
+		return (PageData) dao.findForObject("SchoolAptitudeMapper.findById", pd);
+	}
+
+	/**
+	 * 通过创建人id和学校类型获取数据
+	 * 
+	 * @param pd
+	 * @throws Exception
+	 */
+	@SuppressWarnings("unchecked")
+	public List<PageData> findByCid(PageData pd) throws Exception {
+		return (List<PageData>) dao.findForList("SchoolAptitudeMapper.findByCid", pd);
+	}
+
+}

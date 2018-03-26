@@ -1,0 +1,22 @@
+package com.zhimu.service.manager.edu.teacherLesson.impl;
+
+import com.zhimu.commons.utils.PageData;
+import com.zhimu.dao.DaoSupport;
+import com.zhimu.dao.entity.system.Page;
+import com.zhimu.service.manager.edu.teacherLesson.TeacherLessonManager;
+import org.springframework.stereotype.Service;
+
+import javax.annotation.Resource;
+import java.util.List;
+
+@Service("teacherLessonService")
+public class TeacherLessonService implements TeacherLessonManager {
+
+  @Resource(name = "daoSupport")
+  private DaoSupport dao;
+
+  public List<PageData> teacherLessonList(PageData pd) throws Exception {
+    return (List<PageData>) dao.findForList("teacherLessonMapper.dataList", pd);
+  }
+
+}

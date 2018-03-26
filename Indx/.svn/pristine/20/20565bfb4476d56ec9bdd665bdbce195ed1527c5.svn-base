@@ -1,0 +1,155 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="ActivityGroupMapper">
+	
+	<!--表名 -->
+	<sql id="tableName">
+		edu_activity_group
+	</sql>
+	
+	<!-- 字段 -->
+	<sql id="Field">
+		id,
+		activity_id,
+		user_id,
+		need_check,
+		check_state,
+		check_opinion,
+		check_user,
+		check_time,
+		group_name,
+		name
+	</sql>
+	
+	<!-- 字段值 -->
+	<sql id="FieldValue">
+		#{id},
+		#{activity_id},
+		#{user_id},
+		#{need_check},
+		#{check_state},
+		#{check_opinion},
+		#{check_user},
+		#{check_time},
+		#{group_name},
+		#{name}
+	</sql>
+	
+	<!-- 学生列表 -->
+	<select id="listStudentPage" parameterType="page" resultType="pd">
+		select
+			eag.id,
+			eag.activity_id,
+			eag.user_id,
+			eag.need_check,
+			eag.check_state,
+			eag.check_opinion,
+			eag.check_user,
+			eag.check_time,
+			eag.group_name,
+			es.xm,
+			es.sfz,
+			es.nl,
+			es.phone,
+			[type]=('学员')
+		from
+			edu_activity_group eag INNER JOIN edu_student es
+			ON eag.user_id = es.user_id
+		where
+			1=1
+		AND
+			eag.activity_id = #{pd.activity_id}
+		<if test="pd.keywords != null and pd.keywords != ''"><!-- 关键词检索 -->
+			and
+				name LIKE ('%'+#{pd.keywords}+'%')
+		</if>
+		<if test="pd.checkState != null and pd.checkState != ''"><!-- 审核状态检索 -->
+			and
+				check_state = #{pd.checkState}
+		</if>
+		ORDER BY
+			eag.check_state
+	</select>
+
+	<!-- 老师列表 -->
+	<select id="listTeacherPage" parameterType="page" resultType="pd">
+		select
+			eag.id,
+			eag.activity_id,
+			eag.user_id,
+			eag.need_check,
+			eag.check_state,
+			eag.check_opinion,
+			eag.check_user,
+			eag.check_time,
+			eag.group_name,
+			et.name AS xm,
+			et.idcard AS sfz,
+			et.tel AS phone,
+			[type]=('教师')
+		from
+			edu_activity_group eag INNER JOIN edu_teacher et
+		ON eag.user_id = et.id
+		where
+		1=1
+		AND
+		eag.activity_id = #{pd.activity_id}
+		<if test="pd.keywords != null and pd.keywords != ''"><!-- 关键词检索 -->
+			and
+			name LIKE ('%'+#{pd.keywords}+'%')
+		</if>
+		<if test="pd.check_state != null and pd.check_state != ''"><!-- 审核状态检索 -->
+			and
+			check_state = #{pd.check_state}
+		</if>
+		ORDER BY
+			eag.check_state
+	</select>
+
+	<!-- 新增-->
+	<insert id="save" parameterType="pd">
+		insert into
+		<include refid="tableName"></include>
+		(
+		<include refid="Field"></include>
+		) values (
+		<include refid="FieldValue"></include>
+		)
+	</insert>
+
+	<!-- 通过ID获取数据 -->
+	<select id="findById" parameterType="pd" resultType="pd">
+		select
+		<include refid="Field"></include>
+		from
+		<include refid="tableName"></include>
+		where
+		id = #{id}
+	</select>
+
+	<!-- 修改 -->
+	<update id="edit" parameterType="pd">
+		update
+		<include refid="tableName"></include>
+		set
+		name=#{name},
+		content=#{content},
+		people_num=#{people_num},
+		file_url=#{file_url},
+		activity_start_time=#{activity_start_time},
+		activity_end_time=#{activity_end_time},
+		apply_start_time=#{apply_start_time},
+		apply_end_time=#{apply_end_time},
+		status=#{status},
+		need_check=#{need_check},
+		need_send_message=#{need_send_message},
+		publish_range=#{publish_range}
+		where
+		id = #{id}
+	</update>
+
+	<!--根据id删除-->
+	<delete id="deleteById" parameterType="String">
+		DELETE FROM <include refid="tableName"></include> WHERE id = #{id}
+	</delete>
+</mapper>

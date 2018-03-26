@@ -1,0 +1,55 @@
+package com.zhimu.controller.manager.edu.activity;
+
+import com.zhimu.commons.utils.PageData;
+import com.zhimu.controller.manager.base.BaseController;
+import com.zhimu.dao.entity.system.Page;
+import com.zhimu.dao.utils.Jurisdiction;
+import com.zhimu.service.manager.edu.activity.ActivityManager;
+import com.zhimu.service.manager.edu.grades.GradesManager;
+import org.apache.commons.lang.StringUtils;
+import org.springframework.stereotype.Controller;
+import org.springframework.web.bind.annotation.RequestMapping;
+import org.springframework.web.servlet.ModelAndView;
+
+import javax.annotation.Resource;
+import java.util.List;
+
+/**
+ * 活动管理控制层__lwc
+ */
+@Controller
+@RequestMapping(value = "/activity")
+public class ActivityController extends BaseController {
+
+
+  @Resource(name = "activityService")
+  ActivityManager activityService;
+
+  /**
+   * 进入列表
+   * @param page
+   * @return
+   * @throws Exception
+   */
+  @RequestMapping(value = "/list")
+  public ModelAndView list(Page page) throws Exception {
+    ModelAndView mv = this.getModelAndView();
+    PageData pd = this.getPageData();
+    try {
+      pd.put("username", Jurisdiction.getUsername()); // 放入用户名作为筛选条件
+      page.setPd(pd);
+      List<PageData> activityList = activityService.listPage(page); // 列出所有的角色
+
+      mv.addObject("pd", pd);
+      mv.addObject("page", page);
+      mv.addObject("list", activityList);
+
+      mv.setViewName("edu/activity/activity_list");
+    } catch (Exception e) {
+      e.printStackTrace();
+      logger.error(e.toString(), e);
+    }
+    return mv;
+  }
+
+}

@@ -1,0 +1,86 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="DeptMapper">
+	
+	<!--表名 -->
+	<sql id="tableName">
+		edu_dept
+	</sql>
+	
+	<!-- 字段 -->
+	<sql id="Field">
+		dept_id,
+        name,
+        createTime,
+        school_id
+	</sql>
+	
+	<!-- 字段值 -->
+	<sql id="FieldValue">
+		#{dept_id},
+		#{name},
+		#{createTime},
+		#{school_id}
+	</sql>
+	
+	<!-- 新增-->
+	<insert id="addData" parameterType="pd">
+		insert into <include refid="tableName"/> ( <include refid="Field"/> ) values ( <include refid="FieldValue"/>)
+	</insert>
+	
+	<!-- 删除-->
+	<delete id="deleteData" parameterType="pd">
+		delete from <include refid="tableName"/> where dept_id = #{dept_id}
+	</delete>
+	
+	<!-- 修改 -->
+	<update id="editData" parameterType="pd">
+		update <include refid="tableName"></include>
+		   set       name = #{name},
+		       createTime = #{createTime}
+		 where dept_id = #{dept_id}
+	</update>
+	
+	<!-- 通过ID获取数据 -->
+	<select id="findDataById" parameterType="pd" resultType="pd">
+		select dept_id,name,CONVERT(varchar(100), createTime, 23) AS createTime,school_id
+		  from <include refid="tableName"/>
+		 where dept_id = #{dept_id}
+	</select>
+	
+	<!-- 分页列表 -->
+	<select id="datalistPage" parameterType="page" resultType="pd">
+		select a.dept_id,
+		       a.name,CONVERT(varchar(100), a.createTime, 23) AS createTime,
+		       a.school_id,
+		       b.name school_name,
+		       (select count(c.id) from edu_lesson c where c.dept_id = a.dept_id and c.school_id = a.school_id) totalNum
+		  from edu_dept a,edu_school b
+		 where a.school_id = b.id
+		   and a.school_id in
+		 <foreach item="item" index="index" collection="pd.userSchoolIds" open="(" separator="," close=")">
+			'${item}'
+		 </foreach>
+		 <if test="pd.keywords != null and pd.keywords != ''"><!-- 关键词检索 -->
+		   and ( a.name LIKE ('%'+#{pd.keywords}+'%') or
+			     b.name like ('%'+#{pd.keywords}+'%')
+			   )
+		 </if>
+		 order by a.createTime desc
+	</select>
+
+	<!-- 普通列表 -->
+	<select id="selectList" parameterType="pd" resultType="pd">
+		select dept_id,name,CONVERT(varchar(100), createTime, 23) AS createTime,school_id
+		  from <include refid="tableName"/>
+		 where 1 = 1
+		<if test="name != null and name != ''">
+		   and name = #{name}
+		</if>
+		<if test="school_id != null and school_id != ''">
+		   and school_id = #{school_id}
+		</if>
+		 order by createTime desc
+	</select>
+
+</mapper>

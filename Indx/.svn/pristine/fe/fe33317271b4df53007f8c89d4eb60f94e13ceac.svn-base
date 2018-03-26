@@ -1,0 +1,245 @@
+package com.zhimu.service.manager.edu.grades.impl;
+
+import java.util.Iterator;
+import java.util.List;
+import java.util.Map;
+
+import javax.annotation.Resource;
+
+import org.apache.commons.lang.StringUtils;
+import org.springframework.stereotype.Service;
+
+import com.zhimu.commons.utils.DateUtil;
+import com.zhimu.commons.utils.HashMapUtils;
+import com.zhimu.commons.utils.PageData;
+import com.zhimu.dao.DaoSupport;
+import com.zhimu.dao.entity.system.Page;
+import com.zhimu.service.manager.edu.grades.GradesManager;
+
+@Service("gradesService")
+public class GradesService implements GradesManager {
+
+	@Resource(name = "daoSupport")
+	private DaoSupport dao;
+
+	@Override
+	public List<PageData> gradeslistPage(Page pd) throws Exception {
+
+		return (List<PageData>) dao.findForList("GradesMapper.gradeslistPage", pd);
+
+	}
+
+	@Override
+	public void add(PageData pd) throws Exception {
+		dao.save("GradesMapper.save", pd);
+	}
+
+	/**
+	 * 通过id获取数据
+	 * 
+	 * @param pd
+	 * @throws Exception
+	 */
+	@Override
+	public PageData findObjectById(PageData pd) throws Exception {
+		return (PageData) dao.findForObject("GradesMapper.findById", pd);
+	}
+
+	/**
+	 * 通过id获取课程数据
+	 * 
+	 * @param id
+	 * @throws Exception
+	 */
+	@Override
+	public PageData findLessonById(String id) throws Exception {
+		return (PageData) dao.findForObject("GradesMapper.findLessonById", id);
+	}
+
+	/**
+	 * 修改
+	 * 
+	 * @param pd
+	 * @throws Exception
+	 */
+	@Override
+	public void edit(PageData pd) throws Exception {
+		dao.update("GradesMapper.edit", pd);
+	}
+
+	@Override
+	public void deleteById(String id) throws Exception {
+		dao.update("GradesMapper.deleteById", id);
+	}
+
+	/**
+	 * 取得用户所在学校的课程
+	 * 
+	 * @param pd
+	 * @return
+	 * @throws Exception
+	 */
+	@Override
+	public List<PageData> getUserLesson(PageData pd) throws Exception {
+		return (List<PageData>) dao.findForList("GradesMapper.getUserLesson", pd);
+
+	}
+
+	@Override
+	public List<PageData> getUserTeacher(PageData pd) throws Exception {
+
+		String[] school_id = (String[]) pd.get("userSchoolIds");
+		//查询改校区的学校id school_id"userSchoolIds" ->
+		PageData pa =	(PageData) dao.findForObject("TeacherMapper.findBySchoolPid", school_id[0]);
+		if(pa!=null){
+			pd.put("userSchoolIds",pa.getString("pid").split(","));
+		}
+		return (List<PageData>) dao.findForList("GradesMapper.getUserTeacher", pd);
+	}
+
+	@Override
+	public Boolean isCheak(PageData pd) throws Exception {
+		PageData pg = (PageData) dao.findForObject("GradesMapper.isCheak", pd);
+
+		if (pg != null && pg.size() > 0) {
+			if (Integer.parseInt(pd.get("class_size") + "") <= Integer.parseInt(pg.get("classSize") + "")) {
+				return true;
+			}
+		}
+
+		return false;
+	}
+
+	@Override
+	public List<PageData> studentlistPage(Page page) throws Exception {
+
+		return (List<PageData>) dao.findForList("StudentMapper.studentByGradeslistPage", page);
+
+	}
+
+	@Override
+	public PageData findStudentById(PageData pd) throws Exception {
+
+		return (PageData) dao.findForObject("StudentMapper.findById", pd);
+	}
+
+	@Override
+	public void saveClassCommittee(PageData pd) throws Exception {
+		dao.update("StudentMapper.editClassCommittee", pd);
+	}
+
+	@Override
+	public List<PageData> getAllStudentBycId(PageData pd) throws Exception {
+		// 查询班级全部学生
+		return (List<PageData>) dao.findForList("StudentMapper.getAllStudentBycId", pd);
+	}
+
+	// 查询全部分组
+	@Override
+	public List<PageData> allGroupById(String gId) throws Exception {
+
+		return (List<PageData>) dao.findForList("StudentMapper.allGroupById", gId);
+	}
+
+	@Override
+	public void editStudentGroup(PageData pd) throws Exception {
+
+		dao.update("StudentMapper.editStudentGroup", pd);
+	}
+
+	@Override
+	public void editStudentGroupLeader(PageData pd) throws Exception {
+		dao.update("StudentMapper.editStudentGroupLeader", pd);
+	}
+
+	@Override
+	public void editStudentGroupAll(PageData pd) throws Exception {
+		dao.update("StudentMapper.editStudentGroupAll", pd);
+	}
+
+	@Override
+	public void editGroup(PageData pd) throws Exception {
+
+		dao.update("StudentMapper.editGroup", pd);
+	}
+
+	/**
+	 * 根据学校的id数组查出所有的班级--lwc
+	 * 
+	 * @param pageData
+	 * @return
+	 * @throws Exception
+	 */
+	@Override
+	public List<PageData> findBySchools(PageData pageData) throws Exception {
+		String[] ids = pageData.getString("schoolIds").split(",");
+		pageData.put("array", ids);
+		return (List<PageData>) dao.findForList("GradesMapper.findBySchools", pageData);
+	}
+
+	@Override
+	public List<PageData> findTeacherByIds(List<String> gradeIds) throws Exception {
+		return (List<PageData>) dao.findForList("GradesMapper.findTeacherByIds", gradeIds);
+	}
+
+	@SuppressWarnings("unchecked")
+	@Override
+	public List<Map<String, Object>> gradesDetaillistPage(Page pg) throws Exception {
+		// 手动去重
+		List<PageData> pdList = (List<PageData>) dao.findForList("GradesMapper.gradesDetaillistPage", pg);
+		String nowTimeStr = pg.getPd().getString("now_time");
+		if (StringUtils.isNotEmpty(nowTimeStr)) {
+			// 手动根据时间过滤
+			Iterator<PageData> iter = pdList.iterator();
+			while (iter.hasNext()) {
+				PageData pda = iter.next();
+				String[] timeParts = pda.getString("time_part").split(",");
+				if (!DateUtil.isEffectiveDate(nowTimeStr, timeParts)) {
+					iter.remove();
+				}
+			}
+		}
+		return HashMapUtils.removeRepeatData(pdList, "g_id");
+
+		// return (List<PageData>)
+		// dao.findForList("GradesMapper.gradesDetaillistPage", pd);
+	}
+
+	@Override
+	public List<PageData> findObjectBySchoolId(String schoolId) throws Exception {
+		return (List<PageData>) dao.findForList("GradesMapper.findObjectBySchoolId", schoolId);
+	}
+
+	@Override
+	public PageData findStudentCommitteeById(PageData pd) throws Exception {
+		return (PageData) dao.findForObject("StudentMapper.findStudentCommitteeById", pd);
+	}
+
+	@Override
+	public void addStudentGroup(PageData pd) throws Exception {
+		dao.save("StudentMapper.addStudentGroup", pd);
+	}
+
+	/**
+	 * 根据班级id查找班委
+	 *
+	 * @param gradeIds
+	 * @return
+	 * @throws Exception
+	 */
+	@Override
+	public List<PageData> findComtByGrades(List<String> gradeIds) throws Exception {
+		return (List<PageData>) dao.findForList("GradesMapper.findComtByGrades", gradeIds);
+	}
+
+	/**
+	 * 根据班级和组名查找组长
+	 * @param pd
+	 * @return
+	 * @throws Exception
+	 */
+	@Override
+	public List<PageData> findGleaderByGrades(PageData pd) throws Exception {
+		return (List<PageData>) dao.findForList("GradesMapper.findGleaderByGrades", pd);
+	}
+}

@@ -1,0 +1,292 @@
+package com.zhimu.service.manager.system.department.impl;
+
+import java.util.HashMap;
+import java.util.List;
+import java.util.Map;
+
+import javax.annotation.Resource;
+
+import net.sf.json.JSONArray;
+
+import org.springframework.stereotype.Service;
+
+import com.zhimu.commons.utils.AreaCodeUtils;
+import com.zhimu.commons.utils.PageData;
+import com.zhimu.dao.DaoSupport;
+import com.zhimu.dao.entity.system.Department;
+import com.zhimu.dao.entity.system.Page;
+import com.zhimu.service.manager.redis.RedisCacheUtil;
+import com.zhimu.service.manager.system.areacode.AreaCodeService;
+import com.zhimu.service.manager.system.department.DepartmentManager;
+import com.zhimu.service.manager.system.section.SectionManager;
+import com.zhimu.service.manager.system.user.UserManager;
+
+/**
+ * 组织机构
+ */
+@Service("departmentService")
+public class DepartmentService implements DepartmentManager {
+
+	@Resource(name = "daoSupport")
+	private DaoSupport dao;
+	@Resource(name = "redisCacheUtil")
+	private RedisCacheUtil<?> redisCacheUtil;
+
+	@Resource(name = "sectionService")
+	private SectionManager sectionService;
+
+	@Resource(name = "areaCodeService")
+	private AreaCodeService areaCodeService;
+
+	@Resource(name = "userService")
+	private UserManager userService;
+
+	/**
+	 * 新增
+	 */
+	@Override
+	public void save(PageData pd) throws Exception {
+		dao.save("DepartmentMapper.save", pd);
+	}
+
+	/**
+	 * 删除
+	 */
+	@Override
+	public void delete(PageData pd) throws Exception {
+		dao.delete("DepartmentMapper.delete", pd);
+	}
+
+	/**
+	 * 修改
+	 */
+	@Override
+	public void edit(PageData pd) throws Exception {
+		dao.update("DepartmentMapper.edit", pd);
+	}
+
+	/**
+	 * 更新机构区划代码
+	 */
+	@Override
+	public void updateByAreaCode(PageData pd) throws Exception {
+		dao.update("DepartmentMapper.updateByAreaCode", pd);
+	}
+
+	/**
+	 * 列表
+	 */
+	@Override
+	@SuppressWarnings("unchecked")
+	public List<PageData> list(Page page) throws Exception {
+		return (List<PageData>) dao.findForList("DepartmentMapper.datalistPage", page);
+	}
+
+	/**
+	 * 通过id获取数据
+	 */
+	@Override
+	public PageData findById(PageData pd) throws Exception {
+		return (PageData) dao.findForObject("DepartmentMapper.findById", pd);
+	}
+
+	@Override
+	public PageData findByBianma(PageData pd) throws Exception {
+		return null;
+	}
+
+	/**
+	 * 通过区划获取
+	 * 
+	 * @param
+	 * @return
+	 * @throws Exception
+	 */
+	@Override
+	public List<PageData> findByAreaCode(String areaCode) throws Exception {
+		return (List<PageData>) dao.findForList("DepartmentMapper.findByAreaCode", areaCode);
+	}
+
+	/**
+	 * 通过区划获取
+	 * 
+	 * @param
+	 * @return
+	 * @throws Exception
+	 */
+	@Override
+	public List<PageData> findByAreaCode2(String areaCode) throws Exception {
+		return (List<PageData>) dao.findForList("DepartmentMapper.findByAreaCode2", areaCode);
+	}
+
+	/**
+	 * 通过ID获取其子级列表
+	 */
+	@Override
+	@SuppressWarnings("unchecked")
+	public List<Department> listSubDepartmentByParentId(Map<String, String> map) throws Exception {
+		return (List<Department>) dao.findForList("DepartmentMapper.listSubDepartmentByParentId", map);
+	}
+
+	/**
+	 * 通过ID获取本级
+	 */
+	@Override
+	@SuppressWarnings("unchecked")
+	public List<Department> listById(Map<String, String> map) throws Exception {
+		return (List<Department>) dao.findForList("DepartmentMapper.listById", map);
+	}
+
+	/**
+	 * 通过ID获取本级
+	 */
+	@Override
+	public List<Department> listByPid(String parentId, String menuId, String areaCode) throws Exception {
+		Map<String, String> map = new HashMap<String, String>();
+		map.put("parentId", parentId);
+		map.put("areaCode", areaCode.length() == 12 ? (AreaCodeUtils.returnXzqh(areaCode)) : areaCode);
+		@SuppressWarnings("unchecked")
+		List<Department> departmentList = (List<Department>) redisCacheUtil.getCacheObject("dep_parent_" + parentId);
+		if (null == departmentList || departmentList.size() <= 0) {
+			departmentList = this.listById(map);
+			redisCacheUtil.setCacheObject("dep_parent_" + parentId, departmentList);
+		}
+		for (Department depar : departmentList) {
+			depar.setTreeurl("department/list.do?DEPARTMENT_ID=" + depar.getDEPARTMENT_ID() + "&menuId=" + menuId);
+			depar.setTarget("treeFrame");
+		}
+		return departmentList;
+	}
+
+	/**
+	 * 获取所有数据并填充每条数据的子级列表(递归处理)
+	 */
+	@Override
+	public List<Department> listAllDepartment(String parentId, String menuId, String areaCode) throws Exception {
+		Map<String, String> map = new HashMap<String, String>();
+		map.put("parentId", parentId);
+		map.put("areaCode", areaCode.length() == 12 ? (AreaCodeUtils.returnXzqh(areaCode)) : areaCode);
+		List<Department> departmentList = this.listSubDepartmentByParentId(map);
+		for (Department depar : departmentList) {
+			depar.setTreeurl("department/list.do?DEPARTMENT_ID=" + depar.getDEPARTMENT_ID() + "&menuId=" + menuId);
+			depar.setSubDepartment(this.listAllDepartment(depar.getDEPARTMENT_ID(), menuId, areaCode));
+			depar.setTarget("treeFrame");
+		}
+		return departmentList;
+	}
+
+	/**
+	 * 获取所有数据并填充每条数据的子级列表
+	 */
+	@Override
+	public List<Department> listDepartmentByPid(String parentId, String menuId, String areaCode) throws Exception {
+		Map<String, String> map = new HashMap<String, String>();
+		map.put("parentId", parentId);
+		map.put("areaCode", areaCode.length() == 12 ? (AreaCodeUtils.returnXzqh(areaCode)) : areaCode);
+		@SuppressWarnings("unchecked")
+		List<Department> departmentList = (List<Department>) redisCacheUtil.getCacheObject("dep_" + parentId);
+		if (null == departmentList || departmentList.size() <= 0) {
+			departmentList = this.listSubDepartmentByParentId(map);
+			redisCacheUtil.setCacheObject("dep_" + parentId, departmentList);
+		}
+		for (Department depar : departmentList) {
+			depar.setTreeurl("department/list.do?DEPARTMENT_ID=" + depar.getDEPARTMENT_ID() + "&menuId=" + menuId);
+			depar.setTarget("treeFrame");
+		}
+		return departmentList;
+	}
+
+	/**
+	 * 获取所有数据并填充每条数据列表..平级(递归处理)
+	 */
+	public List<Department> listAllSubDepartment(String parentId, List<Department> departmentList) throws Exception {
+		if (parentId != null && parentId.trim() != "") {
+			Map<String, String> map = new HashMap<String, String>();
+			map.put("parentId", parentId);
+			List<Department> listSubDepartmentByParentId = this.listSubDepartmentByParentId(map);
+			if (listSubDepartmentByParentId != null) {
+				departmentList.addAll(listSubDepartmentByParentId);
+			}
+			for (Department depar : listSubDepartmentByParentId) {
+				if (depar.getDEPARTMENT_ID().trim() == "" || depar.getDEPARTMENT_ID() == null) {
+					break;
+				} else {
+					this.listAllSubDepartment(depar.getDEPARTMENT_ID(), departmentList);
+				}
+			}
+		}
+		return departmentList;
+	}
+
+	/**
+	 * 用户根据是否党员选项选择对应的组织机构
+	 */
+	@Override
+	public List<Department> isPartyAllDepartment(String PARENT_ID, String IS_PARTY) throws Exception {
+		Map<String, String> map = new HashMap<String, String>();
+		map.put("PARENT_ID", PARENT_ID);
+		map.put("IS_PARTY", IS_PARTY);
+		List<Department> departmentList = this.isPartyAllListDepartment(map);
+		for (Department depar : departmentList) {
+			depar.setTreeurl("");
+			depar.setSubDepartment(this.isPartyAllDepartment(depar.getDEPARTMENT_ID(), IS_PARTY));
+			depar.setTarget("treeFrame");
+		}
+		return departmentList;
+	}
+
+	@SuppressWarnings({ "unchecked" })
+	private List<Department> isPartyAllListDepartment(Map<String, String> map) throws Exception {
+		return (List<Department>) dao.findForList("DepartmentMapper.isPartyAllDepartment", map);
+	}
+
+	@Override
+	public JSONArray listAllDepartmentStree(String parentId, String lev) throws Exception {
+		// 所有部门的json数据,每次访问都必须是重新new出来的,不然每次访问数据会累加
+		JSONArray departments = new JSONArray();
+		JSONArray listAllDepartments = this.listAllDepartments(parentId, lev, departments);
+		return listAllDepartments;
+	}
+
+	/**
+	 * 获取部门的数据拼接成Stree数据(递归)
+	 */
+	public JSONArray listAllDepartments(String parentId, String lev, JSONArray departments) throws Exception {
+		Map<String, String> maps = new HashMap<String, String>();
+		maps.put("parentId", parentId);
+		List<Department> departmentList = this.listSubDepartmentByParentId(maps);
+		if (departmentList != null) {
+			Map<Object, Object> map;
+			for (int i = 0; i < departmentList.size(); i++) {
+				map = new HashMap<>();
+				Department department = departmentList.get(i);
+				if (lev == null) {
+					map.put("lev", i + 1 + "");
+				} else {
+					map.put("lev", lev + "-" + (i + 1));
+				}
+				map.put("id", department.getDEPARTMENT_ID());
+				map.put("title", department.getNAME()); // 将name换做stree的title
+				map.put("isChecked", false);
+				map.put("pid", department.getPARENT_ID());
+				departments.add(map);
+				// 递归调用本方法获取所有的子部门
+				this.listAllDepartments(department.getDEPARTMENT_ID(), (String) map.get("lev"), departments);
+			}
+		}
+		return departments;
+	}
+
+	@SuppressWarnings("unchecked")
+	@Override
+	public List<Department> findBySubId(String id) throws Exception {
+		return (List<Department>) dao.findForList("DepartmentMapper.findBySubId", id);
+	}
+
+	@SuppressWarnings("unchecked")
+	@Override
+	public List<Department> findByIds(String id[]) throws Exception {
+		return (List<Department>) dao.findForList("DepartmentMapper.findByIds", id);
+	}
+
+}

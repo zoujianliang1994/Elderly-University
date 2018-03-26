@@ -1,0 +1,150 @@
+package com.zhimu.service.manager.message.impl;
+
+import java.sql.Timestamp;
+import java.util.List;
+
+import javax.annotation.Resource;
+
+import com.zhimu.dao.entity.system.Page;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
+import org.springframework.stereotype.Service;
+
+import com.zhimu.commons.utils.PageData;
+import com.zhimu.commons.websocket.SocketCache;
+import com.zhimu.dao.DaoSupport;
+import com.zhimu.dao.entity.message.Message;
+import com.zhimu.dao.enums.MessageStatus;
+import com.zhimu.dao.utils.Jurisdiction;
+import com.zhimu.service.manager.message.MessageManager;
+import com.zhimu.service.manager.websocket.SocketIoManager;
+/**
+ *   推送消息接口实现
+ * @author Weiyunchao
+ *
+ * 2017年7月20日下午2:45:13
+ */
+@Service("messageService")
+public class MessageService implements MessageManager{
+	
+	protected final Logger logger = LoggerFactory.getLogger(this.getClass());
+	
+	@Resource(name = "daoSupport")
+	private DaoSupport dao;
+	@Override
+	public void sendMessage(Message message) throws Exception
+	{
+		if(null != message)
+		{
+			message.setCreateBy(Jurisdiction.getUsername());
+			// message.setCreateTime(new Timestamp(System.currentTimeMillis()));
+			//判断需要推送消息的用户是否在线，在线就推送消息,
+			if(SocketCache.userCache.containsKey(message.getUserName()))
+			{
+				dao.save("MessageMapper.save", message);//保存发送的消息信息
+				//WebSocketMessage webSocket = new WebSocketMessage();
+				//webSocket.sendMessage(message.getContent());
+				SocketIoManager socketIoManager = new SocketIoManager();
+				socketIoManager.sendEventMessage(message);
+			}else //不在线更新状态
+			{
+				message.setStatus(MessageStatus.NO_SEND.toString());
+				dao.save("MessageMapper.save", message);//保存发送的消息信息
+			}
+		}
+	}
+	@Override
+	public void sendMoreMessage(Message message) throws Exception {
+		if(null != message && null != message.getUserNameList() && message.getUserNameList().size() > 0)
+		{
+			for (int i = 0; i < message.getUserNameList().size(); i++)
+			{
+				message.setUserName(message.getUserNameList().get(i));
+				this.sendMessage(message);
+			}
+		}	
+	}
+	/**
+	 *   更新消息状态 为已读 （已处理）
+	 * @param pd
+	 * @throws Exception
+	 */
+	public void updateStatus(PageData pd) throws Exception {
+		dao.update("MessageMapper.update", pd);
+	}
+	
+	@Override
+	public Message findById(String id) throws Exception 
+	{
+		return (Message) dao.findForObject("MessageMapper.findById", id);
+	}
+	@SuppressWarnings("unchecked")
+	@Override
+	public List<PageData> findByUserId(PageData pd) throws Exception
+	{
+		return (List<PageData>) dao.findForList("MessageMapper.findByUserId", pd);
+	}
+	@SuppressWarnings("unchecked")
+	@Override
+	public List<Message> listAll(Message message) throws Exception
+	{
+		return (List<Message>) dao.findForList("MessageMapper.listAll", message);
+	}
+
+	/**
+	 * 查询个人公告列表
+	 *
+	 * @param page
+	 * @return
+	 * @throws Exception
+	 */
+	@Override
+	public List<PageData> listPageByUser(Page page) throws Exception {
+		return (List<PageData>)dao.findForList("MessageMapper.listPageByUser", page);
+	}
+
+	/**
+	 * 查询个人公告通知列表
+	 *
+	 * @param page
+	 * @return
+	 * @throws Exception
+	 */
+	@Override
+	public List<PageData> listAllMessage(Page page) throws Exception {
+		return (List<PageData>)dao.findForList("MessageMapper.listAllMessage", page);
+	}
+
+	/**
+	 * 根据id删除消息
+	 *
+	 * @param id
+	 * @throws Exception
+	 */
+	@Override
+	public void delete(String id) throws Exception {
+		dao.delete("MessageMapper.delete", id);
+	}
+
+	/**
+	 * 根据buinessId删除消息
+	 *
+	 * @param buinessId
+	 * @throws Exception
+	 */
+	@Override
+	public void delBybuinessId(String businessId) throws Exception {
+		dao.delete("MessageMapper.delBybuinessId", businessId);
+	}
+
+	/**
+	 * 修改消息
+	 *
+	 * @param message
+	 * @throws Exception
+	 */
+	@Override
+	public void edit(Message message) throws Exception {
+		dao.update("MessageMapper.updateMess", message);
+	}
+}

@@ -1,0 +1,127 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="LeaveMapper">
+	
+	<!--表名 -->
+	<sql id="tableName">
+		stu_apply_leave
+	</sql>
+	
+	<!-- 字段 -->
+	<sql id="Field">
+		id,
+        school_id,
+        school_name,
+        start_time,
+        end_time,
+      	duration,
+        reason,
+        teacher_id,
+        teacher_name,
+        monitor_id,
+        monitor_name,
+        group_leader_id,
+        group_leader_name,
+        create_time,
+        create_by,
+        update_time,
+        update_by,
+        checker_id,
+        checker_name,
+        check_time,
+        check_opinion,
+        state,
+        name,
+        user_id
+	</sql>
+	
+	<!-- 字段值 -->
+	<sql id="FieldValue">
+		#{id},
+		#{school_id},
+		#{school_name},
+		#{start_time},
+		#{end_time},
+		#{duration},
+		#{reason},
+		#{teacher_id},
+		#{teacher_name},
+		#{monitor_id},
+		#{monitor_name},
+		#{group_leader_id},
+		#{group_leader_name},
+		#{create_time},
+		#{create_by},
+		#{update_time},
+		#{update_by},
+		#{checker_id},
+		#{checker_name},
+		#{check_time},
+		#{check_opinion},
+		#{state},
+		#{name},
+		#{user_id}
+	</sql>
+
+	<!-- 请假单列表 -->
+	<select id="listPage" parameterType="page" resultType="pd">
+		select
+			<include refid="Field"></include>
+		FROM
+			<include refid="tableName"></include>
+		where
+			1 = 1
+		and
+			create_by = #{pd.createBy}
+		<if test="pd.keywords!= null and pd.keywords != ''"><!-- 关键词检索 -->
+			and reason like ('%'+#{pd.keywords}+'%')
+		</if>
+		<if test="pd.school_id!= null and pd.school_id != ''"><!-- 请假学校检索 -->
+			and school_id like ('%'+#{pd.school_id}+'%')
+		</if>
+		<if test="pd.create_time!= null and pd.create_time != ''"><!-- 创建时间检索 -->
+			and CONVERT(varchar(100), create_time, 23) like ('%'+#{pd.create_time}+'%')
+		</if>
+		order by
+			create_time
+	</select>
+
+	<!-- 新增请假单 -->
+	<insert id="save" parameterType="pd">
+		insert into <include refid="tableName"></include> (<include refid="Field"></include>)
+		values (<include refid="FieldValue"></include> )
+	</insert>
+
+	<!-- 通过ID获取数据 -->
+	<select id="findDataById" parameterType="pd" resultType="pd">
+		select
+			<include refid="Field"/>
+		from
+			<include refid="tableName"/>
+		where
+			id = #{id}
+	</select>
+
+
+	<!-- 分页列表 -->
+	<select id="datalistPage" parameterType="page" resultType="pd">
+		SELECT
+			<include refid="Field"></include>
+		FROM stu_apply_leave
+		WHERE 1=1
+		and school_id in
+		<foreach item="item" index="index" collection="pd.userSchoolIds" open="(" separator="," close=")">
+			'${item}'
+		</foreach>
+		<if test="pd.school_id != null and pd.school_id != ''">
+			and school_id = #{pd.school_id}
+		</if>
+		order by create_time desc
+	</select>
+
+	<!-- 修改 -->
+	<update id="editData" parameterType="pd">
+		update stu_apply_leave set state = #{state},check_opinion = #{check_opinion}
+		 ,checker_id = #{checker_id},checker_name = #{checker_name},check_time = #{check_time} where id = #{id};
+	</update>
+</mapper>

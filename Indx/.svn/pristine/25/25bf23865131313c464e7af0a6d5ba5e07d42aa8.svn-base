@@ -1,0 +1,9 @@
+package com.zhimu.commons.constant;
+
+/**
+ * 公告通知枚举常量类
+ */
+public enum NoticeConstant {
+
+
+}

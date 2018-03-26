@@ -1,0 +1,127 @@
+package com.zhimu.controller.manager.edu.teacherWages;
+
+import com.zhimu.commons.utils.AppUtil;
+import com.zhimu.commons.utils.ErrorUtils;
+import com.zhimu.commons.utils.PageData;
+import com.zhimu.controller.manager.base.BaseController;
+import com.zhimu.dao.entity.system.Page;
+import com.zhimu.service.manager.edu.teacherWages.impl.TeacherWagesService;
+import org.apache.commons.lang.StringUtils;
+import org.springframework.stereotype.Controller;
+import org.springframework.web.bind.annotation.RequestMapping;
+import org.springframework.web.bind.annotation.RequestMethod;
+import org.springframework.web.bind.annotation.ResponseBody;
+import org.springframework.web.servlet.ModelAndView;
+
+import javax.annotation.Resource;
+import java.util.HashMap;
+import java.util.List;
+import java.util.Map;
+
+@Controller
+@RequestMapping(value = "/teacherWages")
+public class TeacherWagesController extends BaseController {
+
+  @Resource(name = "teacherWagesService")
+  private TeacherWagesService teacherWagesService;
+
+  /**
+   * 教师-工资管理列表
+   */
+  @RequestMapping(value = "/list")
+  public ModelAndView list(Page page) throws Exception {
+    ModelAndView mv = this.getModelAndView();
+    PageData pd = getPageData();
+    try {
+      String keywords = pd.getString("keywords"); // 检索条件
+      if (null != keywords && !"".equals(keywords)) {
+        pd.put("keywords", keywords.trim());
+      }
+      //获取当前登陆人员员所属学校ID
+      if (!StringUtils.isEmpty(getUserInfo().getSchoolId())) {
+        pd.put("userSchoolIds", getUserInfo().getSchoolId().split(","));
+      }
+      page.setPd(pd);
+      List<PageData> varList = teacherWagesService.teacherWagesListPage(page);
+      mv.setViewName("edu/teacherWages/teacherWages_list");
+      mv.addObject("varList", varList);
+      mv.addObject("pd", pd);
+    } catch (Exception e) {
+      logger.error(ErrorUtils.getErrorMessage(e, "查询教师-工资管理列表异常!"));
+    }
+    return mv;
+  }
+
+
+  /**
+   * 去编辑教师工资管理页面
+   */
+  @RequestMapping(value = "/goEditU")
+  public ModelAndView goEditU() {
+    ModelAndView mv = this.getModelAndView();
+    PageData pd = getPageData();
+    try {
+      String type = pd.getString("type");
+      String currentPage = pd.getString("currentPage");
+      pd = teacherWagesService.findDataById(pd);
+      pd.put("type", type);
+      pd.put("currentPage", currentPage);
+      mv.addObject("msg", "editU");
+      mv.addObject("pd", pd);
+      //查询老师正常上课列表
+      pd.put("zc", "yes");
+      List<PageData> zcList = teacherWagesService.selectPkList(pd);
+      int zcCountKs = zcList.size();
+      int zcCountKf = 0;
+      for (PageData z : zcList) {
+        zcCountKf += Integer.parseInt(z.get("wages") + "");
+      }
+      PageData totalZcPd = new PageData();
+      totalZcPd.put("kc_name", "合计:" + zcCountKs + "节课");
+      totalZcPd.put("qk_time", "---");
+      totalZcPd.put("wages", "共计:" + zcCountKf + "元");
+      zcList.add(totalZcPd);
+      mv.addObject("zcList", zcList);
+      //查询教师当月请假未上课
+      pd.put("zc", "");
+      pd.put("qj", "yes");
+      List<PageData> qjList = teacherWagesService.selectPkList(pd);
+      int qjCountKs = qjList.size();
+      int qjCountKf = 0;
+      for (PageData q : qjList) {
+        qjCountKf += Integer.parseInt(q.get("wages") + "");
+      }
+      PageData totalqjPd = new PageData();
+      totalqjPd.put("kc_name", "合计:" + qjCountKs + "节课");
+      totalqjPd.put("qk_time", "---");
+      totalqjPd.put("wages", "共计:" + qjCountKf + "元");
+      qjList.add(totalqjPd);
+      mv.addObject("qjList", qjList);
+      mv.setViewName("edu/teacherWages/teacherWages_edit");
+    } catch (Exception e) {
+      logger.error(ErrorUtils.getErrorMessage(e, "去编辑教师工资管理页面异常!"));
+    }
+    return mv;
+  }
+
+  /**
+   * 保存编辑教师工资页面
+   */
+  @RequestMapping(value = "/editU", method = RequestMethod.POST)
+  @ResponseBody
+  public Object editU() {
+    Map<String, String> map = new HashMap<>();
+    String msg;
+    try {
+      PageData pd = getPageData();
+      // 执行保存
+      teacherWagesService.editData(pd);
+      msg = "success";
+    } catch (Exception e) {
+      msg = "error";
+      logger.error(ErrorUtils.getErrorMessage(e, "保存编辑教师工资异常!"));
+    }
+    map.put("result", msg);
+    return AppUtil.returnObject(new PageData(), map);
+  }
+}

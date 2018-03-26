@@ -1,0 +1,20 @@
+<%@ page language="java" contentType="text/html; charset=UTF-8" pageEncoding="UTF-8" %>
+<%
+    String path = request.getContextPath();
+    String basePath = request.getScheme() + "://" + request.getServerName() + ":" + request.getServerPort() + path + "/";
+%>
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <title>发布范围</title>
+    <%@ include file="../../system/index/headcss.jsp" %>
+    <link rel="stylesheet" type="text/css" href="<%=basePath %>static/source/public/css/list.css">
+</head>
+<body>
+
+<div>
+        发布范围
+</div>
+<%@ include file="../../system/index/foot.jsp" %>
+</body>
+</html>

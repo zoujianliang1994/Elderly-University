@@ -1,0 +1,236 @@
+package com.zhimu.controller.manager.base;
+
+import java.text.DateFormat;
+import java.text.SimpleDateFormat;
+import java.util.*;
+
+import javax.servlet.http.HttpServletRequest;
+
+import org.apache.log4j.Logger;
+import org.apache.shiro.session.Session;
+import org.apache.shiro.web.util.WebUtils;
+import org.slf4j.LoggerFactory;
+import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.web.bind.annotation.ExceptionHandler;
+import org.springframework.web.context.request.RequestContextHolder;
+import org.springframework.web.context.request.ServletRequestAttributes;
+import org.springframework.web.multipart.MultipartHttpServletRequest;
+import org.springframework.web.servlet.ModelAndView;
+
+import com.zhimu.commons.constant.Const;
+import com.zhimu.commons.utils.ErrorUtils;
+import com.zhimu.commons.utils.PageData;
+import com.zhimu.commons.utils.RightsHelper;
+import com.zhimu.commons.utils.UuidUtil;
+import com.zhimu.dao.entity.system.Menu;
+import com.zhimu.dao.entity.system.Page;
+import com.zhimu.dao.entity.system.User;
+import com.zhimu.dao.utils.Jurisdiction;
+import com.zhimu.service.manager.system.menu.MenuManager;
+
+public class BaseController {
+
+  protected org.slf4j.Logger logger = LoggerFactory.getLogger(this.getClass());
+
+  @Autowired
+  private MenuManager menuManager;
+
+
+  /**
+   * new PageData对象
+   */
+  public PageData getPageData() {
+    return new PageData(this.getRequest());
+  }
+
+  /**
+   * 得到ModelAndView
+   */
+  public ModelAndView getModelAndView() {
+    return new ModelAndView();
+  }
+
+  /**
+   * 得到request对象
+   */
+  public HttpServletRequest getRequest() {
+    HttpServletRequest request = ((ServletRequestAttributes) RequestContextHolder.getRequestAttributes()).getRequest();
+    return request;
+  }
+
+  /**
+   * 得到32位的uuid
+   */
+  public String get32UUID() {
+    return UuidUtil.get32UUID();
+  }
+
+  /**
+   * 得到分页列表的信息
+   */
+  public Page getPage() {
+    return new Page();
+  }
+
+  public static void logBefore(Logger logger, String interfaceName) {
+    logger.info("");
+    logger.info("start");
+    logger.info(interfaceName);
+  }
+
+  public static void logAfter(Logger logger) {
+    logger.info("end");
+    logger.info("");
+  }
+
+  /**
+   * 获取用户
+   */
+  public User getUserInfo() {
+    Session session = Jurisdiction.getSession();
+    return (User) session.getAttribute(Const.SESSION_USER);
+  }
+
+  /**
+   * 返回角色菜单权限,多个角色菜单去重复
+   */
+  public List<Menu> returnMenuList(String roleRight) {
+    List<Menu> returnMenuList = new ArrayList<>();
+    try {
+      Map<String, Menu> map = new HashMap<>();
+      List<Menu> tmpList = new ArrayList<>();
+      Set<Menu> tmpSet = new LinkedHashSet<>();
+      String[] roleRights = roleRight.split(",");
+      for (int i = 0; i < roleRights.length; i++) {
+        tmpList.clear();
+        tmpList = readRoleMenu(menuManager.listAllMenuQx("0"), roleRights[i]);// 根据角色权限获取本权限的菜单列表
+        tmpSet.addAll(tmpList);
+      }
+      Set<Menu> menuSet = new LinkedHashSet<>();
+      for (Menu p : tmpSet) {
+        if (map.get(p.getMENU_NAME()) == null) {
+          map.put(p.getMENU_NAME(), p);
+        } else {
+          List<Menu> menuList = p.getSubMenu();
+          List<Menu> menuListMap = map.get(p.getMENU_NAME()).getSubMenu();
+          for (int i = 0; i < menuList.size(); i++) {
+            menuListMap.add(menuList.get(i));
+          }
+          for (int i = 0; i < menuListMap.size() - 1; i++) {
+            for (int j = menuListMap.size() - 1; j > i; j--) {
+              if (menuListMap.get(j).getMENU_NAME().equals(menuListMap.get(i).getMENU_NAME())) {
+                menuListMap.remove(j);
+              }
+            }
+          }
+          Collections.sort(menuListMap);
+
+          menuSet.add(p);
+        }
+      }
+      tmpSet.removeAll(menuSet);
+      returnMenuList = new ArrayList<>();
+      returnMenuList.addAll(tmpSet);
+    } catch (Exception e) {
+      logger.error(ErrorUtils.getErrorMessage(e, "多个角色菜单错误"));
+    }
+    return returnMenuList;
+  }
+
+  /**
+   * 根据角色权限获取本权限的菜单列表(递归处理)
+   * menuList 传入的总菜单 roleRights 加密的权限字符串
+   */
+  public List<Menu> readRoleMenu(List<Menu> menuList, String roleRights) {
+    for (int i = 0; i < menuList.size(); i++) {
+      menuList.get(i).setHasMenu(RightsHelper.testRights(roleRights, menuList.get(i).getMENU_ID()));
+      if (menuList.get(i).isHasMenu()) { // 判断是否有此菜单权限
+        this.readRoleMenu(menuList.get(i).getSubMenu(), roleRights);// 是：继续排查其子菜单
+      } else {
+        menuList.remove(i);
+        i--;
+      }
+    }
+    return menuList;
+  }
+
+  /**
+   * 基于@ExceptionHandler异常处理
+   */
+  @ExceptionHandler
+  public String exp(HttpServletRequest request, Exception ex) {
+    String url = WebUtils.getPathWithinApplication(request);
+    String errorMsg = "请求url=" + url + "\n错误信息：" + ex;
+    logger.error(ErrorUtils.getErrorMessage(ex, errorMsg));
+    request.setAttribute("exception", errorMsg);
+    return "error";
+  }
+
+
+  /**
+   * 获取用户所属学校List
+   * schoolName
+   * schoolId
+   */
+  public List<PageData> getSchoolList() {
+    Session session = Jurisdiction.getSession();
+    User u = (User) session.getAttribute(Const.SESSION_USER);
+    String[] userSchoolId = u.getSchoolId().split(",");
+    String[] userSchoolName = u.getSchoolName().split(",");
+    List<PageData> list = new ArrayList<>();
+    if (userSchoolId.length == userSchoolName.length) {
+      for (int i = 0; i < userSchoolId.length; i++) {
+        PageData pg = new PageData();
+        pg.put("schoolName", userSchoolName[i]);
+        pg.put("schoolId", userSchoolId[i]);
+        list.add(pg);
+      }
+    }
+    return list;
+  }
+
+  /**
+   * 获取当前登录人所属的学校及分校集合
+   * @return
+   */
+  public List<PageData> getSchAndBranchSch() {
+    Session session = Jurisdiction.getSession();
+    User u = (User) session.getAttribute(Const.SESSION_USER);
+    String[] userSchoolId = u.getSchoolId().split(",");
+    String[] userSchoolName = u.getSchoolName().split(",");
+    List<PageData> list = new ArrayList<>();
+    if (userSchoolId.length == userSchoolName.length) {
+      for (int i = 0; i < userSchoolId.length; i++) {
+        PageData pg = new PageData();
+        pg.put("schoolName", userSchoolName[i]);
+        pg.put("schoolId", userSchoolId[i]);
+        list.add(pg);
+      }
+    }
+    return list;
+  }
+
+
+  /**
+   * 获取系统当前时间
+   */
+  public String getNowTime() {
+    Date date = new Date();
+    DateFormat format = new SimpleDateFormat("yyyy-MM-dd");
+    return format.format(date);
+  }
+
+  /**
+   * 返回流式数据
+   */
+  public PageData returnPageData(HttpServletRequest request) throws Exception {
+    MultipartHttpServletRequest multipartRequest = (MultipartHttpServletRequest) request;
+    Map<String, String[]> multiMap = multipartRequest.getParameterMap();
+    PageData pd = new PageData();
+    for (Map.Entry<String, String[]> entry : multiMap.entrySet()) {
+      pd.put(entry.getKey(), entry.getValue()[0].toString());
+    }
+    return pd;
+  }
+
+}

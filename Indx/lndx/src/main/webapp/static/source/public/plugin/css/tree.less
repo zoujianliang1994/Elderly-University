@@ -1,0 +1,31 @@
+.tree{
+  .iconfont{
+    position:absolute;
+    top:1px;
+    font-size:12px;
+    left:0;
+    text-overflow: ellipsis;
+  }
+  .title{
+    overflow:hidden;
+    white-space: nowrap;
+    &:hover{
+      color:#666
+    }
+  }
+  .active .title{
+    color:#108ee9;
+    &:hover{
+      color:#108ee9
+    }
+  }
+  .treeItem{
+    width:100%;
+    position:relative;
+    height:30px;
+    line-height:30px;
+    cursor: pointer;
+    font-size:13px;
+    color:#333
+  }
+}

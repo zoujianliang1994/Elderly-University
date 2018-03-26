@@ -1,0 +1,226 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="ActivityGroupMapper">
+	
+	<!--表名 -->
+	<sql id="tableName">
+		edu_activity_group
+	</sql>
+	
+	<!-- 字段 -->
+	<sql id="Field">
+		id,
+		activity_id,
+		user_id,
+		need_check,
+		check_state,
+		check_opinion,
+		check_user,
+		check_time,
+		group_name,
+		resp_content,
+		regis_time,
+		activity_location,
+		diseases_history,
+		linkman1,
+		linkman1_tel,
+		school_id,
+		school_name,
+		position
+	</sql>
+	
+	<!-- 字段值 -->
+	<sql id="FieldValue">
+		#{id},
+		#{activity_id},
+		#{user_id},
+		#{need_check},
+		#{check_state},
+		#{check_opinion},
+		#{check_user},
+		#{check_time},
+		#{group_name},
+		#{resp_content},
+		#{regis_time},
+		#{activity_location},
+		#{diseases_history},
+		#{linkman1},
+		#{linkman1_tel},
+		#{school_id},
+		#{school_name},
+		#{position}
+	</sql>
+	
+	<!-- 学生列表 -->
+	<select id="listStudentPage" parameterType="page" resultType="pd">
+		select
+			eag.id,
+			eag.activity_id,
+			eag.user_id,
+			eag.need_check,
+			eag.check_state,
+			eag.check_opinion,
+			eag.check_user,
+			eag.check_time,
+			eag.group_name,
+			eag.position,
+			eag.activity_location,
+			es.xm,
+			es.sfz,
+			es.nl,
+			es.phone,
+			[type]=('学员')
+		from
+			edu_activity_group eag INNER JOIN edu_student es
+			ON eag.user_id = es.user_id
+		where
+			1=1
+		AND
+			eag.activity_id = #{pd.activity_id}
+		<if test="pd.keywords != null and pd.keywords != ''"><!-- 关键词检索 -->
+			and
+				name LIKE ('%'+#{pd.keywords}+'%')
+		</if>
+		<if test="pd.checkState != null and pd.checkState != ''"><!-- 审核状态检索 -->
+			and
+				check_state = #{pd.checkState}
+		</if>
+		ORDER BY
+			eag.check_state
+	</select>
+
+	<!-- 老师列表 -->
+	<select id="listTeacherPage" parameterType="page" resultType="pd">
+		select
+			eag.id,
+			eag.activity_id,
+			eag.user_id,
+			eag.need_check,
+			eag.check_state,
+			eag.check_opinion,
+			eag.check_user,
+			eag.check_time,
+			eag.group_name,
+			eag.position,
+			eag.activity_location,
+			et.name AS xm,
+			et.idcard AS sfz,
+			et.tel AS phone,
+			[type]=('教师')
+		from
+			edu_activity_group eag INNER JOIN edu_teacher et
+		ON eag.user_id = et.id
+		where
+		1=1
+		AND
+		eag.activity_id = #{pd.activity_id}
+		<if test="pd.keywords != null and pd.keywords != ''"><!-- 关键词检索 -->
+			and
+			name LIKE ('%'+#{pd.keywords}+'%')
+		</if>
+		<if test="pd.check_state != null and pd.check_state != ''"><!-- 审核状态检索 -->
+			and
+			check_state = #{pd.check_state}
+		</if>
+		ORDER BY
+			eag.check_state
+	</select>
+
+	<!-- 新增-->
+	<insert id="save" parameterType="pd">
+		insert into
+		<include refid="tableName"></include>
+		(
+		<include refid="Field"></include>
+		) values (
+		<include refid="FieldValue"></include>
+		)
+	</insert>
+
+	<!-- 通过ID获取数据 -->
+	<select id="findById" parameterType="pd" resultType="pd">
+		select
+		<include refid="Field"></include>
+		from
+		<include refid="tableName"></include>
+		where
+		id = #{id}
+
+	</select>
+
+	<!-- 通过ID获取教师数据 -->
+	<select id="findTeacherById" parameterType="pd" resultType="pd">
+		select
+			eag.id,
+			eag.activity_id,
+			eag.user_id,
+			eag.need_check,
+			eag.check_state,
+			eag.check_opinion,
+			eag.check_user,
+			eag.check_time,
+			eag.regis_time,
+			eag.position,
+			eag.activity_location,
+			et.name AS xm,
+			et.idcard AS sfz,
+			et.addr AS address,
+			et.tel AS phone
+		from
+		edu_activity_group eag INNER JOIN edu_teacher et
+		ON eag.user_id = et.id
+		where
+		1=1
+		AND
+		eag.id = #{id}
+	</select>
+
+	<!-- 通过ID获取学生数据 -->
+	<select id="findStuById" parameterType="pd" resultType="pd">
+		select
+		eag.id,
+		eag.activity_id,
+		eag.user_id,
+		eag.need_check,
+		eag.check_state,
+		eag.check_opinion,
+		eag.check_user,
+		eag.check_time,
+		eag.group_name,
+		eag.position,
+		eag.activity_location,
+		es.xm,
+		es.sfz,
+		es.nl,
+		es.phone,
+		es.disease,
+		es.address,
+		es.family_con_name,
+		es.family_con_tel,
+		es.sec_con,
+		es.sec_con_tel
+		from
+		edu_activity_group eag INNER JOIN edu_student es
+		ON eag.user_id = es.user_id
+		where
+		1=1
+		AND
+		eag.id = #{id}
+	</select>
+
+	<!-- 修改 -->
+	<update id="check" parameterType="pd">
+		update
+			<include refid="tableName"></include>
+		set
+			check_opinion=#{check_opinion},
+			check_state=#{check_state}
+		where
+		id = #{id}
+	</update>
+
+	<!--根据id删除-->
+	<delete id="deleteById" parameterType="String">
+		DELETE FROM <include refid="tableName"></include> WHERE id = #{id}
+	</delete>
+</mapper>

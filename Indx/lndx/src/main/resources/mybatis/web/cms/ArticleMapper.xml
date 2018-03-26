@@ -1,0 +1,242 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN"
+        "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="ArticleMapper">
+
+    <resultMap type="Article" id="ArticleResultMap">
+        <id column="ARTICLE_ID" property="ARTICLE_ID"/>
+        <result column="FOLDER_ID" property="FOLDER_ID"/>
+        <result column="PATH" property="PATH"/>
+        <result column="PICTURE" property="PICTURE"/>
+        <result column="TITLE" property="TITLE"/>
+        <result column="SUMMARY" property="SUMMARY"/>
+        <result column="CONTENT" property="CONTENT"/>
+        <result column="VIEW_COUNT" property="VIEW_COUNT"/>
+        <result column="COMMENT_COUNT" property="COMMENT_COUNT"/>
+        <result column="STATUS" property="STATUS"/>
+        <result column="ISCHECK" property="ISCHECK"/>
+        <result column="CREATE_TIME" property="CREATE_TIME"/>
+        <result column="UPDATE_TIME" property="UPDATE_TIME"/>
+        <association property="folder" column="FOLDER_ID" javaType="Folder">
+            <id column="FOLDER_ID" property="FOLDER_ID"/>
+            <result column="FATHER_ID" property="FATHER_ID"/>
+            <result column="ENAME" property="ENAME"/>
+            <result column="NAME" property="NAME"/>
+            <result column="PATH" property="PATH"/>
+            <result column="CONTENT" property="CONTENT"/>
+            <result column="LEVEL" property="LEVEL"/>
+            <result column="SORT" property="SORT"/>
+            <result column="STATUS" property="STATUS"/>
+            <result column="ISCHECK" property="ISCHECK"/>
+            <result column="CREATE_TIME" property="CREATE_TIME"/>
+            <result column="UPDATE_TIME" property="UPDATE_TIME"/>
+            <result column="TITLE" property="TITLE"/>
+        </association>
+        <!-- <collection property="folderPathList" ofType="FolderVo" javaType="ArrayList">
+                <id property="id" column="post_id"/>
+                <result property="pathName" column="PATH_NAME"/>
+                <association property="pathName" javaType="Author"/>
+                <collection property="comments" ofType="Comment">
+          </collection> -->
+    </resultMap>
+
+    <!--表名 -->
+    <sql id="tableName">
+        cms_article
+    </sql>
+
+    <!-- 字段 -->
+    <sql id="Field">
+        ARTICLE_ID,
+        FOLDER_ID,
+        TITLE,
+        SUMMARY,
+        CONTENT,
+        STATUS,
+        PATH,
+        ISCHECK,
+        SOURCE_NAME,
+        CREATE_TIME,
+        UPDATE_TIME,
+        PICTURE
+    </sql>
+
+    <!-- 字段值 -->
+    <sql id="FieldValue">
+        #{ARTICLE_ID},
+        #{FOLDER_ID},
+        #{TITLE},
+        #{SUMMARY},
+        #{CONTENT},
+        #{STATUS},
+        #{PATH},
+        #{ISCHECK},
+        #{SOURCE_NAME},
+        #{CREATE_TIME},
+        #{UPDATE_TIME},
+        #{PICTURE}
+    </sql>
+
+
+    <!-- ############################## -->
+    <!-- ###### 增加 ###### -->
+    <!-- ############################## -->
+    <insert id="addArticle" parameterType="pd">
+        insert into
+        <include refid="tableName"></include>
+        (
+        <include refid="Field"></include>
+        ) values (
+        <include refid="FieldValue"></include>
+        )
+    </insert>
+
+    <!-- ############################## -->
+    <!-- ###### 删除 ###### -->
+    <!-- ############################## -->
+
+    <delete id="delete" parameterType="pd">
+        delete from
+        <include refid="tableName"></include>
+        where ARTICLE_ID=#{ARTICLE_ID}
+    </delete>
+
+    <delete id="deleteArticleListByStatus" parameterType="String">
+        delete from
+        <include refid="tableName"></include>
+        where STATUS=#{status}
+    </delete>
+
+    <!-- ############################## -->
+    <!-- ###### 修改 ###### -->
+    <!-- ############################## -->
+    <update id="updateArticle" parameterType="pd">
+        UPDATE
+        <include refid="tableName"></include>
+        SET
+        FOLDER_ID=#{FOLDER_ID},
+        TITLE=#{TITLE},
+        CONTENT=#{CONTENT},
+        ISCHECK=#{ISCHECK},
+        SUMMARY=#{summary},
+        UPDATE_TIME=#{UPDATE_TIME},
+        SOURCE_NAME=#{SOURCE_NAME},
+        STATUS=#{STATUS},
+        PICTURE=#{PICTURE}
+
+        WHERE
+        ARTICLE_ID=#{ARTICLE_ID}
+    </update>
+
+    <update id="updatePath" parameterType="pd">
+        update <include refid="tableName"></include> set PATH=#{PATH} where FOLDER_ID=#{FOLDER_ID}
+    </update>
+    <update id="updateCheck" parameterType="pd">
+        update <include refid="tableName"></include>  set ISCHECK=#{ISCHECK} where ARTICLE_ID=#{ARTICLE_ID}
+    </update>
+
+
+    <!-- ############################## -->
+    <!-- ###### 查询 ###### -->
+    <!-- ############################## -->
+
+    <select id="getArticleById" parameterType="String" resultType="pd">
+        select
+        ARTICLE_ID,
+        FOLDER_ID,
+        TITLE,
+        SUMMARY,
+        CONTENT,
+        STATUS,
+        PATH,
+        ISCHECK,
+        SOURCE_NAME,
+        PICTURE,
+        CONVERT(varchar(100), CREATE_TIME, 20) CREATE_TIME,
+        CONVERT(varchar(100), UPDATE_TIME, 20) UPDATE_TIME
+        from
+        <include refid="tableName"></include>
+        where ARTICLE_ID=#{articleId}
+    </select>
+
+    <select id="articlelistPage" parameterType="page" resultType="pd">
+		select 
+			a.ARTICLE_ID,
+			a.FOLDER_ID,
+			a.TITLE,
+			a.SUMMARY,
+			a.CONTENT,
+			a.STATUS,
+			a.ISCHECK,
+			a.SOURCE_NAME,
+			a.PICTURE,
+			CONVERT(varchar(100), a.CREATE_TIME, 20) CREATE_TIME,
+			CONVERT(varchar(100), a.UPDATE_TIME, 20) UPDATE_TIME
+		from cms_article a
+		where
+		  a.PATH like #{pd.PATH}+'%' and
+		 a.STATUS = 'display' and a.ISCHECK = 'yes'
+		order by
+		 a.UPDATE_TIME desc
+	</select>
+
+    <select id="getArticleCountOfDisplayByPath" parameterType="String" resultType="Integer">
+        select
+        count(*)
+        from
+        <include refid="tableName"></include>
+        where
+        PATH like #{PATH}+'%' and STATUS = 'display' and ISCHECK = 'yes'
+    </select>
+
+    <!-- 列表 -->
+    <select id="datalistPage" parameterType="page" resultType="pd">
+        select
+        f.NAME FNAME,
+        f.ENAME,
+        a.ARTICLE_ID,
+        a.FOLDER_ID,
+        a.PATH,
+        a.PICTURE,
+        a.TITLE,
+        a.SUMMARY,
+        a.CONTENT,
+        a.VIEW_COUNT,
+        a.COMMENT_COUNT,
+        (SELECT name from sys_dictionaries d where d.NAME_EN=a.STATUS) STATUS_NAME,
+        a.STATUS STATUS,
+        (SELECT name from sys_dictionaries d where d.NAME_EN=a.ISCHECK) ISCHECK_NAME,
+        a.ISCHECK ISCHECK,
+        CONVERT(varchar(100), a.UPDATE_TIME, 20) UPDATE_TIME
+        from
+        cms_article a,
+        cms_folder f
+        where
+        1=1 AND f.FOLDER_ID=a.FOLDER_ID
+
+        <if test="pd.keywords != null and pd.keywords != ''"><!-- 关键词检索 -->
+            and
+            (
+            a.TITLE LIKE ('%'+#{pd.keywords}+'%')
+            )
+        </if>
+
+        <if test="pd.FOLDER_ID != null and pd.FOLDER_ID != ''"><!-- 关键词检索 -->
+            and
+            (
+            a.FOLDER_ID = #{pd.FOLDER_ID}
+            )
+        </if>
+        order by a.UPDATE_TIME DESC
+    </select>
+    <!-- 通过ID获取数据 -->
+    <select id="findById" parameterType="pd" resultType="pd">
+        select
+        <include refid="Field"></include>
+        from
+        <include refid="tableName"></include>
+        where
+        ARTICLE_ID = #{ARTICLE_ID}
+    </select>
+
+</mapper>

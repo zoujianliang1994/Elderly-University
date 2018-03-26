@@ -1,0 +1,135 @@
+package com.zhimu.service.manager.edu.grades.impl;
+
+
+import com.zhimu.commons.utils.PageData;
+import com.zhimu.dao.DaoSupport;
+import com.zhimu.dao.entity.system.Page;
+import com.zhimu.service.manager.edu.classroom.ClassroomManager;
+import com.zhimu.service.manager.edu.grades.GradesManager;
+import org.springframework.stereotype.Service;
+
+import javax.annotation.Resource;
+import java.util.List;
+
+@Service("gradesService")
+public class GradesService implements GradesManager {
+
+  @Resource(name = "daoSupport")
+  private DaoSupport dao;
+
+
+  @Override
+  public List<PageData> gradeslistPage(Page pd) throws Exception {
+
+    return (List<PageData>) dao.findForList("GradesMapper.gradeslistPage", pd);
+
+  }
+
+  @Override
+  public void add(PageData pd) throws Exception {
+    dao.save("GradesMapper.save", pd);
+  }
+
+  /**
+   * 通过id获取数据
+   *
+   * @param pd
+   * @throws Exception
+   */
+  public PageData findObjectById(PageData pd) throws Exception {
+    return (PageData) dao.findForObject("GradesMapper.findById", pd);
+  }
+
+  /**
+   * 修改
+   *
+   * @param pd
+   * @throws Exception
+   */
+  public void edit(PageData pd) throws Exception {
+    dao.update("GradesMapper.edit", pd);
+  }
+
+  @Override
+  public void deleteById(String id) throws Exception {
+    dao.update("GradesMapper.deleteById", id);
+  }
+
+  /**
+   * 取得用户所在学校的课程
+   * @param pd
+   * @return
+   * @throws Exception
+   */
+  @Override
+  public List<PageData> getUserLesson(PageData pd) throws Exception {
+    return (List<PageData>) dao.findForList("GradesMapper.getUserLesson", pd);
+
+  }
+
+  @Override
+  public List<PageData> getUserTeacher(PageData pd) throws Exception {
+
+    return (List<PageData>) dao.findForList("GradesMapper.getUserTeacher", pd);
+  }
+
+  @Override
+  public Boolean isCheak(PageData pd)  throws Exception{
+    PageData pg = (PageData) dao.findForObject("GradesMapper.isCheak", pd);
+
+    if(pg!=null&&pg.size()>0){
+        if(Integer.parseInt(pd.get("class_size")+"")<=Integer.parseInt(pg.get("classSize")+"")){
+          return true;
+        }
+    }
+
+    return false;
+  }
+
+
+  @Override
+  public List<PageData> studentlistPage(Page page) throws Exception {
+
+    return (List<PageData>) dao.findForList("StudentMapper.studentByGradeslistPage", page);
+
+  }
+
+  @Override
+  public PageData findStudentById(PageData pd) throws Exception {
+
+    return (PageData) dao.findForObject("StudentMapper.findById", pd);
+  }
+
+  @Override
+  public void saveClassCommittee(PageData pd) throws Exception {
+    dao.update("StudentMapper.editClassCommittee", pd);
+  }
+
+  @Override
+  public List<PageData> getAllStudentBycId(PageData pd) throws Exception {
+    //查询班级全部学生
+    return (List<PageData>) dao.findForList("StudentMapper.getAllStudentBycId", pd);
+  }
+
+
+  //查询全部分组
+  @Override
+  public List<PageData> allGroupById(String gId) throws Exception {
+
+    return  (List<PageData>) dao.findForList("StudentMapper.allGroupById", gId);
+  }
+
+
+  /**
+   * 根据学校的id数组查出所有的班级--lwc
+   *
+   * @param schoolIds
+   * @return
+   * @throws Exception
+   */
+  @Override
+  public List<PageData> findBySchools(String schoolIds) throws Exception {
+    String[] ids = schoolIds.split(",");
+    return (List<PageData>)dao.findForList("GradesMapper.findBySchools",ids);
+  }
+}

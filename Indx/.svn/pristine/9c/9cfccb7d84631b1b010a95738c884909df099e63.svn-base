@@ -1,0 +1,106 @@
+package com.zhimu.service.manager.system.section.impl;
+
+import java.util.List;
+
+import javax.annotation.Resource;
+
+import org.springframework.stereotype.Service;
+
+import com.zhimu.commons.utils.PageData;
+import com.zhimu.dao.DaoSupport;
+import com.zhimu.dao.entity.system.Page;
+import com.zhimu.dao.entity.system.Section;
+import com.zhimu.service.manager.system.section.SectionManager;
+
+/**
+ * 部门
+ */
+@Service("sectionService")
+public class SectionService implements SectionManager {
+
+	@Resource(name = "daoSupport")
+	private DaoSupport dao;
+
+	/**
+	 * 列表
+	 */
+	@Override
+	public List<PageData> list(Page page) throws Exception {
+		return (List<PageData>) dao.findForList("SectionMapper.datalistPage", page);
+	}
+
+	/**
+	 * 通过id获取数据
+	 */
+	@Override
+	public PageData findById(PageData pd) throws Exception {
+		return (PageData) dao.findForObject("SectionMapper.findById", pd);
+	}
+
+	/**
+	 * 新增
+	 */
+	@Override
+	public void save(PageData pd) throws Exception {
+		dao.save("SectionMapper.save", pd);
+	}
+
+	/**
+	 * 删除
+	 */
+	@Override
+	public void delete(PageData pd) throws Exception {
+		dao.delete("SectionMapper.delete", pd);
+
+	}
+
+	/**
+	 * 修改
+	 */
+	@Override
+	public void edit(PageData pd) throws Exception {
+		dao.update("SectionMapper.edit", pd);
+	}
+
+	/**
+	 * 更新机构区划代码
+	 */
+	@Override
+	public void updateByAreaCode(PageData pd) throws Exception {
+		dao.update("SectionMapper.updateByAreaCode", pd);
+	}
+
+	/**
+	 * 获取所有的内设机构
+	 */
+	@Override
+	public List<Section> listAllSection(String param) throws Exception {
+		return (List<Section>) dao.findForList("SectionMapper.listAllSection", param);
+	}
+
+	/**
+	 * 根据部门获取内设机构
+	 */
+	@Override
+	public List<Section> listSectionByDep(PageData pd) throws Exception {
+		return (List<Section>) dao.findForList("SectionMapper.listSectionByDep", pd);
+	}
+
+	@SuppressWarnings("unchecked")
+	@Override
+	public List<Section> findByAreaCode(String areaCode) throws Exception {
+		return (List<Section>) dao.findForList("SectionMapper.findByAreaCode", areaCode);
+	}
+
+	@SuppressWarnings("unchecked")
+	@Override
+	public List<Section> findByAreaCodeAndType(String areaCode) throws Exception {
+		return (List<Section>) dao.findForList("SectionMapper.findByAreaCodeAndType", areaCode);
+	}
+
+	@Override
+	public List<Section> findByAreaCodeName(PageData pd) throws Exception {
+		return (List<Section>) dao.findForList("SectionMapper.findByAreaCodeName", pd);
+	}
+
+}

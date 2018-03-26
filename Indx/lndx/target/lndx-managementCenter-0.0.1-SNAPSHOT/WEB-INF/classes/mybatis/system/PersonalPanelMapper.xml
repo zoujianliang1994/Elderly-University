@@ -1,0 +1,85 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="PersonalPanelMapper">
+
+    <resultMap type="com.zhimu.dao.entity.message.Message" id="messageListMap">
+		<id column="id" property="id"/>
+		<result column="URL" property="url"/>
+		<result column="TITLE" property="title"/>
+		<result column="CONTENT" property="content"/>
+		<result column="BUSINESS_ID" property="businessId"/>
+		<result column="USER_ID" property="userId"/>
+		<result column="USER_NAME" property="userName"/>
+		<result column="TYPE" property="type"/>
+		<result column="STATUS" property="status"/>
+		<result column="CREATE_TIME" property="createTime"/>
+		<result column="UPDATE_TIME" property="updateTime"/>
+		<result column="CREATE_BY" property="createBy"/>
+		<result column="UPDATE_BY" property="updateBy"/>
+	</resultMap>
+    
+ <!--表名 -->
+    <sql id="tableName">
+		sys_message
+	</sql>
+
+    <!-- 字段 -->
+    <sql id="Field">
+		ID,	
+		URL,	
+		TITLE,	
+		CONTENT,	
+		BUSINESS_ID,	
+		USER_ID,
+		USER_NAME,
+		TYPE,
+		WORK_TYPE,
+		STATUS,
+		CREATE_TIME,
+		UPDATE_TIME,
+		CREATE_BY,
+		UPDATE_BY
+	</sql>
+
+    
+ 	<!-- 分页列表-->
+    <select id="listPage" parameterType="page" resultType="pd" >
+        select
+	        ID,	
+			URL,	
+			TITLE,	
+			CONTENT,	
+			BUSINESS_ID,	
+			USER_ID,
+			USER_NAME,
+			TYPE,
+			WORK_TYPE,
+			STATUS,
+			CONVERT(VARCHAR(100), CREATE_TIME, 120) CREATE_TIME,
+			CONVERT(VARCHAR(100), UPDATE_TIME, 120) UPDATE_TIME,
+			CREATE_BY,
+			UPDATE_BY
+        from
+        <include refid="tableName"></include>
+        where 1=1
+        <if test="pd.USER_NAME!= null and pd.USER_NAME != ''">
+            AND (USER_NAME =#{pd.USER_NAME} OR USER_ID = #{pd.USER_ID})
+        </if>
+        <if test="pd.STATUS!= null and pd.STATUS != ''">
+            AND STATUS =#{pd.STATUS}
+        </if>
+        ORDER BY STATUS ASC
+    </select>
+
+	<!-- 获取当前用户未读消息总数-->
+    <select id="getTotalMsgNum" parameterType="com.zhimu.dao.entity.system.User" resultType="String" >
+        select
+       		count(1)
+        from
+        <include refid="tableName"></include>
+        where 1=1
+            AND (USER_NAME =#{USERNAME} OR USER_ID = #{USER_ID})
+            AND STATUS ='0'
+    </select>
+
+</mapper>

@@ -1,0 +1,156 @@
+﻿<%@ page language="java" contentType="text/html; charset=UTF-8" pageEncoding="UTF-8" %>
+<%
+    String path = request.getContextPath();
+    String basePath = request.getScheme() + "://" + request.getServerName() + ":" + request.getServerPort() + path + "/";
+%>
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <title>我的活动</title>
+    <%@ include file="../../system/index/headcss.jsp" %>
+</head>
+<body>
+<div class="layui-tab layui-tab-brief" lay-filter="docDemoTabBrief">
+    <ul class="layui-tab-title">
+        <li class="layui-this">发布的活动</li>
+        <li >我的活动</li>
+    </ul>
+    <div class="layui-tab-content tableBox">
+
+        <div class="operationBox">
+            <form action="list.do" class="layui-form" method="post" name="Form" id="Form">
+
+                <div class="searchBox fl">
+
+                    <select lay-filter='school_id' id="school_id" name="school_id" class="layui-input-inline">
+                        <option value="">请选择请假的学校</option>
+                        <c:forEach var="var" items="${schoolList}" varStatus="vs">
+                            <option value="${var.schoolId}" <c:if test="${var.schoolId==pd.school_id}"> selected="selected" </c:if> >
+                                    ${var.schoolName}
+                            </option>
+                        </c:forEach>
+                    </select>
+
+                </div>
+
+                <div class="searchBox fl marL-20">
+
+                    <html:select id="qjlx" name="qjlx" classs="layui-input-inline" style=" lay-filter='qjlx'">
+                        <html:options collection="QJ_TYPE" defaultValue="${pd.qjlx}"></html:options>
+                    </html:select>
+                </div>
+
+
+                <div class="searchBox fl marL-20">
+                    <input id="activityDate" name="keywords" type="text" value="" placeholder="请选择时间"  class="layui-input fl search layui-input-color">
+                </div>
+                <div class="searchBox fl marL-20">
+                    <input  name="keywords" type="text" value="" placeholder="请输入活动名称/荣誉名称" class="layui-input fl search layui-input-color">
+
+                </div>
+
+                <div class="fl srarchBtn" onclick="gsearch()">
+                    <i class="layui-icon">&#xe615;</i>
+                    <span>搜索</span>
+                </div>
+
+            </form>
+        </div>
+        <div class="layui-tab-item info layui-show">
+            <c:choose>
+                <c:when test="${not empty list}">
+                        <c:forEach items="${list}" var="var" varStatus="vs">
+                            <c:if test="${var.check_state == '0' or var.check_state == '3'}">
+                                <div class="activity-item">
+                                    <div class="item-left">
+                                        <div><span>活动名称：</span>${var.name}   </div>
+                                        <div><span>活动时间：</span>${var.activity_start_time}~${var.activity_end_time}</div>
+                                        <div><span>活动地点：</span>${var.activity_location}</div>
+                                        <div><span>责 任 人：</span>${var.leader_name}</div>
+                                        <div><span>活动内容：</span>${var.content}  </div>
+                                    </div>
+                                    <div class="item-right">
+                                        <div>
+                                            发布者：${var.school_name}
+                                        </div>
+                                        <div class="btnbox" style="margin: 0">
+                                            <button onclick="apply('${var.id}')" class="layui-btn layui-btn-primary layui-btn-small go-join">我要报名</button>
+                                        </div>
+                                    </div>
+                                </div>
+                            </c:if>
+                        </c:forEach>
+                </c:when>
+            </c:choose>
+        </div>
+
+        <div class="layui-tab-item">
+            <c:choose>
+                <c:when test="${not empty list}">
+                    <c:forEach items="${list}" var="var" varStatus="vs">
+                        <c:if test="${var.check_state == '1' or var.check_state == '2'}">
+                        <div class="activity-item">
+                            <div class="item-left">
+                                    <div>活动名称：${var.name}</div>
+                                    <div>所属学校：${var.school_name}</div>
+                                    <div>活动时间：${var.activity_start_time}~${var.activity_end_time}</div>
+                                    <div>责 任 人：${var.leader_name}</div>
+                                    <div>活动内容：${var.content}</div>
+                            </div>
+                        </div>
+                            <div>活动名称：${var.name}</div>
+                            <div>所属学校：${var.school_name}</div>
+                            <div>活动时间：${var.activity_start_time}~${var.activity_end_time}</div>
+                            <div>活动地点：${var.activity_location}</div>
+                            <div>责 任 人：${var.leader_name}</div>
+                            <div>活动内容：${var.content}</div>
+                        </c:if>
+                    </c:forEach>
+                </c:when>
+                <c:otherwise>
+                    没有数据
+                </c:otherwise>
+            </c:choose>
+        </div>
+    </div>
+</div>
+
+
+
+<%@ include file="../../system/index/foot.jsp" %>
+<script type="text/javascript">
+
+    layui.use('laydate', function(){
+        var laydate = layui.laydate;
+
+        //执行一个laydate实例
+        laydate.render({
+            elem: '#activityDate' //指定元素
+        });
+    });
+
+    $("#keywords").keydown(function (e) {
+        var ev = e || window.event;
+        if (ev.keyCode == "13") {
+            gsearch();
+        }
+    });
+
+
+    //检索
+    function gsearch() {
+        $("#Form").submit();
+    }
+
+    function apply(id) {
+        parent.layer.open({
+            title: "报名",
+            type: 2,
+            content: '<%=basePath%>activityGroup/goApply.do?id=' + id,
+            area: ["800px", "430px"]
+        });
+    }
+
+</script>
+</body>
+</html>

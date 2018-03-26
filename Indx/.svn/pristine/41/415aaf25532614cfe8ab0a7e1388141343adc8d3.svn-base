@@ -1,0 +1,168 @@
+/**
+ * 学校及教学点
+ * @author wangyong
+ */
+package com.zhimu.service.manager.edu.school;
+
+import java.util.HashSet;
+import java.util.List;
+import java.util.Set;
+
+import javax.annotation.Resource;
+
+import org.apache.commons.lang.StringUtils;
+import org.springframework.stereotype.Service;
+
+import com.zhimu.commons.utils.PageData;
+import com.zhimu.dao.DaoSupport;
+import com.zhimu.dao.entity.system.Page;
+import com.zhimu.service.manager.system.user.impl.UserService;
+
+@Service("schoolService")
+public class SchoolService {
+
+	@Resource(name = "daoSupport")
+	private DaoSupport dao;
+	@Resource(name = "userService")
+	private UserService userService;
+
+	/**
+	 * 新增
+	 * 
+	 * @param pd
+	 * @throws Exception
+	 */
+	public void save(PageData pd) throws Exception {
+		dao.save("SchoolMapper.save", pd);
+	}
+
+	/**
+	 * 删除
+	 * 
+	 * @param pd
+	 * @throws Exception
+	 */
+	public void delete(PageData pd) throws Exception {
+		dao.delete("SchoolMapper.delete", pd);
+	}
+
+	/**
+	 * 修改
+	 * 
+	 * @param pd
+	 * @throws Exception
+	 */
+	public void edit(PageData pd) throws Exception {
+		dao.update("SchoolMapper.edit", pd);
+		// 修改用户关联的学校信息
+		pd.put("SCHOOL_ID", pd.getString("id"));
+		List<PageData> users = this.userService.listAllUserBySid(pd);
+		if (null != users && users.size() > 0) {
+			for (PageData pda : users) {
+				String sName = pda.getString("SCHOOL_NAME");
+				String sId = pda.getString("SCHOOL_ID");
+				String oldName = pd.getString("oldName");
+				if (StringUtils.isNotEmpty(sName) && sName.indexOf(oldName) != -1) {
+					pd.put("SCHOOL_ID", sId);
+					pd.put("SCHOOL_NAME", sName.replaceAll(oldName, pd.getString("name")));
+					pd.put("USER_ID", pda.getString("USER_ID"));
+					this.userService.editUserSchool(pd);
+				}
+			}
+		}
+
+	}
+
+	/**
+	 * 列表
+	 * 
+	 * @param page
+	 * @throws Exception
+	 */
+	@SuppressWarnings("unchecked")
+	public List<PageData> list(Page page) throws Exception {
+		return (List<PageData>) dao.findForList("SchoolMapper.datalistPage", page);
+	}
+
+	/**
+	 * 通过id获取数据
+	 * 
+	 * @param pd
+	 * @throws Exception
+	 */
+	public PageData findById(PageData pd) throws Exception {
+		return (PageData) dao.findForObject("SchoolMapper.findById", pd);
+	}
+
+	/**
+	 * 通过id数组获取数据
+	 * 
+	 * @param pd
+	 * @throws Exception
+	 */
+	public List<PageData> findByIdArr(PageData pd) throws Exception {
+		return (List<PageData>) dao.findForList("SchoolMapper.findByIdArr", pd);
+	}
+
+	/**
+	 * 通过创建人id和学校类型获取数据
+	 * 
+	 * @param pd
+	 * @throws Exception
+	 */
+	@SuppressWarnings("unchecked")
+	public List<PageData> findByCid(PageData pd) throws Exception {
+		return (List<PageData>) dao.findForList("SchoolMapper.findByCid", pd);
+	}
+
+	/**
+	 * 通过学校或分校id查找学校
+	 * 
+	 * @param pd
+	 * @throws Exception
+	 */
+	public PageData getSchoolById(PageData pd) throws Exception {
+		return (PageData) dao.findForObject("SchoolMapper.getSchoolById", pd);
+	}
+
+	/**
+	 * 根据学校id查询分校区
+	 * 
+	 * @param pId
+	 * @return
+	 * @throws Exception
+	 */
+	public List<PageData> listSubSchools(String pId) throws Exception {
+		return (List<PageData>) dao.findForList("SchoolMapper.listSubSchools", pId);
+	}
+
+	/**
+	 * 获取用户所有学校及分校区所属学校
+	 * 
+	 * @param sIds
+	 * @return
+	 * @throws Exception
+	 */
+	public Set<PageData> listPschools(String[] sIds) throws Exception {
+		PageData pd = new PageData();
+		pd.put("array", sIds);
+		List<PageData> schools = this.findByIdArr(pd); // 用户所属的所有学校
+		HashSet<PageData> schoolSet = new HashSet<>();
+
+		for (int i = 0; i < schools.size(); i++) {
+			PageData school = schools.get(i);
+			String type = school.getString("type"); // 学校类型
+			if (StringUtils.isNotBlank(type) && "1".equals(type)) { // 如果是学校就直接放入学校set集合
+				schoolSet.add(school);
+			} else { // 如果是分校或者教学点就找到它的主校区, 再放入集合
+				String pid = school.getString("pid");
+				if (StringUtils.isNotBlank(pid)) {
+					pd.put("id", pid);
+					schoolSet.add(this.findById(pd));
+				}
+			}
+		}
+		return schoolSet;
+	}
+
+}

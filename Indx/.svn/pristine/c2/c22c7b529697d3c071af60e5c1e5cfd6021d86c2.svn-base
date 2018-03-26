@@ -1,0 +1,74 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="TuitionMapper">
+
+    <!--表名 -->
+    <sql id="tableName">
+		edu_tuition
+	</sql>
+
+    <!-- 分页列表 -->
+    <select id="datalistPage" parameterType="page" resultType="pd">
+
+        SELECT b.id xq_id,
+               b.name xq_name,
+               c.id bj_id,
+               c.name bj_name,
+               SUM (a.pay) tf,
+               SUM (a.income) qtss,
+               (SELECT SUM (c.tuition) FROM edu_student d WHERE charindex(c.id, d.c_id) > 0) ys
+          FROM edu_tuition a,
+               edu_semester b,
+               edu_grades c
+         WHERE a.grades_id = c.id
+           AND a.semester_id = b.id
+           AND b.id = #{pd.xq_id}
+           AND b.s_id in
+         <foreach item="item" index="index" collection="pd.userSchoolIds" open="(" separator="," close=")">
+            '${item}'
+         </foreach>
+         <if test="pd.keywords != null and pd.keywords != ''"><!-- 关键词检索 -->
+           AND ( c.name LIKE ('%'+#{pd.keywords}+'%'))
+         </if>
+         GROUP BY b.id,
+                  b.name,
+                  c.name,
+                  c.id
+    </select>
+
+    <!-- 学期列表-->
+    <select id="selectListSemester" parameterType="pd" resultType="pd">
+        select id x_id,
+               name x_name
+          from edu_semester
+         where 1 = 1
+           AND s_id in
+         <foreach item="item" index="index" collection="userSchoolIds" open="(" separator="," close=")">
+            '${item}'
+         </foreach>
+         order by reg_start desc
+    </select>
+
+    <!--收费详情 -->
+    <select id="selectTuitionList" parameterType="pd" resultType="pd">
+        SELECT ISNULL(a.stu_number, '无') xh,
+	           a.xm,
+	           ISNULL(c.pay, 0) tf,
+	           ISNULL(c.income, 0) qtss,
+	           ISNULL(b.tuition, 0) ys,
+	           (ISNULL(b.tuition, 0) - ISNULL(c.pay, 0) + ISNULL(c.income, 0)) ss,
+	           c.event_time,
+	           c.event_type
+          FROM edu_student a LEFT JOIN edu_grades b ON charindex(b.id, a.c_id) > 0
+                             LEFT JOIN edu_tuition c ON a.id = c.student_id
+         WHERE b.id = #{grades_id}
+           AND c.grades_id = #{grades_id}
+    </select>
+
+    <!-- 查询班级名称+学期名称-->
+    <select id="selectOtherName" parameterType="pd" resultType="pd">
+        SELECT name FROM edu_grades WHERE id = #{grades_id}
+         UNION
+	    SELECT name FROM edu_semester WHERE id = #{semester_id}
+    </select>
+</mapper>

@@ -1,0 +1,260 @@
+package com.zhimu.service.manager.edu.teacherWages.impl;
+
+import com.zhimu.commons.utils.DateUtil;
+import com.zhimu.commons.utils.PageData;
+import com.zhimu.commons.utils.UuidUtil;
+import com.zhimu.dao.DaoSupport;
+import com.zhimu.dao.entity.system.Page;
+import com.zhimu.service.manager.edu.teacherWages.TeacherWagesManager;
+import org.springframework.scheduling.annotation.Scheduled;
+import org.springframework.stereotype.Service;
+
+import javax.annotation.Resource;
+import java.text.SimpleDateFormat;
+import java.util.List;
+
+@Service("teacherWagesService")
+public class TeacherWagesService implements TeacherWagesManager {
+
+  @Resource(name = "daoSupport")
+  private DaoSupport dao;
+
+  public List<PageData> teacherWagesListPage(Page pd) throws Exception {
+    return (List<PageData>) dao.findForList("TeacherWagesMapper.datalistPage", pd);
+  }
+
+  public List<PageData> teacherWagesList(PageData pd) throws Exception {
+    return (List<PageData>) dao.findForList("TeacherWagesMapper.selectList", pd);
+  }
+
+  public PageData findDataById(PageData pd) throws Exception {
+    return (PageData) dao.findForObject("TeacherWagesMapper.findDataById", pd);
+  }
+
+  //定时任务 每月1号凌晨3点生成教师上月的工资
+  @Scheduled(cron = "0 0 3 1 * ?")
+  public void insertTeacherWagse() throws Exception {
+    try {
+      //获取教师列表
+      List<PageData> teacherList = (List<PageData>) dao.findForList("TeacherMapper.selectList", new PageData());
+      for (PageData pd : teacherList) {
+        pd.put("teacher_id", pd.getString("id"));
+        pd.put("id", UuidUtil.get32UUID());
+        pd.put("dy_month", DateUtil.getYearMonth(-1));
+        //查询教师当月正常上课
+        pd.put("zc", "yes");
+        List<PageData> zc = selectPkList(pd);
+        //正常上课数
+        int zcks = zc.size();
+        int zckf = 0;
+        //正常上课的累计课费
+        for (PageData z : zc) {
+          zckf += Integer.parseInt(z.get("wages") + "");
+        }
+        //已经上课总数
+        pd.put("yjsk", zcks);
+        //查询教师当月请假未上课
+        pd.put("zc", "");
+        pd.put("qj", "yes");
+        List<PageData> qj = selectPkList(pd);
+        //请假课数
+        int qqks = qj.size();
+        //请假累计扣费
+        int qjkf = 0;
+        for (PageData q : qj) {
+          qjkf += Integer.parseInt(q.get("wages") + "");
+        }
+        //缺勤课数
+        pd.put("qqks", qqks);
+        //应发金额 (正常上课+请假扣费)
+        pd.put("yf_wages", zckf + qjkf);
+        //扣发金额 (请假扣费)
+        pd.put("kf_wages", qjkf);
+        //调整金额 默认 0
+        pd.put("tz_wages", 0);
+        //实发金额 (正常上课的课费)
+        pd.put("sf_wages", zckf);
+        dao.save("TeacherWagesMapper.addData", pd);
+      }
+    } catch (Exception e) {
+      e.printStackTrace();
+    }
+  }
+
+  public void editData(PageData pd) throws Exception {
+    dao.update("TeacherWagesMapper.editData", pd);
+  }
+
+  public void deleteData(PageData pd) throws Exception {
+    dao.delete("TeacherWagesMapper.deleteData", pd);
+  }
+
+  //定时任务 每月1号凌晨1点生成当月教师正常上课数据
+  @Scheduled(cron = "0 0 1 1 * ?")
+  public void insertTeacherZcSk() throws Exception {
+    SimpleDateFormat sdf = new SimpleDateFormat("yyyy-MM-dd");
+    try {
+      //当月1号的日期
+      String begin_time = DateUtil.returnNowDate(0, 1);
+      //当月1号是周几
+      int bengin_week = DateUtil.getWeek(sdf.parse(begin_time));
+      String date_one = "";
+      String date_two = "";
+      String date_three = "";
+      String date_four = "";
+      String date_five = "";
+      switch (bengin_week) {
+        case 1:
+          date_one = DateUtil.addDay(begin_time, 0);
+          date_two = DateUtil.addDay(begin_time, 1);
+          date_three = DateUtil.addDay(begin_time, 2);
+          date_four = DateUtil.addDay(begin_time, 3);
+          date_five = DateUtil.addDay(begin_time, 4);
+          break;
+        case 2:
+          date_one = DateUtil.addDay(begin_time, 6);
+          date_two = DateUtil.addDay(begin_time, 0);
+          date_three = DateUtil.addDay(begin_time, 1);
+          date_four = DateUtil.addDay(begin_time, 2);
+          date_five = DateUtil.addDay(begin_time, 3);
+          break;
+        case 3:
+          date_one = DateUtil.addDay(begin_time, 5);
+          date_two = DateUtil.addDay(begin_time, 4);
+          date_three = DateUtil.addDay(begin_time, 0);
+          date_four = DateUtil.addDay(begin_time, 1);
+          date_five = DateUtil.addDay(begin_time, 2);
+          break;
+        case 4:
+          date_one = DateUtil.addDay(begin_time, 4);
+          date_two = DateUtil.addDay(begin_time, 5);
+          date_three = DateUtil.addDay(begin_time, 6);
+          date_four = DateUtil.addDay(begin_time, 0);
+          date_five = DateUtil.addDay(begin_time, 1);
+          break;
+        case 5:
+          date_one = DateUtil.addDay(begin_time, 3);
+          date_two = DateUtil.addDay(begin_time, 4);
+          date_three = DateUtil.addDay(begin_time, 5);
+          date_four = DateUtil.addDay(begin_time, 6);
+          date_five = DateUtil.addDay(begin_time, 0);
+          break;
+        case 6:
+          date_one = DateUtil.addDay(begin_time, 2);
+          date_two = DateUtil.addDay(begin_time, 3);
+          date_three = DateUtil.addDay(begin_time, 4);
+          date_four = DateUtil.addDay(begin_time, 5);
+          date_five = DateUtil.addDay(begin_time, 6);
+          break;
+        case 7:
+          date_one = DateUtil.addDay(begin_time, 1);
+          date_two = DateUtil.addDay(begin_time, 2);
+          date_three = DateUtil.addDay(begin_time, 3);
+          date_four = DateUtil.addDay(begin_time, 4);
+          date_five = DateUtil.addDay(begin_time, 5);
+          break;
+      }
+      //当月最后一天日期
+      String end_time = DateUtil.returnNowDate(1, 0);
+      int week_one = DateUtil.getMondayNumber(begin_time, end_time, 1);
+      int week_two = DateUtil.getMondayNumber(begin_time, end_time, 2);
+      int week_three = DateUtil.getMondayNumber(begin_time, end_time, 3);
+      int week_four = DateUtil.getMondayNumber(begin_time, end_time, 4);
+      int week_five = DateUtil.getMondayNumber(begin_time, end_time, 5);
+      //获取教师列表
+      List<PageData> teacherList = (List<PageData>) dao.findForList("TeacherMapper.selectList", new PageData());
+      for (PageData pd : teacherList) {
+        for (int i = 1; i <= 5; i++) {
+          pd.put("teacher_id", pd.getString("id"));
+          pd.put("week", i);
+          switch (i) {
+            case 1:
+              if (week_one > 0) {
+                List<PageData> list_one = selectQkList(pd);
+                //写入周一正常上课情况
+                if (list_one.size() > 0) {
+                  batchInsertQkInfo(pd, list_one, week_one, date_one);
+                }
+              }
+              break;
+            case 2:
+              if (week_two > 0) {
+                List<PageData> list_two = selectQkList(pd);
+                //写入周二正常上课情况
+                if (list_two.size() > 0) {
+                  batchInsertQkInfo(pd, list_two, week_two, date_two);
+                }
+              }
+              break;
+            case 3:
+              if (week_three > 0) {
+                List<PageData> list_three = selectQkList(pd);
+                //写入周三正常上课情况
+                if (list_three.size() > 0) {
+                  batchInsertQkInfo(pd, list_three, week_three, date_three);
+                }
+              }
+              break;
+            case 4:
+              if (week_four > 0) {
+                List<PageData> list_four = selectQkList(pd);
+                //写入周四正常上课情况
+                if (list_four.size() > 0) {
+                  batchInsertQkInfo(pd, list_four, week_four, date_four);
+                }
+              }
+              break;
+            case 5:
+              if (week_five > 0) {
+                List<PageData> list_five = selectQkList(pd);
+                //写入周五正常上课情况
+                if (list_five.size() > 0) {
+                  batchInsertQkInfo(pd, list_five, week_five, date_five);
+                }
+              }
+              break;
+          }
+        }
+      }
+    } catch (Exception e) {
+      e.printStackTrace();
+    }
+  }
+
+  //查询当前星期几是否有排课
+  public List<PageData> selectQkList(PageData pd) throws Exception {
+    return (List<PageData>) dao.findForList("TeacherWagesMapper.selectQkList", pd);
+  }
+
+  //批量写入教师当月正常上课明细
+  public void batchInsertQkInfo(PageData pd, List<PageData> list, int num, String nowDate) throws Exception {
+    //循环周数
+    for (int i = 1; i <= num; i++) {
+      //写入缺课情况
+      if (list.size() > 0) {
+        for (PageData p : list) {
+          p.put("id", UuidUtil.get32UUID());
+          p.put("teacher_id", pd.getString("teacher_id"));
+          p.put("dy_month", DateUtil.getYearMonth(0));
+          p.put("qj_zt", "3");
+          p.put("qk_time", DateUtil.addDay(nowDate, (i - 1) * 7) + " " + (p.get("start_time") + ""));
+        }
+        //执行批量保存
+        dao.batchSave("TeacherWagesMapper.addQkBatch", list);
+      }
+    }
+  }
+
+  //查询老师当月上课情况
+  public List<PageData> selectPkList(PageData pd) throws Exception {
+    return (List<PageData>) dao.findForList("TeacherWagesMapper.selectPkList", pd);
+  }
+
+  public List<PageData> myWagesList(PageData pd) throws Exception {
+    return (List<PageData>) dao.findForList("TeacherWagesMapper.myWagesList", pd);
+  }
+
+  public List<PageData> myWagesDetail(PageData pd) throws Exception {
+    return (List<PageData>) dao.findForList("TeacherWagesMapper.myWagesDetail", pd);
+  }
+}

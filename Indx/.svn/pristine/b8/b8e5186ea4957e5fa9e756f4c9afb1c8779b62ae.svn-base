@@ -1,0 +1,242 @@
+﻿<%@ page language="java" contentType="text/html; charset=UTF-8" pageEncoding="UTF-8" %>
+<%
+    String path = request.getContextPath();
+    String basePath = request.getScheme() + "://" + request.getServerName() + ":" + request.getServerPort() + path + "/";
+%>
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <title>学校管理</title>
+    <%@ include file="../../system/index/headcss.jsp" %>
+</head>
+<body>
+<div class="back-page">
+    <i class="iconfont icon-xiangzuo"></i>
+    <span>返回上一级</span>
+</div>
+<div class="layui-tab layui-tab-brief" lay-filter="docDemoTabBrief">
+    <ul class="layui-tab-title">
+        <li class="layui-this">插班</li>
+
+    </ul>
+    <div class="layui-tab-content">
+        <div class="layui-tab-item layui-show">
+            <div class="tableBox">
+                <div class="operationBox">
+
+                    <form action="list.do" method="post" class="layui-form" name="Form" id="Form">
+                        <div class=" fl ">
+                            <input id="keywords" name="keywords" type="text" value="${pd.keywords}" placeholder="请输入分校、教学点名称" class="layui-input fl search">
+
+                            <div class="fl srarchBtn" onclick="gsearch()">
+                                <i class="iconfont icon-sousuo"></i>
+                                <span>搜索</span>
+                            </div>
+                        </div>
+                    </form>
+                    <div class="hint">提示：请勾选您所需要转班的班级。</div>
+                    <shiro:hasPermission name="system:user:add">
+                        <button class="add-btn fl  marL-20 " id="add">
+                            <i  class="iconfont icon-add"></i>
+                            <span>新增</span>
+                        </button>
+
+                    </shiro:hasPermission>
+                </div>
+
+                <!-- table -->
+                <div class="layui-col-sm12">
+                    <table class="layui-table center" lay-skin="line" id="table">
+                        <colgroup>
+                            <col>
+                            <col>
+                            <col>
+                            <col width="100">
+                            <col>
+                            <col>
+                            <col>
+                            <col width="170">
+                        </colgroup>
+                        <thead>
+                        <tr class="table-head-tr">
+                            <th></th>
+                            <th>序号</th>
+                            <th>班级名称</th>
+                            <th>课程名称</th>
+                            <th>任课教师</th>
+                            <th>开课时间</th>
+                        </tr>
+                        </thead>
+                        <tbody>
+                        <c:choose>
+                            <c:when test="${not empty varList}">
+
+                                <shiro:hasPermission name="edu:school:select">
+                                    <c:forEach items="${varList}" var="var" varStatus="vs">
+                                        <tr>
+                                            <td>
+                                                <div class="item-check">
+                                                    <i class="icon-gou iconfont checked"></i>
+                                                </div>
+                                            </td>
+                                            <td>${vs.index+1}</td>
+                                            <td>${var.name}</td>
+                                            <td><c:if test="${var.type == 1 }">主校区</c:if>
+                                                <c:if test="${var.type == 2 }">分校区</c:if>
+                                                <c:if test="${var.type == 3 }">教学点</c:if>
+                                            </td>
+                                            <td>${var.location}</td>
+                                            <td>${var.contact}</td>
+                                            <%--<td>${var.tel}</td>--%>
+
+                                        </tr>
+                                    </c:forEach>
+                                </shiro:hasPermission>
+                                <shiro:lacksPermission name="edu:school:select">
+                                    <tr>
+                                        <td colspan="100" class="center">您无权查看</td>
+                                    </tr>
+                                </shiro:lacksPermission>
+                            </c:when>
+                            <c:otherwise>
+                                <tr class="main_info">
+                                    <td colspan="100" class="center">没有相关数据</td>
+                                </tr>
+                            </c:otherwise>
+                        </c:choose>
+                        </tbody>
+                    </table>
+
+                    <div class="laypageBox">
+                        <div id="laypage" class="fr"></div>
+                    </div>
+                </div>
+                <div class="layui-form" style="padding: 3rem 2rem;">
+                    <div class="layui-inline">
+                        <input type="text" class="layui-input" id="date" placeholder="请选择插班日期（必选）" style="cursor: pointer;width: 14rem;margin-right: 1rem">
+                        <%--<i class="iconfont icon-fold"></i>--%>
+                    </div>
+
+                    <div class="layui-inline">
+                        <input type="text" class="layui-input" placeholder="请输入插班费用（必填）" style="cursor: pointer;width: 13rem;margin-right: 1rem">
+
+                    </div>
+                    <div class="layui-inline">
+                        <input type="text" class="layui-input" placeholder="请输入备注信息" style="cursor: pointer;width: 31rem;margin-right: 1rem">
+
+                    </div>
+                    <div class="layui-inline">
+                        <button id="confirm" class="confirm ">确定</button>
+                    </div>
+                </div>
+            </div>
+
+        </div>
+
+    </div>
+</div>
+
+
+
+<%@ include file="../../system/index/foot.jsp" %>
+<script type="text/javascript">
+    layui.use('laydate', function(){
+        var laydate = layui.laydate;
+        laydate.render({
+            elem: '#date'
+
+        });
+    });
+    $(".item-check").on("click",function(){
+        console.log($(this))
+        if ($(this).hasClass("active")){
+            $(this).removeClass("active")
+        }else{
+            $(this).addClass("active")
+        }
+
+    })
+    var first = true;
+    var form = layui.form;
+    layui.use('laypage', function () {
+        var laypage = layui.laypage;
+        var layer = layui.layer;
+        form.on('select(sectionId)', function (data) {
+            gsearch()
+        });
+
+        //执行一个laypage实例
+        laypage.render({
+            elem: 'laypage',
+            count: ${page.totalResult},
+            curr: ${page.currentPage},
+            layout: ['prev', 'page', 'next', 'count', 'skip'],
+            jump: function (obj, first) {
+                if (!first) {
+                    window.location.href = "<%=basePath%>school/list.do?&currentPage=" + obj.curr + '&keywords=' + '${keywords}';
+                }
+            }
+        });
+    });
+
+
+    $("#keywords").keydown(function (e) {
+        var ev = e || window.event;
+        if (ev.keyCode == "13") {
+            gsearch();
+        }
+    });
+
+
+    //检索
+    function gsearch() {
+        $("#Form").submit();
+    }
+
+    //新增
+    $("#add").on("click", function () {
+        parent.parent.layer.edit = window;
+        parent.parent.layer.open({
+            title: "新增",
+            type: 2,
+            content: '<%=basePath%>school/goAdd.do?currentPage=' + ${page.currentPage},
+            area: ["800px", "550px"]
+        });
+    });
+
+    function edit(id, type) {
+        var msg = type == '1' ? '查看' : '编辑';
+        var area = type == '1' ? ["800px", "430px"] : ["800px", "550px"];
+        parent.parent.layer.edit = window;
+        parent.parent.layer.open({
+            title: msg,
+            type: 2,
+            content: '<%=basePath%>school/goEdit.do?id=' + id + '&currentPage=${page.currentPage}'+'&type='+type,
+            area: area
+        });
+    }
+
+    function del(id) {
+        parent.parent.layer.confirm("是否删除此学校?", {
+            btn: ['确定', '取消'],
+            resize: false,
+            title: "提示",
+            maxWidth: 800
+        }, function (index) {
+            var url = "<%=basePath%>school/delete.do?id=" + id;
+            $.get(url, function (data) {
+                if ("success" == data.result) {
+                    window.location.href = "<%=basePath%>school/list.do?currentPage=${page.currentPage}";
+                    parent.parent.layer.closeAll();
+                } else if("error" == data.result){
+                	parent.layer.msg('当前学校还有人员存在，不能删除!', {icon: 5});
+                }else {
+                	parent.layer.msg('系统异常,删除失败!', {icon: 5});
+                }
+            });
+        });
+    }
+
+</script>
+</body>
+</html>

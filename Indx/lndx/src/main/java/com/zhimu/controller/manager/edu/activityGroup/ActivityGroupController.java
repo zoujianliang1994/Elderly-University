@@ -1,0 +1,261 @@
+package com.zhimu.controller.manager.edu.activityGroup;
+
+import com.zhimu.commons.constant.Const;
+import com.zhimu.commons.utils.*;
+import com.zhimu.controller.manager.base.BaseController;
+import com.zhimu.dao.entity.system.Page;
+import com.zhimu.dao.entity.system.User;
+import com.zhimu.dao.utils.Jurisdiction;
+import com.zhimu.service.manager.edu.activity.ActivityManager;
+import com.zhimu.service.manager.edu.activityGroup.ActivityGroupService;
+import com.zhimu.service.manager.edu.school.SchoolService;
+import com.zhimu.service.manager.edu.student.StudentService;
+import com.zhimu.service.manager.edu.teacher.TeacherManager;
+import net.sf.json.JSONArray;
+import org.apache.commons.lang.StringUtils;
+import org.springframework.stereotype.Controller;
+import org.springframework.web.bind.annotation.RequestMapping;
+import org.springframework.web.bind.annotation.RequestMethod;
+import org.springframework.web.bind.annotation.RequestParam;
+import org.springframework.web.bind.annotation.ResponseBody;
+import org.springframework.web.multipart.MultipartFile;
+import org.springframework.web.servlet.ModelAndView;
+
+import javax.annotation.Resource;
+import javax.servlet.http.HttpServletRequest;
+import java.util.HashMap;
+import java.util.List;
+import java.util.Map;
+import java.util.Set;
+
+/**
+ * 活动参与人员控制层__lwc
+ */
+@Controller
+@RequestMapping(value = "/activityGroup")
+public class ActivityGroupController extends BaseController {
+
+
+    @Resource(name = "activityGroupService")
+    private ActivityGroupService activityGroupService;
+    @Resource(name = "studentService")
+    private StudentService studentService;
+    @Resource(name = "teacherService")
+    private TeacherManager teacherService;
+    @Resource(name = "schoolService")
+    private SchoolService schoolService;
+
+    /**
+     * 进入列表
+     *
+     * @param page
+     * @return
+     * @throws Exception
+     */
+    @RequestMapping(value = "/list")
+    public ModelAndView listGroupUser(Page page) throws Exception {
+        ModelAndView mv = this.getModelAndView();
+        PageData pd = this.getPageData();
+        try {
+            page.setPd(pd);
+            List<PageData> groupUserList = activityGroupService.listPage(page); // 列出所有的团体成员
+
+            mv.addObject("pd", pd);
+            mv.addObject("page", page);
+            mv.addObject("list", groupUserList);
+
+            mv.setViewName("edu/activityGroup/group_list");
+        } catch (Exception e) {
+            logger.error(ErrorUtils.getErrorMessage(e, "去活动参与人列表异常!"));
+        }
+        return mv;
+    }
+
+    /**
+     * 我的活动列表
+     * @param page
+     * @return
+     * @throws Exception
+     */
+    @RequestMapping(value = "/listByUser")
+    public ModelAndView listByUser(Page page) throws Exception {
+        ModelAndView mv = this.getModelAndView();
+        PageData pd = this.getPageData();
+        try {
+
+            User user = this.getUserInfo();
+            String schoolId = user.getSchoolId();
+            Set<PageData> schoolSet = null;
+            if (StringUtils.isNotBlank(schoolId)){
+                schoolSet = schoolService.listPschools(schoolId.split(",")); // 列出所有学校
+            }
+
+
+            // 拿到前传过来的条件,判断,如果有选择学校班级数据,就查出来作为前台查询条件显示
+            String school_child_id = pd.getString("school_child_id"); // 分校区
+            String school_id = pd.getString("school_id"); // 校区
+
+            pd.put("user_id", user.getUSER_ID());
+            pd.put("check_state", "'"+0+"','"+3+"'");
+            page.setPd(pd);
+            List<PageData> myActivityList = activityGroupService.listByUser(page); // 列出我的所有活动(已发布的活动)
+
+            // 如果学校不为空, 拿到所有当前学校分校及分校
+            if (StringUtils.isNotBlank(school_id)){
+                pd.put("school_id",school_id);
+                mv.addObject("childSchools", schoolService.listSubSchools(school_id));
+            }
+
+            mv.addObject("pd", pd);
+            mv.addObject("page", page);
+            mv.addObject("schoolList", schoolSet);
+            mv.addObject("list", myActivityList);
+
+            mv.setViewName("edu/activityGroup/my_activity");
+        } catch (Exception e) {
+            logger.error(ErrorUtils.getErrorMessage(e, "去我的活动列表异常!"));
+        }
+        return mv;
+    }
+
+    /**
+     * 我的活动列表(已报名的活动)
+     * @param page
+     * @return
+     * @throws Exception
+     */
+    @RequestMapping(value = "/listRegisteredActi")
+    @ResponseBody
+    public Object listRegisteredActi(Page page) throws Exception {
+        Map<String, String> map = new HashMap<String, String>();
+        PageData pd = this.getPageData();
+        JSONArray arr = new JSONArray();
+        try {
+            pd.put("user_id", this.getUserInfo().getUSER_ID());
+            pd.put("check_state", "'"+1+"','"+2+"'");
+            page.setPd(pd);
+            List<PageData> myActivityList = activityGroupService.listByUser(page); // 列出我的所有活动(已报名的活动)
+            if (!myActivityList.isEmpty()){
+                arr = JSONArray.fromObject(myActivityList); // 转换成json数据
+                map.put("data",arr.toString());
+            }
+            map.put("page",page.toString());
+        } catch (Exception e) {
+            logger.error(ErrorUtils.getErrorMessage(e, "去我的活动(已报名的活动)列表异常!"));
+        }
+        return map;
+    }
+
+    /**
+     * 去详情和审核页面
+     *
+     * @return
+     * @throws Exception
+     */
+    @RequestMapping(value = "/toSelect")
+    public ModelAndView toSelect() throws Exception {
+        ModelAndView mv = this.getModelAndView();
+        PageData pd = this.getPageData();
+        try {
+            String currentPage = pd.getString("currentPage");
+            String keywords = pd.getString("keywords");
+            //查询
+            PageData personalInfo = activityGroupService.findObjectById(pd);
+
+            //封装参数
+            pd.put("currentPage", currentPage);
+            pd.put("keywords", keywords);
+            pd.put("type", "1");
+            mv.addObject("msg", "edit");
+            mv.addObject("pd", pd);
+            mv.addObject("personalInfo", personalInfo);
+            mv.setViewName("edu/activityGroup/group_edit");
+        } catch (Exception e) {
+            logger.error(ErrorUtils.getErrorMessage(e, "去活动团员详情或审核页面异常!"));
+        }
+        return mv;
+    }
+
+    /**
+     * 审核
+     * @return
+     * @throws Exception
+     */
+    @RequestMapping(value = "/check")
+    @ResponseBody
+    public Object check() throws Exception {
+        PageData pd = this.getPageData();
+        String msg = "";
+        try {
+            msg = "success";
+            pd.put("check_time", DateUtil.getTime()); // 审核时间
+            pd.put("check_user", this.getUserInfo().getNAME()); // 审核人
+            activityGroupService.check(pd);
+        } catch (Exception e) {
+            logger.error(ErrorUtils.getErrorMessage(e, "活动审核保存异常!"));
+        }
+        Map<String, String> map = new HashMap<String, String>();
+        map.put("msg", msg);
+        return AppUtil.returnObject(new PageData(), map);
+    }
+
+    /**
+     * 去报名页面
+     * @return
+     * @throws Exception
+     */
+    @RequestMapping(value = "/goApply")
+    public ModelAndView goApply() throws Exception {
+        ModelAndView mv = this.getModelAndView();
+        PageData pd = this.getPageData();
+        try {
+            PageData person = null;
+
+            String userId = this.getUserInfo().getUSER_ID();
+            person = studentService.findByUser(userId);
+            if (null == person){ // 如果不是学生就去寻找老师
+                person = teacherService.findByUser(userId);
+            }
+
+            //封装参数
+            mv.addObject("msg", "updateAndApply");
+            mv.addObject("pd", pd);
+            mv.addObject("person", person);
+            mv.setViewName("edu/activityGroup/activity_apply");
+        } catch (Exception e) {
+            logger.error(ErrorUtils.getErrorMessage(e, "去活动团员报名面异常!"));
+        }
+        return mv;
+    }
+
+    /**
+     * 更新个人信息和报名活动
+     * @return
+     * @throws Exception
+     */
+    @RequestMapping(value = "/updateAndApply")
+    @ResponseBody
+    public Object updateAndApply() throws Exception {
+        PageData pd = this.getPageData();
+        String msg = "";
+        try {
+            // 根据不同人物类型更新个人信息
+            String type = pd.getString("type");
+            if ("教师".equals(type)){
+                teacherService.updateData(pd);
+            }else if("学生".equals(type)){
+                studentService.update(pd);
+            }
+
+            // 报名活动
+            activityGroupService.updateAndApply(pd);
+            msg = "success";
+        } catch (Exception e) {
+            logger.error(ErrorUtils.getErrorMessage(e, "更新个人信息和报名活动异常!"));
+        }
+        Map<String, String> map = new HashMap<String, String>();
+        map.put("msg", msg);
+        return AppUtil.returnObject(new PageData(), map);
+    }
+
+}

@@ -1,0 +1,141 @@
+<%@ page language="java" contentType="text/html; charset=UTF-8" pageEncoding="UTF-8"%>
+
+<%
+	String path = request.getContextPath();
+	String basePath = request.getScheme() + "://" + request.getServerName() + ":" + request.getServerPort() + path + "/";
+%>
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<base href="<%=basePath%>">
+<!-- jsp文件头和头部 -->
+	<%@ include file="../../system/index/headcss.jsp"%>
+
+    <style>
+		.imgBox{
+			position:relative;
+		}
+		#imgfile{
+			position:absolute;
+			z-index: -1;
+			top: 0px;
+			left:0
+		}
+		.layui-upload-drag{
+			background-size:cover;
+		}
+
+	</style>
+</head>
+<body >
+<div class="edit_menu" class="disnone">
+
+	<form action="grades/editGroup.do" class="layui-form"  name="form1" id="form1" >
+		<input type="hidden" name="id" id="id" value="${pd.id}" />
+
+		<div class="layui-form-item">
+
+				<div class="form-item-inline" style="width: 100%">
+					<label class="form-label"><span class="red-star">*</span>班级名称：</label>
+					<div class="layui-input-block class_committee">
+
+						<select name="group_name" lay-verify="required" lay-search="">
+							<option value="">直接选择或搜索选择</option>
+							<c:forEach var="var" items="${allGroupById}">
+								<option value="${var.group_name}">${var.group_name}</option>
+							</c:forEach>
+						</select>
+
+
+					</div>
+				</div>
+
+		</div>
+
+	</form>
+
+	<div class="btnbox" >
+		<c:if test="${pd.type=='0'}">
+			<button id="sure" class="layui-btn layui-btn-primary layui-btn-small">保存</button>
+		</c:if>
+		<button id="cancel" class="layui-btn layui-btn-primary layui-btn-small">取消</button>
+	</div>
+</div>
+
+
+	<!-- 页面底部js¨ -->
+	<%@ include file="../../system/index/foot.jsp"%>
+	<!--提示框-->
+	<script type="text/javascript">
+
+
+        var form = layui.form;
+
+        var type = '${pd.type}';
+        if (1 == type) {
+            $.formToDiv(true);
+            $("#btnDiv").hide();
+            $("#cancel").hide();
+            $(".colon").show();
+            $("input,select,radio,textarea").attr("disabled", "disabled").css("background-color", "#f2f2f2");
+            $("input").removeAttr("placeholder", "");
+            $("label").addClass("layui-form-label");
+            $("label").removeClass("form-label");
+            $(".layui-input-block").css("color","#666")
+        } else {
+            $("#btnDiv").show();
+            $(".colon").hide();
+            $("label").removeClass("layui-form-label");
+            $("label").addClass("form-label");
+            $(".layui-input-block").css("color","#000")
+        }
+
+        $(document).ready(function(){
+
+            $("#sure").on("click",function(){
+                if ($("#group_name").val() == ""||$().val("#group_name").length>50) {
+                    layer.tips('请验证选择',  $(".class_committee"), {
+                        tips: [4, '#D16E6C'],
+                        time: 4000
+                    });
+                    $("#group_name").focus();
+                    return false;
+                }
+
+
+
+                var page ="${pd.currentPage}";
+                var sum ="&keywords=${pd.keywords}";
+
+
+                $("#form1").ajaxSubmit({
+                    type: 'post',
+                    dataType:"html",
+                    success: function(data) {
+                        var jso = JSON.parse(data);
+                        if ("success" == jso.msg) {
+                            parent.layer.transmit.location.href = "<%=basePath%>grades/listStudent.do?gId=${pd.gId}&currentPage=" + page + sum;
+                            parent.layer.closeAll();
+                        } else if ("error" == jso.msg) {
+                            layer.msg('系统异常,保存失败!', {icon: 5});
+                        } else if("false" == jso.msg){
+                            layer.msg('错误', {icon: 5});
+						}
+                    }
+                });
+
+            });
+
+            $("#cancel").on("click",function(){
+                parent.layer.closeAll();
+            })
+        });
+
+        function test(file_name,symbol){
+            var result = file_name.split(symbol);
+            return result[result.length-1];
+        }
+	</script>
+</body>
+</html>
+

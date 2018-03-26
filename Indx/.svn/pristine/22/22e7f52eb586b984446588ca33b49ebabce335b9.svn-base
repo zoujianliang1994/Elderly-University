@@ -1,0 +1,80 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="DeptMapper">
+	
+	<!--表名 -->
+	<sql id="tableName">
+		edu_dept
+	</sql>
+	
+	<!-- 字段 -->
+	<sql id="Field">
+		DEPT_ID,
+        NAME,
+        CREATE_TIME,
+        FLAG
+	</sql>
+	
+	<!-- 字段值 -->
+	<sql id="FieldValue">
+		#{DEPT_ID},
+		#{NAME},
+		#{CREATE_TIME},
+		#{FLAG}
+	</sql>
+	
+	<!-- 新增-->
+	<insert id="addData" parameterType="pd">
+		insert into <include refid="tableName"/> ( <include refid="Field"/> ) values ( <include refid="FieldValue"/>)
+	</insert>
+	
+	<!-- 删除-->
+	<delete id="deleteData" parameterType="pd">
+		delete from <include refid="tableName"/> where DEPT_ID = #{DEPT_ID}
+	</delete>
+	
+	<!-- 修改 -->
+	<update id="editData" parameterType="pd">
+		update <include refid="tableName"></include>
+		   set NAME = #{NAME},
+		       CREATE_TIME = #{CREATE_TIME}
+		 where DEPT_ID = #{DEPT_ID}
+	</update>
+	
+	<!-- 通过ID获取数据 -->
+	<select id="findDataById" parameterType="pd" resultType="pd">
+		select DEPT_ID,NAME,CONVERT(varchar(100), CREATE_TIME, 23) AS CREATE_TIME,FLAG
+		  from <include refid="tableName"/>
+		 where FLAG = '0'
+		   and DEPT_ID = #{DEPT_ID}
+	</select>
+	
+	<!-- 分页列表 -->
+	<select id="datalistPage" parameterType="page" resultType="pd">
+		select DEPT_ID,
+		       NAME,
+		       CONVERT(varchar(100), CREATE_TIME, 23) AS CREATE_TIME,
+		       FLAG
+		  from <include refid="tableName"/>
+		 where FLAG = '0'
+		 <if test="pd.keywords != null and pd.keywords != ''"><!-- 关键词检索 -->
+		   and name LIKE ('%'+#{pd.keywords}+'%')
+		 </if>
+		 order by CREATE_TIME
+	</select>
+
+	<!-- 普通列表 -->
+	<select id="selectList" parameterType="pd" resultType="pd">
+		select DEPT_ID,
+		       NAME,
+		       CONVERT(varchar(100), CREATE_TIME, 23) AS CREATE_TIME,
+		       FLAG
+		  from <include refid="tableName"/>
+		 where FLAG = '0'
+		<if test="NAME != null and NAME != ''">
+		   and name = #{NAME}
+		</if>
+		 order by CREATE_TIME
+	</select>
+
+</mapper>

@@ -1,0 +1,116 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="WagesMapper">
+
+    <!--表名 -->
+    <sql id="tableName">
+		edu_teacher_wages
+	</sql>
+
+    <!-- 字段 -->
+    <sql id="Field">
+		id,
+        teacher_id,
+        name,
+        idcard,
+        gw_type,
+        dy_month,
+        yf_wages,
+        kf_wages,
+        tz_wages,
+        sf_wages,
+        tz_bz,
+        yjsk,
+        qqks,
+        school_id
+	</sql>
+
+    <!-- 字段值 -->
+    <sql id="FieldValue">
+		#{id},
+        #{teacher_id},
+        #{name},
+        #{idcard},
+        #{gw_type},
+        #{dy_month},
+        #{yf_wages},
+        #{kf_wages},
+        #{tz_wages},
+        #{sf_wages},
+        #{tz_bz},
+        #{yjsk},
+        #{qqks},
+        #{school_id}
+	</sql>
+
+    <!-- 分页列表 -->
+    <select id="datalistPage" parameterType="page" resultType="pd">
+        SELECT a.teacher_id,
+               a.name,
+               a.idcard,
+               a.gw_type,
+               SUM (a.yf_wages) yf_wages,
+               SUM (a.kf_wages) kf_wages,
+               SUM (a.sf_wages) sf_wages
+          FROM edu_teacher_wages a
+         WHERE 1 = 1
+           and a.school_id in
+         <foreach item="item" index="index" collection="pd.userSchoolIds" open="(" separator="," close=")">
+            '${item}'
+         </foreach>
+         <if test="pd.dy != null and pd.dy != ''">
+           and a.dy_month = #{pd.dy}
+         </if>
+         <if test="pd.qn != null and pd.qn != ''">
+            and a.dy_month like (#{pd.qn}+'%')
+         </if>
+         <if test="pd.keywords != null and pd.keywords != ''"><!-- 关键词检索 -->
+           and ( a.name LIKE ('%'+#{pd.keywords}+'%') or
+                 a.id_card LIKE ('%'+#{pd.keywords}+'%')
+               )
+         </if>
+         GROUP BY teacher_id,
+                  name,
+                  idcard,
+                  gw_type
+    </select>
+
+    <!--月工资详情 -->
+    <select id="selectListMonth" parameterType="pd" resultType="pd">
+        SELECT x.kc_name,
+	           x.dy_month,
+	           SUM (x.kf + x.sf) yf,
+	           SUM (x.kf) kf,
+	           SUM (x.sf) sf
+          FROM ( SELECT a.kc_name,
+			            a.dy_month,
+                        case when a.qj_zt = '0' or a.qj_zt = '1' then a.wages  else 0 end kf,
+                        case when a.qj_zt = '2' or a.qj_zt = '3' then a.wages  else 0 end sf
+		           FROM edu_teacher_normal a
+		          WHERE a.teacher_id = #{teacher_id}
+                    and a.dy_month = #{dy_month}
+	           ) x
+         GROUP BY x.kc_name,
+	              x.dy_month
+	     ORDER BY x.dy_month DESC
+    </select>
+
+    <!--年工资详情 -->
+    <select id="selectListYear" parameterType="pd" resultType="pd">
+        SELECT x.kc_name,
+               x.dy_month,
+               SUM (x.kf + x.sf) yf,
+               SUM (x.kf) kf,
+               SUM (x.sf) sf
+          FROM ( SELECT a.kc_name,
+                        a.dy_month,
+                        case when a.qj_zt = '0' or a.qj_zt = '1' then a.wages  else 0 end kf,
+                        case when a.qj_zt = '2' or a.qj_zt = '3' then a.wages  else 0 end sf
+                   FROM edu_teacher_normal a
+                  WHERE a.teacher_id = #{teacher_id}
+                ) x
+          GROUP BY x.kc_name,
+                   x.dy_month
+          ORDER BY x.dy_month DESC
+    </select>
+</mapper>

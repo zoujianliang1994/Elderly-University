@@ -1,0 +1,144 @@
+package com.zhimu.service.manager.stu.leave.impl;
+
+import com.zhimu.commons.utils.DateUtil;
+import com.zhimu.commons.utils.PageData;
+import com.zhimu.dao.DaoSupport;
+import com.zhimu.dao.entity.system.Page;
+import com.zhimu.service.manager.edu.grades.GradesManager;
+import com.zhimu.service.manager.edu.student.StudentService;
+import com.zhimu.service.manager.edu.studentFiles.ScheduleManager;
+import com.zhimu.service.manager.stu.leave.LeaveManager;
+import org.apache.commons.lang.StringUtils;
+import org.springframework.stereotype.Service;
+import sun.org.mozilla.javascript.internal.ast.ForInLoop;
+
+import javax.annotation.Resource;
+import java.text.DateFormat;
+import java.text.SimpleDateFormat;
+import java.util.ArrayList;
+import java.util.Date;
+import java.util.List;
+import java.util.concurrent.ForkJoinPool;
+
+/**
+ * 请假单服务层
+ *
+ * @author Liang Wenchao
+ * @create 2018/1/15 16:32
+ **/
+@Service("leaveService")
+public class LeaveService implements LeaveManager {
+
+    @Resource(name = "daoSupport")
+    private DaoSupport dao;
+    @Resource(name = "studentService")
+    private StudentService studentService;
+    @Resource(name = "scheduleService")
+    ScheduleManager scheduleService;
+    @Resource(name = "gradesService")
+    GradesManager gradesService;
+
+    @Override
+    public List<PageData> listPage(Page page) throws Exception {
+        return (List<PageData>)dao.findForList("LeaveMapper.listPage", page);
+    }
+
+    /**
+     * 保存学员请假信息
+     * @param pd
+     * @throws Exception
+     */
+    @Override
+    public void save(PageData pd) throws Exception {
+        // 根据用户id找到学生数据(学期:semester_id,班级:c_id)
+        PageData student = studentService.findByUser(pd.getString("userId"));
+        if (null != student){
+            // 获取到学生报名的所有班级
+            String gradesId = student.getString("c_id");
+            String[] gIdArr = gradesId.split(",");
+
+            // 获取到学生报名的学期id
+            String semesterId = student.getString("semester_id");
+            student.put("gIdArr", gIdArr);
+            // 根据学期id和班级id数组查到对应的课程表数据
+            List<PageData> schedules = scheduleService.findByGIdAndSId(student);
+            String starTime = pd.getString("start_time"); // 请假开始时间
+            String endTime = pd.getString("end_time"); // 请假结束时间
+            int startWeek = DateUtil.getWeek(DateUtil.fomatDate(starTime)); // 开始周X
+            int endWeek = DateUtil.getWeek(DateUtil.fomatDate(endTime)); // 结束周X
+
+            // 获取请假时间相隔的天数
+            int numDays =  DateUtil.daysBetween(starTime, endTime);
+
+            /*
+                判断如果: 1.请假时间之差为0,则为同一天,比较课程表的开始于结束时间是否包含了请假的结束开始时间
+                        有就获取对应的班级id
+                        2.请假之和大于0,就获取所有的周x,并进行去重,将请假第一天的时间和最后一天的时间对课程表
+                        时间进行对比,获取范围内的课程对应班级
+            */
+            List<String> gradeIds = new ArrayList<>();
+            if (numDays == 0){
+                for (PageData schedule: schedules) {
+                    int week = (int)schedule.get("week");
+                    if (week == startWeek){
+                        String schSTime = schedule.getString("start_time"); // 课程表开始时间
+                        String schETime = schedule.getString("end_time"); // 课程表开始时间
+                        if ((DateUtil.compareTime(schSTime,endTime) && DateUtil.compareTime(endTime,schETime))
+                        || (DateUtil.compareTime(schSTime,starTime) && DateUtil.compareTime(starTime,schETime))
+                        || (DateUtil.compareTime(starTime,schSTime) && DateUtil.compareTime(schETime,endTime))){
+                            gradeIds.add(schedule.getString("grades_id"));
+                        }
+                    }
+                }
+            }else if (0 < numDays &&  numDays < 7){
+                for (PageData schedule: schedules) {
+                    int week = (int)schedule.get("week");
+                    String schSTime = schedule.getString("start_time"); // 课程表开始时间
+                    String schETime = schedule.getString("end_time"); // 课程表开始时间
+                    for (int i = 0; i < numDays; i++) {
+                        int weekCount = startWeek + i;
+                        if (6 != weekCount && 7 != weekCount && weekCount == startWeek && week == weekCount){
+                            if ((DateUtil.compareTime(schSTime,starTime) && DateUtil.compareTime(starTime,schETime))){
+                                gradeIds.add(schedule.getString("grades_id"));
+                            }
+                        }else if (6 != weekCount && 7 != weekCount && weekCount == endWeek && week == weekCount){
+                            if ((DateUtil.compareTime(schSTime,endTime) && DateUtil.compareTime(endTime,schETime))){
+                                gradeIds.add(schedule.getString("grades_id"));
+                            }
+                        }else if(6 != weekCount && 7 != weekCount && weekCount != endWeek && weekCount != startWeek && week == weekCount){
+                            gradeIds.add(schedule.getString("grades_id"));
+                        }
+                    }
+                }
+            }else {
+                for (PageData schedule: schedules) {
+                    gradeIds.add(schedule.getString("grades_id"));
+                }
+            }
+
+            // 根据班级id集合查找所有老师
+            List<PageData> teachers = gradesService.findTeacherByIds(gradeIds);
+            String teacherId = "";
+            String teacherName = "";
+            for (PageData teacher: teachers) {
+                teacherId += teacher.getString("teacher_id"); // 取出老师id
+                teacherName += teacher.getString("teacher_name"); // 取出教师名字
+            }
+            pd.put("teacher_id", teacherId);
+            pd.put("teacher_name", teacherName);
+        }
+        dao.save("LeaveMapper.save", pd);
+    }
+
+    /**
+     * 获取学生请假单详情
+     *
+     * @param pd
+     * @return
+     * @throws Exception
+     */
+    @Override
+    public PageData findDataById(PageData pd) throws Exception {
+        return (PageData)dao.findForObject("LeaveMapper.findDataById", pd);
+    }
+}

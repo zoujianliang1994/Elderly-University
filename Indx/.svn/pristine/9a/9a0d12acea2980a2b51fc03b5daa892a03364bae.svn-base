@@ -1,0 +1,319 @@
+package com.zhimu.controller.manager.edu.notice;
+
+import com.zhimu.commons.constant.Const;
+import com.zhimu.commons.utils.*;
+import com.zhimu.controller.manager.base.BaseController;
+import com.zhimu.dao.entity.message.Message;
+import com.zhimu.dao.entity.system.Page;
+import com.zhimu.dao.entity.system.User;
+import com.zhimu.dao.enums.MessageType;
+import com.zhimu.dao.utils.Jurisdiction;
+import com.zhimu.service.manager.edu.notice.NoticeManager;
+import com.zhimu.service.manager.edu.student.StudentService;
+import com.zhimu.service.manager.edu.teacher.TeacherManager;
+import com.zhimu.service.manager.message.MessageManager;
+import com.zhimu.service.manager.message.impl.MessageService;
+import net.sf.json.JSONArray;
+import org.apache.commons.lang.StringUtils;
+import org.apache.shiro.session.Session;
+import org.springframework.beans.propertyeditors.CustomDateEditor;
+import org.springframework.stereotype.Controller;
+import org.springframework.web.bind.WebDataBinder;
+import org.springframework.web.bind.annotation.*;
+import org.springframework.web.multipart.MultipartFile;
+import org.springframework.web.servlet.ModelAndView;
+
+import javax.annotation.Resource;
+import javax.servlet.http.HttpServletRequest;
+import java.text.DateFormat;
+import java.text.SimpleDateFormat;
+import java.util.*;
+
+/**
+ * 公告管理的控制层
+ *
+ * @author Liang Wenchao
+ * @create 2018/1/10 10:02
+ **/
+@Controller
+@RequestMapping(value = "/notice")
+public class NoticeController extends BaseController {
+
+    @Resource(name = "messageService")
+    private MessageService messageService;
+    @Resource(name = "noticeService")
+    private NoticeManager noticeService;
+    @Resource(name = "studentService")
+    private StudentService studentService;
+    @Resource(name = "teacherService")
+    private TeacherManager teacherService;
+
+    /**
+     * 公告列表
+     * @param page
+     * @return
+     */
+    @RequestMapping(value = "/list")
+    public ModelAndView list(Page page) {
+        ModelAndView mv = this.getModelAndView();
+        PageData pd = new PageData();
+        pd = this.getPageData();
+        String keywords = pd.getString("keywords"); // 检索条件
+        if (null != keywords && !"".equals(keywords)) {
+            pd.put("keywords", keywords.trim());
+        }
+        List<PageData> noticeList = new ArrayList<PageData>();
+        try {
+            // 放入当前用户id
+            pd.put("username", this.getUserInfo().getUSERNAME());
+            page.setPd(pd);
+            noticeList = noticeService.listPageByUser(page);
+        } catch (Exception e) {
+            logger.error(ErrorUtils.getErrorMessage(e, "获取公告列表异常!"));
+        } // 列表
+        mv.setViewName("edu/notice/notice_list");
+        mv.addObject("noticeList", noticeList);
+        return mv;
+    }
+
+    /**
+     * 去新增页面
+     *
+     * @param
+     * @throws Exception
+     */
+    @RequestMapping(value = "/goAdd")
+    public ModelAndView goAdd() {
+        ModelAndView mv = this.getModelAndView();
+        PageData pd = new PageData();
+        pd = this.getPageData();
+        mv.addObject("currentPage", pd.get("currentPage"));
+        mv.addObject("msg", "save");
+        mv.setViewName("edu/notice/notice_edit");
+        return mv;
+    }
+
+    /**
+     * 保存公告
+     * @param message
+     * @param noticeFile
+     * @return
+     */
+    @RequestMapping(value = "/save")
+    @ResponseBody
+    public Object save(Message message , @RequestParam(value = "noticeFile", required = false) MultipartFile noticeFile) {
+        Map<String, String> map = new HashMap<String, String>();
+        String msg = "success";
+        try {
+            String id = this.get32UUID();
+            message.setId(id);
+
+            String filePath = PathUtil.getClasspath() + Const.FILEPATHFILE; // 文件上传路径
+            // 上传附件
+            if (null != noticeFile && !noticeFile.isEmpty()){
+                String url = FileUpload.fileUp(noticeFile, filePath,
+                        noticeFile.getOriginalFilename().split("\\.")[0] + "("+DateUtil.getTime()+")");
+                message.setFileUrl(url);
+            }
+            noticeService.saveMessage(message);
+        } catch (Exception e) {
+            msg = "error";
+            logger.error(ErrorUtils.getErrorMessage(e, "保存发送公告消息异常!"));
+        }
+        map.put("result", msg);
+        return AppUtil.returnObject(new PageData(), map);
+    }
+
+    /**
+     * 去修改页面
+     *
+     * @param
+     * @throws Exception
+     */
+    @RequestMapping(value = "/goEdit")
+    public ModelAndView goEdit() {
+        ModelAndView mv = this.getModelAndView();
+        PageData pd = this.getPageData();
+        String type = pd.getString("TYPE");
+        String currentPage = pd.getString("currentPage");
+        Message message = null;
+        try {
+            message = noticeService.findById(pd.getString("id" )); // 根据ID读取
+            if (null != message) {
+                pd.put("filePath", PathUtil.getClasspath() + Const.FILEPATHFILE + message.getFileUrl());
+            }
+            String buinessId = pd.getString("msgId");
+            if (StringUtils.isNotBlank(buinessId)){
+                PageData pageData = new PageData();
+                pageData.put("BUSINESS_ID", buinessId);
+                messageService.updateStatus(pageData);
+            }
+        } catch (Exception e) {
+            logger.error(ErrorUtils.getErrorMessage(e, "去公告编辑页面异常!"));
+        }
+        pd.put("type", type);
+        mv.addObject("pd", pd); // 放入视图容器
+        mv.addObject("message", message); // 放入消息
+        mv.addObject("currentPage", currentPage);
+        mv.setViewName("edu/notice/notice_edit");
+        mv.addObject("msg", "edit");
+        return mv;
+    }
+
+    /**
+     * 去公告发布范围页面
+     *
+     * @param
+     * @throws Exception
+     */
+    @RequestMapping(value = "/goPublish")
+    public ModelAndView goPublish() {
+        ModelAndView mv = this.getModelAndView();
+        PageData pd = this.getPageData();
+        try {
+        } catch (Exception e) {
+            logger.error(ErrorUtils.getErrorMessage(e, "去公告发布范围页面异常!"));
+        }
+        mv.addObject("pd", pd); // 放入视图容器
+        mv.setViewName("edu/notice/notice_publish");
+        return mv;
+    }
+
+    /**
+     * 修改公告
+     *
+     * @param
+     * @throws Exception
+     */
+    @RequestMapping(value = "/edit")
+    @ResponseBody
+    public Object edit(Message message , @RequestParam(value = "noticeFile", required = false) MultipartFile noticeFile) {
+        Map<String, String> map = new HashMap<String, String>();
+        String msg = "success";
+        User user = getUserInfo();
+        try {
+            message.setUpdateBy(user.getUSERNAME());
+            message.setUpdateTime(DateUtil.getTime());
+
+            this.delete(message.getId()); // 先删除
+            this.save(message, noticeFile); // 在新增
+            noticeService.edit(message);
+        } catch (Exception e) {
+            msg = "error";
+            logger.error(ErrorUtils.getErrorMessage(e, "修改公告异常!"));
+        }
+        map.put("result", msg);
+        return AppUtil.returnObject(new PageData(), map);
+    }
+
+    /**
+     * 删除公告
+     * @param id
+     * @return
+     */
+    @RequestMapping(value = "/delete")
+    @ResponseBody
+    public Object delete(@RequestParam String id) {
+        Map<String, String> map = new HashMap<String, String>();
+        PageData pd = getPageData();
+        String resultInfo = "success";
+        try {
+            noticeService.delete(id);
+            messageService.delBybuinessId(id);
+        } catch (Exception e) {
+            resultInfo = "error";
+            logger.error(ErrorUtils.getErrorMessage(e, "删除公告异常!"));
+        }
+        map.put("result", resultInfo);
+        return AppUtil.returnObject(new PageData(), map);
+    }
+
+    /**
+     * 根据学校id查找学生和老师
+     * @return
+     */
+    @RequestMapping(value = "/findPersonBySid",method = RequestMethod.POST)
+    @ResponseBody
+    public Object findPersonBySid() {
+        Map<String, String> map = new HashMap<String, String>();
+        PageData pd = this.getPageData();
+        JSONArray arr = null;
+        String json = "";
+        try {
+            // 获取用户的学校和分校区
+            String sId = this.getUserInfo().getSchoolId();
+            if (StringUtils.isNotBlank(sId)){
+                String[] sIds = sId.split(",");
+                pd.put("array", sIds);
+                pd.put("sId", sId);
+                List<PageData> students = studentService.findBySid(pd); // 获取学校的所有学生
+                List<PageData> teachers = teacherService.findBySchools(pd); // 获取学校的所有老师
+                students.addAll(teachers);
+                JSONArray stuArr = JSONArray.fromObject(students);
+                json = stuArr.toString();
+            }
+            map.put("data", json);
+        } catch (Exception e) {
+            logger.error(ErrorUtils.getErrorMessage(e, "获取学校学生和老师异常__lwc"));
+        }
+        return map;
+    }
+
+    /**
+     * 获取所有个人公告通知
+     * @param page
+     * @return
+     */
+    @RequestMapping(value = "/listAllMessage")
+    public ModelAndView listAllMessage(Page page) {
+        ModelAndView mv = this.getModelAndView();
+        PageData pd = new PageData();
+        pd = this.getPageData();
+        String keywords = pd.getString("keywords"); // 检索条件
+        if (null != keywords && !"".equals(keywords)) {
+            pd.put("keywords", keywords.trim());
+        }
+        List<PageData> messageList = new ArrayList<PageData>();
+        try {
+            User user = this.getUserInfo();
+            // 放入当前用户id
+            pd.put("USER_ID", user.getUSER_ID());
+            pd.put("SCHOOL_NAME", user.getSchoolName());
+            page.setPd(pd);
+            messageList = messageService.listAllMessage(page);
+        } catch (Exception e) {
+            logger.error(ErrorUtils.getErrorMessage(e, "获取所有个人公告通知列表异常!"));
+        } // 列表
+        mv.setViewName("edu/notice/message_list");
+        mv.addObject("messageList", messageList);
+        return mv;
+    }
+
+    /**
+     * 去公告通知详情页面
+     *
+     * @param
+     * @throws Exception
+     */
+    @RequestMapping(value = "/goDetail")
+    public ModelAndView goDetail() {
+        ModelAndView mv = this.getModelAndView();
+        PageData pd = this.getPageData();
+        try {
+            Message message = messageService.findById(pd.getString("id"));
+            mv.addObject("message", message); // 放入视图容器
+        } catch (Exception e) {
+            logger.error(ErrorUtils.getErrorMessage(e, "去公告通知详情页面异常!_lwc"));
+        }
+        mv.addObject("pd", pd); // 放入视图容器
+        mv.setViewName("edu/notice/message_detail");
+        return mv;
+    }
+
+
+    @InitBinder
+    public void initBinder(WebDataBinder binder) {
+        DateFormat format = new SimpleDateFormat("yyyy-MM-dd");
+        binder.registerCustomEditor(Date.class, new CustomDateEditor(format, true));
+    }
+}

@@ -1,0 +1,324 @@
+<%@ page language="java" contentType="text/html; charset=UTF-8" pageEncoding="UTF-8"%>
+
+<%
+	String path = request.getContextPath();
+	String basePath = request.getScheme() + "://" + request.getServerName() + ":" + request.getServerPort() + path + "/";
+%>
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<base href="<%=basePath%>">
+<!-- jsp文件头和头部 -->
+	<%@ include file="../../system/index/headcss.jsp"%>
+
+    <style>
+		.imgBox{
+			position:relative;
+		}
+		#imgfile{
+			position:absolute;
+			z-index: -1;
+			top: 0px;
+			left:0
+		}
+		.layui-upload-drag{
+			background-size:cover;
+		}
+
+	</style>
+</head>
+<body >
+<div class="edit_menu" class="disnone">
+
+	<form action="schedule/${msg}.do" class="layui-form"  name="form1" id="form1" >
+		<input type="hidden" name="id" id="id" value="${pd.id}" />
+
+		<div class="layui-form-item">
+			<div class="layui-row">
+
+				<div class="form-item-inline">
+					<label class="form-label"><span class="red-star">*</span>姓名</label>
+					<div class="layui-input-block school_id">
+						<input name="xm" id="xm" value="${pd.xm}" type="text" class="layui-input layui-input-color">
+					</div>
+				</div>
+
+
+				<div class="form-item-inline">
+					<label class="form-label"><span class="red-star">*</span>出生日期：</label>
+					<div class="layui-input-block semester_id">
+						<input name="birth_day" id="birth_day" value="${pd.birth_day}" type="text" class="layui-input layui-input-color">
+					</div>
+				</div>
+			</div>
+		</div>
+
+		<div class="layui-form-item">
+		<div class="layui-row">
+
+			<div class="form-item-inline">
+				<label class="form-label">籍贯：</label>
+				<div class="layui-input-block">
+					<input name="hjdz" id="hjdz" value="${pd.hjdz}" type="text" class="layui-input layui-input-color">
+				</div>
+			</div>
+
+			<div class="form-item-inline">
+				<label class="form-label"><span class="red-star">*</span>性别：</label>
+				<div class="layui-input-block">
+					<input name="xb" id="xb" value="${pd.xb}" type="number"	class="layui-input layui-input-color">
+				</div>
+			</div>
+
+		</div>
+	</div>
+
+	<div class="layui-form-item">
+		<div class="layui-row">
+
+			<div class="form-item-inline">
+				<label class="form-label"><span class="red-star">*</span>身份证：</label>
+				<div class="layui-input-block">
+					<input name="sfz" id="sfz" value="${pd.sfz}" type="text" class="layui-input layui-input-color">
+				</div>
+			</div>
+
+			<div class="form-item-inline">
+				<label class="form-label">民族：</label>
+				<div class="layui-input-block">
+					<input name="mz" id="mz" value="${pd.mz}" type="number"	class="layui-input layui-input-color">
+				</div>
+			</div>
+
+		</div>
+	</div>
+
+		<div class="layui-form-item">
+			<div class="layui-row">
+
+				<div class="form-item-inline">
+					<label class="form-label"><span class="red-star">*</span>年龄：</label>
+					<div class="layui-input-block">
+						<input name="nl" id="nl" value="${pd.nl}" type="number" class="layui-input layui-input-color">
+					</div>
+				</div>
+
+				<div class="form-item-inline">
+					<label class="form-label">手机号码：</label>
+					<div class="layui-input-block">
+						<input name="phone" id="phone" value="${pd.phone}" type="text"	class="layui-input layui-input-color">
+					</div>
+				</div>
+
+			</div>
+		</div>
+
+		<div class="layui-form-item">
+			<div class="layui-row">
+
+				<div class="form-item-inline">
+					<label class="form-label"><span class="red-star">*</span>疾病史：</label>
+					<div class="layui-input-block">
+						<input name="disease" id="disease" value="${pd.disease}" type="number" class="layui-input layui-input-color">
+					</div>
+				</div>
+
+			</div>
+		</div>
+
+		<div class="layui-form-item" style="border-top: 1px solid rgba(78,78,78,0.53);">
+			<div class="layui-row">
+
+				<div class="form-item-inline">
+					<label class="form-label"><span class="red-star">*</span>学号：</label>
+					<div class="layui-input-block">
+						<input name="stu_number" id="stu_number" value="${pd.stu_number}" type="number" class="layui-input layui-input-color">
+					</div>
+				</div>
+
+				<div class="form-item-inline">
+					<label class="form-label">入学时间：</label>
+					<div class="layui-input-block">
+						<input name="join_school_date" id="join_school_date" value="${pd.join_school_date}" type="text"	class="layui-input layui-input-color">
+					</div>
+				</div>
+
+			</div>
+		</div>
+
+		<div class="layui-form-item" style="border-top: 1px solid rgba(78,78,78,0.53);">
+			<div class="layui-row">
+
+				<div class="form-item-inline">
+					<label class="form-label"><span class="red-star">*</span>家庭联系人：</label>
+					<div class="layui-input-block">
+						<input name="family_con_name" id="family_con_name" value="${pd.family_con_name}" type="number" class="layui-input layui-input-color">
+					</div>
+				</div>
+
+				<div class="form-item-inline">
+					<label class="form-label">联系人电话：</label>
+					<div class="layui-input-block">
+						<input name="family_con_tel" id="family_con_tel" value="${pd.family_con_tel}" type="text"	class="layui-input layui-input-color">
+					</div>
+				</div>
+
+			</div>
+		</div>
+
+		<div class="layui-form-item">
+			<div class="layui-row">
+
+				<div class="form-item-inline">
+					<label class="form-label"><span class="red-star">*</span>家庭第二联系人：</label>
+					<div class="layui-input-block">
+						<input name="sec_con" id="sec_con" value="${pd.sec_con}" type="number" class="layui-input layui-input-color">
+					</div>
+				</div>
+
+				<div class="form-item-inline">
+					<label class="form-label">联系人电话：</label>
+					<div class="layui-input-block">
+						<input name="sec_con_tel" id="sec_con_tel" value="${pd.sec_con_tel}" type="text"	class="layui-input layui-input-color">
+					</div>
+				</div>
+
+			</div>
+		</div>
+
+		<div class="layui-form-item">
+			<div class="layui-row">
+
+				<div class="form-item-inline">
+					<label class="form-label"><span class="red-star">*</span>当前住址：</label>
+					<div class="layui-input-block">
+						<input name="address" id="address" value="${pd.address}" type="number" class="layui-input layui-input-color">
+					</div>
+				</div>
+
+
+			</div>
+		</div>
+
+	</form>
+
+	<div class="btnbox" >
+		<c:if test="${pd.type=='2'}">
+			<button id="sure" class="layui-btn layui-btn-primary layui-btn-small">保存</button>
+		</c:if>
+		<button id="cancel" class="layui-btn layui-btn-primary layui-btn-small">取消</button>
+	</div>
+</div>
+
+
+	<!-- 页面底部js¨ -->
+	<%@ include file="../../system/index/foot.jsp"%>
+	<!--提示框-->
+	<script type="text/javascript">
+
+
+        var form = layui.form;
+
+        <%--var type = '${pd.type}';--%>
+        <%--if (1 == type) {--%>
+            <%--$.formToDiv(true);--%>
+            <%--$("#btnDiv").hide();--%>
+            <%--$("#cancel").hide();--%>
+            <%--$(".colon").show();--%>
+            <%--$("input,select,radio,textarea").attr("disabled", "disabled").css("background-color", "#f2f2f2");--%>
+            <%--$("input").removeAttr("placeholder", "");--%>
+            <%--$("label").addClass("layui-form-label");--%>
+            <%--$("label").removeClass("form-label");--%>
+            <%--$(".layui-input-block").css("color","#666")--%>
+        <%--} else {--%>
+            <%--$("#btnDiv").show();--%>
+            <%--$(".colon").hide();--%>
+            <%--$("label").removeClass("layui-form-label");--%>
+            <%--$("label").addClass("form-label");--%>
+            <%--$(".layui-input-block").css("color","#000")--%>
+        <%--}--%>
+
+        $(document).ready(function(){
+            form.on('select(semester_id)', function(data){
+                $("#semester_name").val(data.elem[data.elem.selectedIndex].text);
+            });
+
+
+            $("#sure").on("click",function(){
+
+				<c:if test="${msg eq 'add'}">
+                if ($("#school_id").val() == "") {
+                    layer.tips('请选择学校',  $(".school_id"), {
+                        tips: [4, '#D16E6C'],
+                        time: 4000
+                    });
+                    $("#school_id").focus();
+                    return false;
+                }
+
+                if ($("#semester_id").val() == "") {
+                    layer.tips('请选择学期',  $(".semester_id"), {
+                        tips: [4, '#D16E6C'],
+                        time: 4000
+                    });
+                    $("#semester_id").focus();
+                    return false;
+                }
+				</c:if>
+                if ($("#recess_time").val() == "") {
+                    layer.tips('请确认课间休息时间',  $("#recess_time"), {
+                        tips: [4, '#D16E6C'],
+                        time: 4000
+                    });
+                    $("#recess_time").focus();
+                    return false;
+                }
+
+                if ($("#siesta_time").val() == "") {
+                    layer.tips('请确认写午休时间',  $("#siesta_time"), {
+                        tips: [4, '#D16E6C'],
+                        time: 4000
+                    });
+                    $("#siesta_time").focus();
+                    return false;
+                }
+
+
+
+               var page ="${pd.currentPage}";
+               var sum ="&keywords=${pd.keywords}";
+
+
+                $("#form1").ajaxSubmit({
+                    type: 'post',
+                    dataType:"html",
+                    success: function(data) {
+                        var jso = JSON.parse(data);
+                        if ("success" == jso.msg) {
+                            parent.layer.transmit.location.href = "<%=basePath%>schedule/list.do?currentPage=" + page + sum;
+                            parent.layer.closeAll();
+                        } else if ("error" == jso.msg) {
+                            layer.msg('系统异常,保存失败!', {icon: 5});
+                        }else if ("false" == jso.msg) {
+                            layer.msg('该学期已存在请直接排课!', {icon: 5});
+                        }else if ("false2" == jso.msg) {
+                            layer.msg('该学期已存在排课!', {icon: 5});
+                        }
+                    }
+				});
+
+            });
+
+            $("#cancel").on("click",function(){
+                parent.layer.closeAll();
+            })
+        });
+
+        function test(file_name,symbol){
+            var result = file_name.split(symbol);
+            return result[result.length-1];
+        }
+	</script>
+</body>
+</html>
+

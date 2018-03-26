@@ -1,0 +1,84 @@
+/**
+ * 学员选课
+ * @author wangyong
+ */
+package com.zhimu.service.manager.edu.student;
+
+import java.util.List;
+
+import javax.annotation.Resource;
+
+import org.springframework.stereotype.Service;
+
+import com.zhimu.commons.utils.PageData;
+import com.zhimu.dao.DaoSupport;
+import com.zhimu.dao.entity.system.Page;
+import com.zhimu.service.manager.system.user.impl.UserService;
+
+@Service("enrollService")
+public class EnrollService {
+
+	@Resource(name = "daoSupport")
+	private DaoSupport dao;
+	@Resource(name = "userService")
+	private UserService userService;
+
+	/**
+	 * 列表
+	 * 
+	 * @param page
+	 * @throws Exception
+	 */
+	@SuppressWarnings("unchecked")
+	public List<PageData> list(Page page) throws Exception {
+		return (List<PageData>) dao.findForList("StudentEnrollMapper.datalistPage", page);
+	}
+
+	/**
+	 * 新增
+	 * 
+	 * @param pd
+	 * @throws Exception
+	 */
+	public void save(PageData pd) throws Exception {
+		// 保存选课信息
+		dao.save("StudentEnrollMapper.save", pd);
+		// 支付开始
+		// 支付结束
+		// 写入班级信息到学员表
+
+	}
+
+	/**
+	 * 删除
+	 * 
+	 * @param pd
+	 * @throws Exception
+	 */
+	public void delete(PageData pd) throws Exception {
+		dao.delete("StudentEnrollMapper.delete", pd);
+	}
+
+	/**
+	 * 修改
+	 * 
+	 * @param pd
+	 * @throws Exception
+	 */
+	public void edit(PageData pd) throws Exception {
+		dao.update("StudentEnrollMapper.edit", pd);
+
+	}
+
+	/**
+	 * 通过id获取数据
+	 * 
+	 * @param pd
+	 * @throws Exception
+	 */
+	@SuppressWarnings("unchecked")
+	public List<PageData> findByUserId(PageData pd) throws Exception {
+		return (List<PageData>) dao.findForList("StudentEnrollMapper.findByUserId", pd);
+	}
+
+}

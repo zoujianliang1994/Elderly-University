@@ -1,0 +1,406 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="StudentMapper">
+	
+	<!--表名 -->
+	<sql id="tableName">
+		edu_student
+	</sql>
+	<!--表名 -->
+	<sql id="tableName2">
+		edu_student_append
+	</sql>
+	
+	<!-- 字段 -->
+	<sql id="Field">
+		id,
+		xm,
+		nl,
+		xb,
+		mz,
+		hjdz,
+		czdz,
+		sfz,
+		zt,
+		s_id,
+		s_name,
+		c_id,
+		c_name,
+		l_id,
+		l_name,
+		create_date,
+		create_id,
+		user_id,
+		class_committee,
+		group_name,
+		group_leader,
+		phone,
+		semester_id,
+		stu_number,
+		sign_gov,
+		admitted_party_date,
+		edu_degree,
+		join_school_date,
+		tel,
+		retire_date,
+		retire_number,
+		work_status,
+		family_con_name,
+		family_con_tel,
+		sec_con,
+		sec_con_tel,
+		address,
+		disease,
+		photo,
+		checkin_date,
+		checkin_type,
+		birth_day,
+		province,
+		city,
+		country
+	</sql>
+	
+	<!-- 字段值 -->
+	<sql id="FieldValue">
+		#{id},
+		#{xm},
+		#{nl},
+		#{xb},
+		#{mz},
+		#{hjdz},
+		#{czdz},
+		#{sfz},
+		#{zt},
+		#{s_id},
+		#{s_name},
+		#{c_id},
+		#{c_name},
+		#{l_id},
+		#{l_name},
+		#{create_date},
+		#{create_id},
+		#{user_id},
+		#{class_committee},
+		#{group_name},
+		#{group_leader},
+		#{phone},
+		#{semester_id},
+		#{stu_number},
+		#{sign_gov},
+		#{admitted_party_date},
+		#{edu_degree},
+		#{join_school_date},
+		#{tel},
+		#{retire_date},
+		#{retire_number},
+		#{work_status},
+		#{family_con_name},
+		#{family_con_tel},
+		#{sec_con},
+		#{sec_con_tel},
+		#{address},
+		#{disease},
+		#{photo},
+		#{checkin_date},
+		#{checkin_type},
+		#{birth_day},
+		#{province},
+		#{city},
+		#{country}
+	</sql>
+	
+	<!-- 新增-->
+	<insert id="save" parameterType="pd">
+		insert into 
+	<include refid="tableName"></include>
+		(
+	<include refid="Field"></include>
+		) values (
+	<include refid="FieldValue"></include>
+		)
+	</insert>
+	
+	<!-- 注册-->
+	<insert id="register" parameterType="pd">
+		insert into 
+	<include refid="tableName"></include>
+		(
+			id,xm,phone,create_date,create_id,user_id,semester_id,checkin_date,checkin_type
+		) values (
+			#{id},#{xm},#{phone},#{create_date},#{create_id},#{user_id},#{semester_id},#{checkin_date},#{checkin_type}
+		)
+	</insert>
+	
+	<!-- 删除-->
+	<delete id="delete" parameterType="pd">
+		delete from
+		<include refid="tableName"></include>
+		where 
+			id = #{id}
+	</delete>
+	
+	<!-- 修改 -->
+	<update id="edit" parameterType="pd">
+		update
+		<include refid="tableName"></include>
+		set 
+			xm = #{xm},
+			xb=#{xb},
+			nl=#{nl},
+			birth_day=#{birth_day},
+			sfz = #{sfz},
+			phone=#{phone},
+			disease=#{disease},
+			hjdz=#{hjdz},
+			mz=#{mz},
+			family_con_name=#{family_con_name},
+			family_con_tel=#{family_con_tel},
+			sec_con=#{sec_con},
+			sec_con_tel=#{sec_con_tel},
+			tel=#{tel},
+			province=#{province},
+			city=#{city},
+			country=#{country},
+			address=#{address}
+		where 
+			id = #{id}
+	</update>
+	
+	<!-- 通过ID获取数据 -->
+	<select id="findById" parameterType="pd" resultType="pd">
+		select 
+		<include refid="Field"></include>
+		from 
+		<include refid="tableName"></include>
+		where 
+			id = #{id}
+	</select>
+	
+	
+	<!-- 列表 -->
+	<select id="datalistPage" parameterType="page" resultType="pd">
+		select
+		s.id,
+		s.xm,
+		s.semester_id,
+		s.sfz,
+		s.checkin_date,
+		m.name,
+		s.checkin_type,
+		1 class_numz
+		from
+		<include refid="tableName"></include> s,edu_semester m
+		where
+			1=1
+			and s.semester_id=m.id
+		<if test="pd.keywords != null and pd.keywords != ''"><!-- 关键词检索 -->
+			and
+				(
+				 name LIKE ('%'+#{pd.keywords}+'%')
+				 or
+				 sfz LIKE ('%'+#{pd.keywords}+'%')
+				 or
+				 checkin_type like ('%'+#{pd.keywords}+'%')
+				 or
+				 semester_id =#{pd.keywords}
+				)
+		</if>
+		order by s.create_date
+	</select>
+
+
+	<!-- 列表 -->
+	<select id="studentByGradeslistPage" parameterType="page" resultType="pd">
+		select
+		<include refid="Field"></include>
+		from
+		<include refid="tableName"></include>
+		where
+
+		<foreach item="item" index="index" collection="pd.gradesIds" open="(" separator=" or" close=")">
+			c_id  LIKE ('%'+'${item}'+'%')
+		</foreach>
+
+
+		<if test="pd.keywords != null and pd.keywords != ''"><!-- 关键词检索 -->
+			and
+			(
+			name LIKE ('%'+#{pd.keywords}+'%')
+			or
+			sfz LIKE ('%'+#{pd.keywords}+'%')
+		</if>
+	</select>
+
+
+	<!-- 修改 -->
+	<update id="editClassCommittee" parameterType="pd">
+		update
+		<include refid="tableName"></include>
+		set
+		class_committee = #{class_committee}
+		where
+		id = #{id}
+	</update>
+
+	<select id="getAllStudentBycId" parameterType="pd" resultType="pd">
+	select
+	<include refid="Field"></include>
+	from
+	<include refid="tableName"></include>
+	where
+
+	<foreach item="item" index="index" collection="gradesIds" open="(" separator=" or" close=")">
+		c_id  LIKE ('%'+'${item}'+'%')
+	</foreach>
+	</select>
+
+
+	<select id="allGroupById" parameterType="String" resultType="pd">
+		select
+		<include refid="Field"></include>
+		from
+		<include refid="tableName"></include>
+		where
+		  c_id  LIKE ('%'+#{gId}+'%')
+		  and group_leader = '1'
+	</select>
+
+	<update id="editStudentGroup" parameterType="pd">
+		update
+		<include refid="tableName"></include>
+		set
+		group_name=#{group_name},
+		group_leader=#{group_leader}
+		where
+		id = #{id}
+	</update>
+
+	<update id="editStudentGroupLeader" parameterType="pd">
+		update
+		<include refid="tableName"></include>
+		set
+		group_leader='0'
+		where
+		 c_id  LIKE ('%'+#{c_id}+'%')
+		and
+		group_name=#{group_name}
+		AND
+		group_leader='1'
+	</update>
+
+	<update id="editStudentGroupAll" parameterType="pd">
+		update
+		<include refid="tableName"></include>
+		set
+		group_leader='',
+		group_name=''
+		where
+		c_id  LIKE ('%'+#{c_id}+'%')
+		and
+		group_name=#{group_name}
+	</update>
+	<!-- 修改 -->
+	<update id="editGroup" parameterType="pd">
+		update
+		<include refid="tableName"></include>
+		set
+		group_name = #{group_name},
+		GROUP_leader = '0'
+		where
+		id = #{id}
+	</update>
+
+	<!--根据用户id查找他所有的组长_lwc-->
+	<select id="findByUser" parameterType="String" resultType="pd">
+		select
+			id,c_id,semester_id,xm,xb,mz,nl,birth_day,sfz,hjdz,mz,phone,tel,disease,province,city,country,address,family_con_name,family_con_tel,sec_con,sec_con_tel
+		from
+			<include refid="tableName"></include>
+		where
+			1=1 AND zt != 3 AND
+			user_id  = #{user_id}
+	</select>
+
+	<!--根据学校id查找对应所有的学生用户id_lwc-->
+	<select id="findUidBySid" resultType="String">
+		select
+			<include refid="tableName"></include>
+		from
+			<include refid="tableName"></include>
+		where
+			1=1 AND zt != 3 AND
+			s_id
+		IN
+		<foreach collection="sIds" separator="," open="(" close=")" item="schoolId">
+			#{schoolId}
+		</foreach>
+	</select>
+
+	<!--根据学校id查找对应所有的学生_lwc-->
+	<select id="findBySid" parameterType="pd" resultType="pd">
+		select
+			id,
+			xm AS name,
+			nl,
+			xb,
+			mz,
+			hjdz,
+			czdz,
+			sfz,
+			zt,
+			s_id,
+			s_name,
+			c_id,
+			c_name,
+			l_id,
+			l_name,
+			create_date,
+			create_id,
+			user_id,
+			class_committee,
+			group_name,
+			group_leader,
+			phone,
+			semester_id,
+			stu_number,
+			sign_gov,
+			admitted_party_date,
+			edu_degree,
+			join_school_date,
+			tel,
+			[type]=('学生')
+		from
+			<include refid="tableName"></include>
+		where
+			1=1 AND zt != 3 AND
+			s_id
+		IN
+		<foreach collection="array" separator="," open="(" close=")" item="schoolId">
+			#{schoolId}
+		</foreach>
+		<if test="keywords != null and keywords != ''"><!-- 关键词检索 -->
+			and
+			(
+			xm LIKE ('%'+#{keywords}+'%')
+			or
+			sfz LIKE ('%'+#{keywords}+'%')
+		</if>
+	</select>
+
+	<!--根据班级id查找对应所有的学生信息_lwc-->
+	<select id="findByCid" resultType="pd">
+		select
+			<include refid="Field"></include>
+		from
+			<include refid="tableName"></include>
+		where
+			1=1 AND zt != 3 AND
+			c_id
+		IN
+		<foreach collection="array" separator="," open="(" close=")" item="cId">
+			#{cId}
+		</foreach>
+	</select>
+
+	<!--  -->
+</mapper>

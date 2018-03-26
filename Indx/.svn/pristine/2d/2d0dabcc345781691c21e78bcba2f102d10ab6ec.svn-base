@@ -1,0 +1,277 @@
+package com.zhimu.service.manager.system.areacode;
+
+import java.math.BigInteger;
+import java.util.HashMap;
+import java.util.List;
+import java.util.Map;
+
+import javax.annotation.Resource;
+
+import net.sf.json.JSONArray;
+
+import org.apache.commons.lang.StringUtils;
+import org.springframework.stereotype.Service;
+
+import com.zhimu.commons.utils.AreaCodeUtils;
+import com.zhimu.commons.utils.PageData;
+import com.zhimu.dao.DaoSupport;
+import com.zhimu.dao.entity.system.AreaCode;
+import com.zhimu.dao.entity.system.Page;
+import com.zhimu.service.manager.redis.RedisCacheUtil;
+import com.zhimu.service.manager.system.department.DepartmentManager;
+
+/**
+ * 说明： 行政区划 创建人：wy
+ */
+@Service("areaCodeService")
+public class AreaCodeService {
+
+	@Resource(name = "daoSupport")
+	private DaoSupport dao;
+	@SuppressWarnings("rawtypes")
+	@Resource(name = "redisCacheUtil")
+	RedisCacheUtil redisCacheUtil;
+
+	@Resource(name = "departmentService")
+	private DepartmentManager departmentService;
+
+	/**
+	 * 通过ID获取其子级列表
+	 * 
+	 * @param parentId
+	 * @return
+	 * @throws Exception
+	 */
+	@SuppressWarnings("unchecked")
+	public List<AreaCode> listSubAreaCodeByParentId(String parentId) throws Exception {
+		List<AreaCode> cacheList = (List<AreaCode>) redisCacheUtil.getCacheObject(parentId);
+		if (null != cacheList && cacheList.size() > 0) {
+			// 有缓存立即返回
+			return cacheList;
+		}
+		List<AreaCode> list = (List<AreaCode>) dao.findForList("AreaCodeMapper.listSubAreaCodeByParentId", parentId);
+		redisCacheUtil.setCacheObject(parentId, list);
+		return list;
+	}
+
+	/**
+	 * 获取所有数据并填充每条数据列表..平级(递归处理)
+	 */
+	public List<AreaCode> listAllSubAreaCode(String parentId, List<AreaCode> areaCodeList) throws Exception {
+		if (StringUtils.isEmpty(parentId)) {
+			List<AreaCode> listSubAreaCodeByParentId = this.listSubAreaCodeByParentId(parentId);
+			if (listSubAreaCodeByParentId != null) {
+				areaCodeList.addAll(listSubAreaCodeByParentId);
+			}
+			for (AreaCode depar : listSubAreaCodeByParentId) {
+				if (StringUtils.isEmpty(depar.getId())) {
+					break;
+				} else {
+					this.listAllSubAreaCode(depar.getId(), areaCodeList);
+				}
+			}
+		}
+		return areaCodeList;
+	}
+
+	/**
+	 * 获取所有区划
+	 * 
+	 * @return
+	 * @throws Exception
+	 */
+	@SuppressWarnings("unchecked")
+	public List<AreaCode> findAll() throws Exception {
+		return (List<AreaCode>) dao.findForList("AreaCodeMapper.findAll", "");
+	}
+
+	/**
+	 * 获取区县以上所有区划
+	 * 
+	 * @return
+	 * @throws Exception
+	 */
+	@SuppressWarnings("unchecked")
+	public List<AreaCode> findLevel2(String areaCode) throws Exception {
+		return (List<AreaCode>) dao.findForList("AreaCodeMapper.findLevel2", areaCode);
+	}
+
+	/**
+	 * 显示列表stree
+	 * 
+	 * @param parentId
+	 * @param lev
+	 * @return
+	 * @throws Exception
+	 */
+	public JSONArray listAreaCodeStree(String parentId, String lev) throws Exception {
+		// 所有部门的json数据,每次访问都必须是重新new出来的,不然每次访问数据会累加
+		// List<AreaCode> list = (List<AreaCode>)
+		// dao.findForList("AreaCodeMapper.findAll", "");
+		return this.listAllAreaCode(parentId, lev, new JSONArray());
+	}
+
+	/**
+	 * 获取部门的数据拼接成Stree数据(递归)
+	 * 
+	 * @param parentId
+	 * @param lev
+	 * @param departments
+	 * @return
+	 * @throws Exception
+	 */
+	public JSONArray listAllAreaCode(String parentId, String lev, JSONArray areas) throws Exception {
+		// String json = redisService.get(parentId);
+		// // JsonUtils.
+		// if (StringUtils.isEmpty(json)) {
+		// List<AreaCode> areaCodeList =
+		// this.listSubAreaCodeByParentId(parentId);
+		// // 放入缓存
+		// redisService.put(parentId, areaCodeList);
+		// } else {
+		//
+		// }
+		List<AreaCode> areaCodeList = this.listSubAreaCodeByParentId(parentId);
+		// List<AreaCode> areaCodeList = new ArrayList<AreaCode>();
+		// for (AreaCode areaCode : list) {
+		// if (areaCode.getParentId().equals(parentId)) {
+		// areaCodeList.add(areaCode);
+		// }
+		// }
+		if (areaCodeList != null) {
+			Map<Object, Object> map;
+			for (int i = 0; i < areaCodeList.size(); i++) {
+				map = new HashMap<>();
+				AreaCode department = areaCodeList.get(i);
+				if (lev == null) {
+					map.put("lev", i + 1 + "");
+				} else {
+					map.put("lev", lev + "-" + (i + 1));
+				}
+				map.put("id", department.getId());
+				map.put("name", department.getName());
+				map.put("spread", false);
+				map.put("areaCode", department.getAreaCode());
+				map.put("level", department.getLevel());
+				map.put("pid", department.getParentId());
+				map.put("children", this.listAllAreaCode(department.getId(), (String) map.get("lev"), new JSONArray()));
+				// 递归调用本方法获取所有的子code
+				areas.add(map);
+			}
+		}
+		return areas;
+	}
+
+	public List<AreaCode> findBySubId(String id) throws Exception {
+		return (List<AreaCode>) dao.findForList("AreaCodeMapper.findBySubId", id);
+	}
+
+	public List<AreaCode> findByIds(String id[]) throws Exception {
+		return (List<AreaCode>) dao.findForList("AreaCodeMapper.findByIds", id);
+	}
+
+	public PageData findByCode(String areaCode) throws Exception {
+		return (PageData) dao.findForObject("AreaCodeMapper.findByCode", areaCode);
+	}
+
+	public AreaCode findById(String id) throws Exception {
+		return (AreaCode) dao.findForObject("AreaCodeMapper.findById", id);
+	}
+
+	public String findByCodeName(String areaName) throws Exception {
+		return (String) dao.findForObject("AreaCodeMapper.findByName", areaName);
+	}
+
+	public List<AreaCode> findLevel3() throws Exception {
+		return (List<AreaCode>) dao.findForList("AreaCodeMapper.findLevel3", "");
+	}
+
+	public void save(PageData pd) throws Exception {
+		dao.save("AreaCodeMapper.save", pd);
+	}
+
+	public PageData getMaxId() throws Exception {
+		return (PageData) dao.findForObject("AreaCodeMapper.getMaxId", "");
+	}
+
+	public void updateName(PageData pd) throws Exception {
+		dao.findForObject("AreaCodeMapper.updateName", pd);
+	}
+
+	public List<PageData> getAreaByName(Page page) throws Exception {
+		return (List<PageData>) dao.findForList("AreaCodeMapper.getAreaByName", page);
+
+	}
+
+	public PageData getMaxAreaCode(PageData pd) throws Exception {
+
+		return (PageData) dao.findForObject("AreaCodeMapper.getMaxAreaCode", pd);
+	}
+
+	public List<PageData> getAreaByPinYin(String pinyin) throws Exception {
+		return (List<PageData>) dao.findForList("AreaCodeMapper.findByPinyin", pinyin);
+	}
+
+	public void edti(PageData pd) throws Exception {
+		dao.update("AreaCodeMapper.edit", pd);
+	}
+
+	public void updateMove(AreaCode mArea) throws Exception {
+		dao.update("AreaCodeMapper.updateMove", mArea);
+	}
+
+	// 根据上级的areaCode返回一个可用下级的areaCode
+	public String getAreaCode(String areaCode) {
+		PageData pd = new PageData();
+		String tmp = AreaCodeUtils.returnXzqh(areaCode);
+
+		pd.put("code", tmp);
+		if (tmp.length() == 9) {
+			// 获取村数据
+			pd.put("zreo", "");
+		} else if (tmp.length() == 6) {
+			// 获取街道数据
+			pd.put("zreo", "000");
+		} else if (tmp.length() == 4) {
+			// 获取区数据
+			pd.put("zreo", "000000");
+		}
+		// 查询最大的区划code
+		try {
+			pd = this.getMaxAreaCode(pd);
+			String maxCode = pd.getString("code");
+
+			if (maxCode.equals(areaCode)) {
+				tmp = AreaCodeUtils.returnXzqh(maxCode);
+				if (tmp.length() == 9) {
+					// 获取村数据
+					tmp = tmp + "001";
+				} else if (tmp.length() == 6) {
+					// 获取街道数据
+					tmp = tmp + "001" + "000";
+				}
+			} else {
+				tmp = AreaCodeUtils.returnXzqh(maxCode);
+				BigInteger i = new BigInteger(tmp);
+				i = i.add(new BigInteger("1"));
+				tmp = i + "";
+
+				// 还原areaCode
+				if (tmp.length() != 12) {
+					while (true) {
+						tmp = tmp + "0";
+						if (tmp.length() == 12) {
+							break;
+						}
+					}
+				}
+			}
+
+		} catch (Exception e) {
+			e.printStackTrace();
+		}
+
+		return tmp;
+	}
+
+}

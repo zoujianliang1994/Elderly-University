@@ -1,0 +1,203 @@
+﻿<%@ page language="java" contentType="text/html; charset=UTF-8" pageEncoding="UTF-8" %>
+<%
+    String path = request.getContextPath();
+    String basePath = request.getScheme() + "://" + request.getServerName() + ":" + request.getServerPort() + path + "/";
+%>
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <title>我的活动</title>
+    <%@ include file="../../system/index/headcss.jsp" %>
+</head>
+<body>
+<div class="layui-tab layui-tab-brief" lay-filter="docDemoTabBrief">
+    <ul class="layui-tab-title">
+        <li class="layui-this">发布的活动</li>
+        <li id="my_activity">我的活动</li>
+    </ul>
+    <div class="layui-tab-content tableBox">
+
+        <div class="operationBox">
+            <form action="list.do" class="layui-form" method="post" name="Form" id="Form">
+
+                <div class="searchBox fl">
+
+                    <select lay-filter='school_id' id="school_id" name="school_id" class="layui-input-inline">
+                        <option value="">请选择请假的学校</option>
+                        <c:forEach var="var" items="${schoolList}" varStatus="vs">
+                            <option value="${var.schoolId}" <c:if test="${var.schoolId==pd.school_id}"> selected="selected" </c:if> >
+                                    ${var.schoolName}
+                            </option>
+                        </c:forEach>
+                    </select>
+
+                </div>
+
+                <div class="searchBox fl marL-20">
+                    <select lay-filter='school_child_id' id="school_child_id" name="school_child_id"  class="layui-input-inline" >
+                        <option value="">请选择校区、教学点</option>
+                    </select>
+                </div>
+
+
+                <div class="searchBox fl marL-20">
+                    <input id="activityDate" name="keywords" type="text" value="" placeholder="请选择时间"  class="layui-input fl search layui-input-color">
+                </div>
+                <div class="searchBox fl marL-20">
+                    <input  name="keywords" type="text" value="" placeholder="请输入活动名称/荣誉名称" class="layui-input fl search layui-input-color">
+
+                </div>
+
+                <div class="fl srarchBtn" onclick="gsearch()">
+                    <i class="layui-icon">&#xe615;</i>
+                    <span>搜索</span>
+                </div>
+
+            </form>
+        </div>
+        <div class="layui-tab-item info layui-show">
+            <c:choose>
+                <c:when test="${not empty list}">
+                        <c:forEach items="${list}" var="var" varStatus="vs">
+                            <c:if test="${var.check_state == '0' or var.check_state == '3'}">
+                                <div class="activity-item">
+                                    <div class="item-left">
+                                        <div class="activity-name"><span>活动名称：</span>${var.name}   </div>
+                                        <div>发布者：${var.school_name}</div>
+                                        <div><span>活动时间：</span>${var.activity_start_time}~${var.activity_end_time}</div>
+                                        <div><span>活动地点：</span>${var.activity_location}</div>
+                                        <div><span>责 任 人：</span>${var.leader_name}</div>
+                                        <div><span>活动内容：</span>${var.content}  </div>
+                                        <div class="btnbox" style="margin: 0;position: absolute;right: 10px;bottom: 10px;">
+                                            <button onclick="apply('${var.id}')" class="layui-btn layui-btn-primary layui-btn-small go-join">我要报名</button>
+                                        </div>
+
+                                </div>
+                            </c:if>
+                        </c:forEach>
+                </c:when>
+            </c:choose>
+        </div>
+                <div class="laypageBox">
+                    <div id="laypage1" class="fr"></div>
+                </div>
+        </div>
+
+        <div class="layui-tab-item">
+            <c:choose>
+                <c:when test="${not empty list}">
+                    <c:forEach items="${list}" var="var" varStatus="vs1">
+                        <c:if test="${var.check_state == '1' or var.check_state == '2'}">
+                            <input hidden id="count2" value="${vs1.count}">
+                            <div class="activity-item">
+                            <div class="my-item-left">
+                                    <div class="activity-name">活动名称：${var.name}</div>
+                                    <div>所属学校：${var.school_name}</div>
+                                    <div>活动时间：${var.activity_start_time}~${var.activity_end_time}</div>
+                                    <div>活动地点：${var.activity_location}</div>
+                                    <div>责 任 人：${var.leader_name}</div>
+                                    <div>活动内容：${var.content}</div>
+                            </div>
+                        </div>
+
+                        </c:if>
+                    </c:forEach>
+                </c:when>
+                <c:otherwise>
+                    没有数据
+                </c:otherwise>
+            </c:choose>
+            <div class="laypageBox">
+                <div id="laypage2" class="fr"></div>
+            </div>
+        </div>
+
+    </div>
+</div>
+
+
+
+<%@ include file="../../system/index/foot.jsp" %>
+<script type="text/javascript">
+    layui.use('laypage', function () {
+        var laypage = layui.laypage;
+        var layer = layui.layer;
+        console.log($("#count2").val()),
+        //执行一个laypage实例
+        laypage.render({
+            elem: 'laypage1',
+            count: $("#count1").val(),
+            limit:4,
+            curr: ${page.currentPage},
+            layout: ['prev', 'page', 'next', 'count', 'skip'],
+            jump: function (obj, first) {
+                if (!first) {
+                    window.location.href = "<%=basePath%>lesson/list.do?&currentPage=" + obj.curr + '&keywords=' + '${pd.keywords}';
+                }
+            }
+        });
+        laypage.render({
+            elem: 'laypage2',
+            count: 0,
+            limit:4,
+            curr: ${page.currentPage},
+            layout: ['prev', 'page', 'next', 'count', 'skip'],
+            jump: function (obj, first) {
+                if (!first) {
+                    window.location.href = "<%=basePath%>lesson/list.do?&currentPage=" + obj.curr + '&keywords=' + '${pd.keywords}';
+                }
+            }
+        });
+    });
+
+    <%--var form = layui.form;--%>
+
+    <%--form.on('li(my_activity)', function (data) {--%>
+            <%--//根据学校查询分校及教学点--%>
+            <%--var url = "<%=basePath%>activityGroup/listByUser.do?id=" + data.value;--%>
+            <%--$.get(url, function (res) {--%>
+                <%--if(res.data){--%>
+                    <%--for(var i=0;i<res.data.length;i++){--%>
+                        <%--$("#school_child_id").append('<option class="childSchool" value="'+res.data[i].id+'">'+res.data[i].name+'</option>');--%>
+                    <%--}--%>
+                    <%--form.render('li');--%>
+                <%--}--%>
+            <%--});--%>
+    <%--});--%>
+
+
+
+    layui.use('laydate', function(){
+        var laydate = layui.laydate;
+
+        //执行一个laydate实例
+        laydate.render({
+            elem: '#activityDate' //指定元素
+        });
+    });
+
+    $("#keywords").keydown(function (e) {
+        var ev = e || window.event;
+        if (ev.keyCode == "13") {
+            gsearch();
+        }
+    });
+
+
+    //检索
+    function gsearch() {
+        $("#Form").submit();
+    }
+
+    function apply(id) {
+        parent.layer.open({
+            title: "报名",
+            type: 2,
+            content: '<%=basePath%>activityGroup/goApply.do?id=' + id,
+            area: ["800px", "430px"]
+        });
+    }
+
+</script>
+</body>
+</html>

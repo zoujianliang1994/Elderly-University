@@ -1,0 +1,279 @@
+package com.zhimu.controller.manager.system.permission;
+
+import java.util.ArrayList;
+import java.util.HashMap;
+import java.util.List;
+import java.util.Map;
+
+import javax.annotation.Resource;
+
+import org.springframework.stereotype.Controller;
+import org.springframework.ui.Model;
+import org.springframework.web.bind.annotation.RequestMapping;
+import org.springframework.web.bind.annotation.RequestParam;
+import org.springframework.web.bind.annotation.ResponseBody;
+import org.springframework.web.servlet.ModelAndView;
+
+import com.zhimu.commons.utils.AppUtil;
+import com.zhimu.commons.utils.DateUtil;
+import com.zhimu.commons.utils.ErrorUtils;
+import com.zhimu.commons.utils.PageData;
+import com.zhimu.controller.manager.base.BaseController;
+import com.zhimu.dao.entity.system.Page;
+import com.zhimu.dao.entity.system.RolePermission;
+import com.zhimu.service.manager.system.permission.PermissionManager;
+import com.zhimu.service.manager.system.role.RoleManager;
+
+/**
+ * 类名称：PermissionController 权限处理 创建人：lwc 创建时间：2017年07月10日
+ * 
+ * @version
+ */
+@Controller
+@RequestMapping(value = "/permission")
+public class PermissionController extends BaseController {
+
+	String menuUrl = "permission/list.do"; // 菜单地址(权限用)
+	@Resource(name = "permissionService")
+	private PermissionManager permissionService;
+	@Resource(name = "roleService")
+	private RoleManager roleService;
+
+	/**
+	 * 保存
+	 * 
+	 * @param
+	 * @throws Exception
+	 */
+	@RequestMapping(value = "/save")
+	@ResponseBody
+	public Object save() throws Exception {
+		Map<String, String> map = new HashMap<String, String>();
+		PageData pd = new PageData();
+		pd = this.getPageData();
+		String permission_id = this.get32UUID(); // 权限id
+		String msg = "";
+		try {
+			// pd.put("is_del", false);
+			pd.put("createTime", DateUtil.getTime());
+			pd.put("id", permission_id); // 主键
+			permissionService.save(pd);
+			msg = "success";
+		} catch (Exception e) {
+			msg = "false";
+			logger.error(ErrorUtils.getErrorMessage(e, "lwc:权限保存"));
+		}
+
+		// 权限保存成功后,自动将权限赋给系统角色
+		// giveRolePermission(permission_id);
+		map.put("msg", msg);
+		return AppUtil.returnObject(new PageData(), map);
+	}
+
+	/**
+	 * 权限保存成功后,自动将权限赋给系统角色
+	 * 
+	 * @param permission_id
+	 * @throws Exception
+	 */
+	private void giveRolePermission(String permission_id) throws Exception {
+		try {
+			// 获取所有的系统用户角色id
+			List<String> ids = roleService.findSysRoleId("1");
+			List<RolePermission> rolePermissionList = new ArrayList<RolePermission>();
+			RolePermission rolePermission;
+			Map<String, String> map = new HashMap<String, String>();
+			map.put("permission_id", permission_id);
+			roleService.deleteRolePermission(map);
+			for (String id : ids) {
+				rolePermission = new RolePermission();
+				rolePermission.setRole_id(id);// 系统角色id
+				rolePermission.setId(this.get32UUID());// id
+				rolePermission.setPermission_id(permission_id);// 权限id
+				rolePermission.setIs_select("1");// 已选中
+				rolePermissionList.add(rolePermission);
+			}
+			if (!rolePermissionList.isEmpty()) {
+				roleService.insertRolePermission(rolePermissionList);// 插入角色权限表
+			}
+		} catch (Exception e) {
+			logger.error(ErrorUtils.getErrorMessage(e, "lwc:自动赋予权限"));
+		}
+	}
+
+	/**
+	 * 删除
+	 * 
+	 * @param id
+	 * @throws Exception
+	 */
+	@RequestMapping(value = "/delete")
+	@ResponseBody
+	public Object delete(@RequestParam String id) throws Exception {
+		// if (!Jurisdiction.buttonJurisdiction(menuUrl, "del")) {
+		// return null;
+		// } // 校验权限
+		Map<String, String> map = new HashMap<String, String>();
+		PageData pd = new PageData();
+		try {
+			pd.put("id", id);
+			String errInfo = "success";
+			try {
+				permissionService.delete(pd); // 执行删除
+			} catch (Exception e) {
+				errInfo = "false";
+			}
+			map.put("result", errInfo);
+		} catch (Exception e) {
+			logger.error(ErrorUtils.getErrorMessage(e, "lwc:权限删除"));
+		}
+		return AppUtil.returnObject(new PageData(), map);
+	}
+
+	/**
+	 * 修改
+	 * 
+	 * @param
+	 * @throws Exception
+	 */
+	@RequestMapping(value = "/edit")
+	@ResponseBody
+	public Object edit() throws Exception {
+		// if (!Jurisdiction.buttonJurisdiction(menuUrl, "edit")) {
+		// return null;
+		// } // 校验权限
+
+		Map<String, String> map = new HashMap<String, String>();
+		ModelAndView mv = this.getModelAndView();
+		PageData pd = new PageData();
+		String msg = "";
+		pd = this.getPageData();
+		try {
+			permissionService.edit(pd);
+			msg = "success";
+			mv.setViewName("save_result");
+		} catch (Exception e) {
+			msg = "false";
+			logger.error(ErrorUtils.getErrorMessage(e, "lwc:权限修改"));
+		}
+		map.put("msg", msg);
+		return AppUtil.returnObject(new PageData(), map);
+	}
+
+	/**
+	 * 列表
+	 * 
+	 * @param page
+	 * @throws Exception
+	 */
+	@RequestMapping(value = "/list")
+	public ModelAndView list(Page page) throws Exception {
+		ModelAndView mv = this.getModelAndView();
+		PageData pd = new PageData();
+		pd = this.getPageData();
+		try {
+			String keywords = pd.getString("keywords"); // 检索条件
+			if (null != keywords && !"".equals(keywords)) {
+				mv.addObject("keywords", keywords);
+				pd.put("keywords", keywords.trim());
+			}
+			page.setPd(pd);
+			List<PageData> varList = permissionService.list(page); // 列出Permission列表
+			mv.setViewName("system/permission/permission_list");
+			mv.addObject("varList", varList);
+			// mv.addObject("QX",Jurisdiction.getHC()); //按钮权限
+		} catch (Exception e) {
+			logger.error(ErrorUtils.getErrorMessage(e, "lwc:权限列表"));
+		}
+		return mv;
+	}
+
+	/**
+	 * 显示列表ztree
+	 * 
+	 * @param model
+	 * @return
+	 */
+	@RequestMapping(value = "/listAllPermission")
+	public ModelAndView listAllDepartment(Model model) throws Exception {
+		ModelAndView mv = this.getModelAndView();
+		try {
+			mv.setViewName("system/permission/permission_list");
+		} catch (Exception e) {
+			logger.error(ErrorUtils.getErrorMessage(e, "lwc:权限ztree"));
+		}
+		return mv;
+	}
+
+	/**
+	 * 去新增页面
+	 * 
+	 * @param
+	 * @throws Exception
+	 */
+	@RequestMapping(value = "/goAdd")
+	public ModelAndView goAdd() throws Exception {
+		ModelAndView mv = this.getModelAndView();
+		PageData pd = new PageData();
+		pd = this.getPageData();
+
+		try {
+			mv.setViewName("system/permission/permission_edit");
+			mv.addObject("msg", "save");
+			mv.addObject("pd", pd);
+		} catch (Exception e) {
+			logger.error(ErrorUtils.getErrorMessage(e, "lwc:去权限新增页面"));
+		}
+		return mv;
+	}
+
+	/**
+	 * 去修改页面
+	 * 
+	 * @param
+	 * @throws Exception
+	 */
+	@RequestMapping(value = "/goEdit")
+	public ModelAndView goEdit() throws Exception {
+		ModelAndView mv = this.getModelAndView();
+		PageData pd = new PageData();
+		pd = this.getPageData();
+		try {
+			String id = pd.getString("id");
+			String currentPage = pd.getString("currentPage");
+			pd = permissionService.findById(pd);// 根据ID读取
+			pd.put("currentPage", currentPage);
+			mv.addObject("pd", pd); // 放入视图容器
+			pd.put("id", id); // 复原本ID
+			mv.setViewName("system/permission/permission_edit");
+			mv.addObject("msg", "edit");
+		} catch (Exception e) {
+			logger.error(ErrorUtils.getErrorMessage(e, "lwc:去权限修改页面"));
+		}
+		return mv;
+	}
+
+	/**
+	 * 判断标志是否存在
+	 * 
+	 * @return
+	 */
+	@RequestMapping(value = "/hasSign")
+	@ResponseBody
+	public Object hasSign() {
+		Map<String, String> map = new HashMap<String, String>();
+		String errInfo = "success";
+		PageData pd = new PageData();
+		try {
+			pd = this.getPageData();
+			if (permissionService.findBySign(pd) != null) {
+				errInfo = "error";
+			}
+		} catch (Exception e) {
+			logger.error(ErrorUtils.getErrorMessage(e, "lwc:判断权限sign事都存在"));
+		}
+		map.put("result", errInfo); // 返回结果
+		return AppUtil.returnObject(new PageData(), map);
+	}
+
+}

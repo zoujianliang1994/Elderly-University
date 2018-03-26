@@ -1,0 +1,31 @@
+package com.zhimu.dao.enums;
+
+/**
+ *   消息类型
+ * @author Weiyunchao
+ *
+ * 2017年7月18日下午1:44:04
+ */
+public enum MessageType {
+
+	/**
+	 * 站内信
+	 */
+	MAIL("mail"),
+	/**
+	 * 短信
+	 */
+	SHORT_MESSAGE("short_message");
+	
+	
+	private String value;
+
+	private MessageType(String value) {
+		this.value = value;
+	}
+	
+	@Override
+	public String toString() {
+		return value;
+	}
+}

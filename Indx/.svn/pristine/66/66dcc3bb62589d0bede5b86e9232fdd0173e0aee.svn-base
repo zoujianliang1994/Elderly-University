@@ -1,0 +1,154 @@
+package com.zhimu.dao.entity.system;
+
+import java.io.Serializable;
+import java.util.List;
+
+/**
+ * 机构
+ * 
+ * @author wangyong
+ * 
+ */
+public class Department implements Serializable {
+
+	/**
+	 * 
+	 */
+	private static final long serialVersionUID = 1L;
+	private String DEPARTMENT_ID;
+	private String NAME;
+	private String PARENT_ID;
+	private String JGJB;
+	private String JGXZ;
+	private String SZQY;
+	private String ADDRESS;
+	private String BZRS;
+	private String LDZS;
+
+	private String target;
+	private Department department;
+	private List<Department> subDepartment;
+	private boolean hasDepartment = false;
+	private String treeurl;
+	private String SZQY_CODE;
+
+	public String getSZQY_CODE() {
+		return SZQY_CODE;
+	}
+
+	public void setSZQY_CODE(String sZQY_CODE) {
+		SZQY_CODE = sZQY_CODE;
+	}
+
+	public String getDEPARTMENT_ID() {
+		return DEPARTMENT_ID;
+	}
+
+	public void setDEPARTMENT_ID(String DEPARTMENT_ID) {
+		this.DEPARTMENT_ID = DEPARTMENT_ID;
+	}
+
+	public String getNAME() {
+		return NAME;
+	}
+
+	public void setNAME(String NAME) {
+		this.NAME = NAME;
+	}
+
+	public String getPARENT_ID() {
+		return PARENT_ID;
+	}
+
+	public void setPARENT_ID(String PARENT_ID) {
+		this.PARENT_ID = PARENT_ID;
+	}
+
+	public String getJGJB() {
+		return JGJB;
+	}
+
+	public void setJGJB(String JGJB) {
+		this.JGJB = JGJB;
+	}
+
+	public String getJGXZ() {
+		return JGXZ;
+	}
+
+	public void setJGXZ(String JGXZ) {
+		this.JGXZ = JGXZ;
+	}
+
+	public String getSZQY() {
+		return SZQY;
+	}
+
+	public void setSZQY(String SZQY) {
+		this.SZQY = SZQY;
+	}
+
+	public String getADDRESS() {
+		return ADDRESS;
+	}
+
+	public void setADDRESS(String ADDRESS) {
+		this.ADDRESS = ADDRESS;
+	}
+
+	public String getBZRS() {
+		return BZRS;
+	}
+
+	public void setBZRS(String BZRS) {
+		this.BZRS = BZRS;
+	}
+
+	public String getLDZS() {
+		return LDZS;
+	}
+
+	public void setLDZS(String LDZS) {
+		this.LDZS = LDZS;
+	}
+
+	public String getTarget() {
+		return target;
+	}
+
+	public void setTarget(String target) {
+		this.target = target;
+	}
+
+	public Department getDepartment() {
+		return department;
+	}
+
+	public void setDepartment(Department department) {
+		this.department = department;
+	}
+
+	public List<Department> getSubDepartment() {
+		return subDepartment;
+	}
+
+	public void setSubDepartment(List<Department> subDepartment) {
+		this.subDepartment = subDepartment;
+	}
+
+	public boolean isHasDepartment() {
+		return hasDepartment;
+	}
+
+	public void setHasDepartment(boolean hasDepartment) {
+		this.hasDepartment = hasDepartment;
+	}
+
+	public String getTreeurl() {
+		return treeurl;
+	}
+
+	public void setTreeurl(String treeurl) {
+		this.treeurl = treeurl;
+	}
+}

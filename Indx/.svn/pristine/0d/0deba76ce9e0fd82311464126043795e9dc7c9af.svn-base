@@ -1,0 +1,108 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="PermissionMapper">
+	
+	
+	<!--表名 -->
+	<sql id="tableName">
+		SYS_PERMISSIONS
+	</sql>
+	
+	<!-- 字段 -->
+	<sql id="Field">
+		id,	
+		name,	
+		sign,	
+		createTime,
+		is_del	
+	</sql>
+	
+	<!-- 字段值 -->
+	<sql id="FieldValue">
+		#{id},	
+		#{name},	
+		#{sign},
+		#{createTime},	
+		#{is_del}
+	</sql>
+	
+	<!-- 新增权限 -->
+	<insert id="save" parameterType="pd" >
+		insert into <include refid="tableName"></include> (
+			<include refid="Field"></include>
+		) values (
+			<include refid="FieldValue"></include>
+		)
+	</insert>
+	
+	<!-- 删除角色  -->
+	<delete id="delete" parameterType="pd">
+		delete from 
+		<include refid="tableName"></include>
+		where id=#{id}
+	</delete>
+	
+	<!-- 通过ID获取数据 -->
+	<select id="findById" parameterType="pd" resultType="pd">
+		select 
+		<include refid="Field"></include>
+		from 
+		<include refid="tableName"></include>
+		where 
+			id = #{id}
+	</select>
+	
+	<!-- 修改 -->
+	<update id="edit" parameterType="pd">
+		update
+		<include refid="tableName"></include>
+		set 
+			name = #{name},
+			sign = #{sign},
+			is_del = #{is_del}
+		where 
+		id= #{id}
+	</update>
+	
+	<!-- 列表 -->
+	<select id="datalistPage" parameterType="page" resultType="pd">
+		select
+		<include refid="Field"></include>
+		from 
+		<include refid="tableName"></include>
+		where
+			1=1
+		<if test="pd.keywords != null and pd.keywords != ''"><!-- 关键词检索 -->
+			and 
+			(
+				name LIKE ('%'+#{pd.keywords}+'%') 
+				or sign LIKE ('%'+#{pd.keywords}+'%')
+			)
+		</if>
+		order by createTime
+	</select>
+	<!-- 根据角色查询角色对应的所有权限 -->
+	<select id="listAllPermissionByRoleId" parameterType="java.lang.String" resultType="com.zhimu.dao.entity.system.Permission">
+		select 
+			p.id,
+			p.name,
+			p.sign,
+			p.is_del,
+			p.createTime
+		from sys_permissions p 
+		inner join sys_role_permission rp
+		on rp.permission_id = p.id
+		where rp.role_id = #{ROLE_ID}
+	</select>
+	
+	<!-- 通过ID获取数据 -->
+	<select id="findBySign" parameterType="pd" resultType="pd">
+		select 
+		<include refid="Field"></include>
+		from 
+		<include refid="tableName"></include>
+		where 
+			sign = #{sign}
+	</select>
+	
+</mapper>

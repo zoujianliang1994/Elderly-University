@@ -1,0 +1,218 @@
+package com.zhimu.service.manager.edu.notice.impl;
+
+import com.zhimu.commons.constant.Const;
+import com.zhimu.commons.constant.NoticeConstant;
+import com.zhimu.commons.utils.PageData;
+import com.zhimu.commons.utils.UuidUtil;
+import com.zhimu.commons.websocket.SocketCache;
+import com.zhimu.dao.DaoSupport;
+import com.zhimu.dao.entity.message.Message;
+import com.zhimu.dao.entity.system.Page;
+import com.zhimu.dao.entity.system.User;
+import com.zhimu.dao.enums.MessageStatus;
+import com.zhimu.dao.enums.MessageType;
+import com.zhimu.dao.utils.Jurisdiction;
+import com.zhimu.service.manager.edu.notice.NoticeManager;
+import com.zhimu.service.manager.edu.school.SchoolService;
+import com.zhimu.service.manager.edu.student.StudentService;
+import com.zhimu.service.manager.edu.teacher.TeacherManager;
+import com.zhimu.service.manager.message.MessageManager;
+import com.zhimu.service.manager.message.impl.MessageService;
+import com.zhimu.service.manager.websocket.SocketIoManager;
+import org.apache.commons.lang.StringUtils;
+import org.apache.shiro.session.Session;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
+import org.springframework.stereotype.Service;
+import sun.print.PageableDoc;
+
+import javax.annotation.Resource;
+import java.util.ArrayList;
+import java.util.List;
+import java.util.UUID;
+import java.util.concurrent.ForkJoinPool;
+
+/**
+ *   通知公告接口实现
+ * @author liangwenchao
+ *
+ */
+@Service("noticeService")
+public class NoticeService implements NoticeManager{
+	
+	protected final Logger logger = LoggerFactory.getLogger(this.getClass());
+	
+	@Resource(name = "daoSupport")
+	private DaoSupport dao;
+	@Resource(name = "messageService")
+	private MessageService messageService;
+	@Resource(name = "schoolService")
+	private SchoolService schoolService;
+	@Resource(name = "studentService")
+	private StudentService studentService;
+	@Resource(name = "teacherService")
+	private TeacherManager teacherService;
+
+	@Override
+	public void saveMessage(Message message) throws Exception
+	{
+		if(null != message)
+		{
+			message.setCreateBy(Jurisdiction.getUsername());
+			message.setStatus(MessageStatus.NO_SEND.toString());
+			dao.save("NoticeMapper.save", message);//保存公告通知
+
+			// 发送消息推送
+			String id = message.getId();
+			String url = "notice/goEdit.do?msgId=" + id +"&TYPE=" + 1;
+			Message msg = new Message(url, message.getTitle(), message.getContent(), id,
+					"", "", message.getType(), MessageStatus.NO_SEND
+					.toString(), "", message.getPublishTime());
+			msg.setWorkType(MessageType.NOTICE.toString());
+
+			String target = message.getTarget();
+			if (StringUtils.isNotBlank(target)){
+
+				String personIds = message.getSelectId(); // 前台传过来的id
+				String[] personArr = null;
+				String schoolIds = this.getSchoolId(); // 获取当前用户所有学校id
+				PageData pageData = new PageData();
+				List<PageData> people = new ArrayList<>();
+
+				// 获取前台传过来的目标对象类型, 根据不同的类型获取相应的人员进项消息保存
+				if (target.equals(NoticeConstant.ALL_PEOPLE.getName())){ // 所有人
+					pageData.put("array",schoolIds.split(","));
+					pageData.put("sId",schoolIds);
+					people.addAll(studentService.findBySid(pageData)); // 所有学员
+					people.addAll(teacherService.findBySchools(pageData)); // 所有老师
+				}else if(target.equals(NoticeConstant.ALL_TEACHER.getName())){ // 所有老师
+					people.addAll(teacherService.findBySchools(pageData));
+				}else if(target.equals(NoticeConstant.ALL_STUDENT.getName())){ // 所有学员
+					people.addAll(studentService.findBySid(pageData));
+				}else if(target.equals(NoticeConstant.CAMPUS.getName())){ // 校区
+					if (StringUtils.isNotBlank(personIds)){
+						pageData.put("array",personIds.split(","));
+						pageData.put("sId",personIds);
+						people.addAll(studentService.findBySid(pageData)); // 所有学员
+						people.addAll(teacherService.findBySchools(pageData)); // 所有老师
+					}
+
+				}else if(target.equals(NoticeConstant.CLASS_AND_GRADE.getName())){ // 班级
+					if (StringUtils.isNotBlank(personIds)){
+						people.addAll(studentService.findByCid(personIds)); // 班上的同学
+					}
+				}else{ // 人员
+					if (StringUtils.isNotBlank(personIds)){
+						personArr = personIds.split(",");
+						for (int i = 0; i <personArr.length ; i++) {
+							msg.setId(UuidUtil.get32UUID());
+							msg.setUserId(personArr[i]);
+							messageService.sendMessage(msg); // 发送推送消息
+						}
+					}
+				}
+				if(!people.isEmpty()){
+					for (PageData pagedata : people) {
+						msg.setId(UuidUtil.get32UUID());
+						msg.setUserId(pagedata.getString("id"));
+						messageService.sendMessage(msg); // 发送推送消息
+					}
+				}
+			}
+		}
+	}
+
+	/**
+	 * 获取用户所有学校id
+	 * @return
+	 * @throws Exception
+	 */
+	public String getSchoolId() throws Exception {
+		PageData pageData = new PageData();
+		List<PageData> schools = new ArrayList<>();
+		// 获取到当前登录用户所属的学校
+		Session session = Jurisdiction.getSession();
+		User user = (User) session.getAttribute(Const.SESSION_USER);
+		pageData.put("array", user.getSchoolId().split(","));
+		List<PageData> school = schoolService.findByIdArr(pageData);
+		schools.addAll(school);
+
+		for (PageData pd: school) {
+			String type = pd.getString("type");
+			// 如果学校类型为空则寻找它的分校区
+			if (type.isEmpty()) {
+				List<PageData> subSchools = schoolService.listSubSchools(pd.getString("id"));
+				schools.addAll(subSchools);
+			}
+		}
+		String schoolIds = "";
+		for (int i = 0; i < schools.size(); i++) {
+			if (i == schools.size()-1){
+				schoolIds += schools.get(i).getString("id");
+			}else {
+				schoolIds += schools.get(i).getString("id")+",";
+			}
+		}
+		return schoolIds;
+	}
+	/**
+	 *   更新消息状态 为已读 （已处理）
+	 * @param pd
+	 * @throws Exception
+	 */
+	public void updateStatus(PageData pd) throws Exception {
+		dao.update("NoticeMapper.update", pd);
+	}
+	
+	@Override
+	public Message findById(String id) throws Exception 
+	{
+		return (Message) dao.findForObject("NoticeMapper.findById", id);
+	}
+	@SuppressWarnings("unchecked")
+	@Override
+	public List<PageData> findByUserId(PageData pd) throws Exception
+	{
+		return (List<PageData>) dao.findForList("NoticeMapper.findByUserId", pd);
+	}
+	@SuppressWarnings("unchecked")
+	@Override
+	public List<Message> listAll(Message message) throws Exception
+	{
+		return (List<Message>) dao.findForList("NoticeMapper.listAll", message);
+	}
+
+	/**
+	 * 查询个人公告列表
+	 *
+	 * @param page
+	 * @return
+	 * @throws Exception
+	 */
+	@Override
+	public List<PageData> listPageByUser(Page page) throws Exception {
+		return (List<PageData>)dao.findForList("NoticeMapper.listPageByUser", page);
+	}
+
+	/**
+	 * 根据id删除消息
+	 *
+	 * @param id
+	 * @throws Exception
+	 */
+	@Override
+	public void delete(String id) throws Exception {
+		dao.delete("NoticeMapper.delete", id);
+	}
+
+	/**
+	 * 修改消息
+	 *
+	 * @param message
+	 * @throws Exception
+	 */
+	@Override
+	public void edit(Message message) throws Exception {
+		dao.update("NoticeMapper.updateMess", message);
+	}
+}

@@ -1,0 +1,298 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="GradesMapper">
+	
+	<!--表名 -->
+	<sql id="tableName">
+		edu_grades
+	</sql>
+	
+	<!-- 字段 -->
+	<sql id="Field">
+		id,
+		name,
+		class_size,
+		sex_woman_number,
+		sex_man_number,
+		lesson_id,
+		lesson_periods,
+		teacher_id,
+		teacher_name,
+		class_time,
+		tuition,
+		details,
+		headmaster_name,
+		headmaster_phone,
+		school_id,
+		classroom_type,
+		createTime,
+		teacher_wages
+
+	</sql>
+	
+	<!-- 字段值 -->
+	<sql id="FieldValue">
+		#{id},
+		#{name},
+		#{class_size},
+		#{sex_woman_number},
+		#{sex_man_number},
+		#{lesson_id},
+		#{lesson_periods},
+		#{teacher_id},
+		#{teacher_name},
+		#{class_time},
+		#{tuition},
+		#{details},
+		#{headmaster_name},
+		#{headmaster_phone},
+		#{school_id},
+		#{classroom_type},
+		getdate(),
+		teacher_wages
+
+	</sql>
+	
+	<!-- 新增-->
+	<insert id="save" parameterType="pd">
+		insert into 
+	<include refid="tableName"></include>
+		(
+	<include refid="Field"></include>
+		) values (
+	<include refid="FieldValue"></include>
+		)
+	</insert>
+
+	<update id="deleteById" parameterType="String">
+		UPDATE <include refid="tableName"></include> set is_del =0 WHERE id = #{id}
+	</update>
+	
+	<!-- 修改 -->
+	<update id="edit" parameterType="pd">
+		update
+		<include refid="tableName"></include>
+		set
+		name=#{name},
+		class_size=#{class_size},
+		sex_woman_number=#{sex_woman_number},
+		sex_man_number=#{sex_man_number},
+		lesson_id=#{lesson_id},
+		lesson_periods=#{lesson_periods},
+		teacher_id=#{teacher_id},
+		teacher_name=#{teacher_name},
+		class_time=#{class_time},
+		tuition=#{tuition},
+		details=#{details},
+		headmaster_name=#{headmaster_name},
+		headmaster_phone=#{headmaster_phone},
+		classroom_type=#{classroom_type},
+		teacher_wages=#{teacher_wages}
+		where
+			id = #{id}
+	</update>
+	
+	<!-- 通过ID获取数据 -->
+	<select id="findById" parameterType="pd" resultType="pd">
+		select 
+		<include refid="Field"></include>
+		from
+		<include refid="tableName"></include>
+		where
+			id = #{id}
+	</select>
+	
+	<!-- 列表 -->
+	<select id="gradeslistPage" parameterType="page" resultType="pd">
+		select
+		g.id,
+		g.name,
+		g.class_size,
+		g.sex_woman_number,
+		g.sex_man_number,
+		g.lesson_id,
+		g.lesson_periods,
+		g.teacher_id,
+		g.teacher_name,
+		g.class_time,
+		g.tuition,
+		g.details,
+		g.headmaster_name,
+		g.headmaster_phone,
+		g.school_id,
+		g.createTime,
+		teacher_wages,
+		l.name lesson_name,
+		(SELECT COUNT(*) from edu_student where c_id LIKE '%'+g.id+'%') as studentNum
+		from 
+		<include refid="tableName"></include> as g
+		INNER JOIN edu_lesson l on l.id=g.lesson_id
+		where
+		g.is_del = 1
+		and g.school_id in
+		<foreach item="item" index="index" collection="pd.userSchoolIds" open="(" separator="," close=")">
+			'${item}'
+		</foreach>
+		<if test="pd.keywords != null and pd.keywords != ''"><!-- 关键词检索 -->
+			and
+				(
+				l.name LIKE ('%'+#{pd.keywords}+'%')
+				 or
+				g.name LIKE ('%'+#{pd.keywords}+'%')
+				)
+		</if>
+	</select>
+
+	<!-- 班级详细列表 -->
+	<select id="gradesDetaillistPage" parameterType="page" resultType="pd">
+		select
+		g.id,
+		g.name as g_name,
+		g.teacher_id,
+		g.teacher_name,
+		g.tuition,
+		g.school_id,
+		g.createTime,
+		g.classroom_type,
+		s.name as s_name,
+		c.classroom_name c_name,
+		(SELECT COUNT(*) from edu_student where c_id LIKE '%'+g.id+'%') as studentNum,
+		CONCAT ('周',case d.week when 1 then '一' when 2 then '二'  when 3 then '三' when 4 then '四' when 5 then '五' when 6  then '六' else '日' end,case d.period when 1 then '上午 ' else '下午 ' end ,left(d.start_time,5),'-',left(d.end_time,5)) as sksj,
+		case when (SELECT COUNT(*) from edu_student where c_id LIKE '%'+g.id+'%')>=g.class_size then '已满' else (case when #{pd.sex}='1' and (SELECT COUNT(*) from edu_student where xb='1' and c_id LIKE '%'+g.id+'%')>=sex_woman_number then '已满'  when #{pd.sex}='1' and (SELECT COUNT(*) from edu_student where xb='2' and c_id LIKE '%'+g.id+'%')>=sex_man_number then '已满' else '未满'  end) end as zt
+		from 
+		<include refid="tableName"></include> as g
+		INNER JOIN edu_schedule_details d on d.grades_id=g.id
+		INNER JOIN edu_school s on s.id=g.school_id 
+		INNER JOIN edu_classroom c on d.classroom_id=c.id
+		where
+		g.is_del = 1
+		and g.school_id in
+		<foreach item="item" index="index" collection="pd.userSchoolIds" open="(" separator="," close=")">
+			'${item}'
+		</foreach>
+		<if test="pd.keywords != null and pd.keywords != ''"><!-- 关键词检索 -->
+			and
+				(
+				g.name LIKE ('%'+#{pd.keywords}+'%')
+					or
+				g.teacher_name  LIKE ('%'+#{pd.keywords}+'%')
+					or
+				g.school_id=#{pd.keywords}
+				)
+		</if>
+	</select>
+	
+
+	<!-- 列表 -->
+	<select id="getUserLesson" parameterType="page" resultType="pd">
+		SELECT
+		l.id,
+		l.name,
+		l.qs,
+		s.name AS school_name
+
+		FROM
+		dbo.edu_lesson AS l
+		INNER JOIN dbo.edu_school AS s ON l.school_id = s.id
+		WHERE
+		l.school_id in
+		<foreach item="item" index="index" collection="userSchoolIds" open="(" separator="," close=")">
+			'${item}'
+		</foreach>
+	</select>
+
+
+	<!-- 列表 -->
+	<select id="getUserTeacher" parameterType="page" resultType="pd">
+		SELECT
+			id,
+			name,
+			school_id
+		FROM
+		edu_teacher
+		WHERE
+		school_id in
+		<foreach item="item" index="index" collection="userSchoolIds" open="(" separator="," close=")">
+			'${item}'
+		</foreach>
+	</select>
+
+	<!-- 列表 -->
+	<select id="isCheak" parameterType="pd" resultType="pd">
+		SELECT
+		MAX(classroom_size) classSize
+		FROM
+		edu_classroom
+		WHERE
+		school_id = #{school_id} and classroom_type =#{classroom_type}
+	</select>
+
+	<!--根据学校id数据查找所有班级_lwc-->
+	<select id="findBySchools" parameterType="pd" resultType="pd">
+		SELECT
+		eg.id,
+		eg.name,
+		eg.class_size,
+		eg.sex_woman_number,
+		eg.sex_man_number,
+		eg.lesson_id,
+		eg.lesson_periods,
+		eg.teacher_id,
+		eg.teacher_name,
+		eg.class_time,
+		eg.tuition,
+		eg.details,
+		eg.headmaster_name,
+		eg.headmaster_phone,
+		eg.school_id,
+		eg.classroom_type,
+		eg.createTime,
+		eg.teacher_wages,el.name AS lesson_name
+		FROM
+			<include refid="tableName"></include> eg INNER JOIN edu_lesson el
+		ON eg.lesson_id = el.id
+		WHERE
+			eg.school_id
+		IN
+			<foreach collection="array" separator="," open="(" close=")" item="schoolId">
+				#{schoolId}
+			</foreach>
+			<if test="keywords != null and keywords != ''"><!-- 关键词检索 -->
+				and
+				(
+				eg.name LIKE ('%'+#{keywords}+'%')
+				or
+				el.name LIKE ('%'+#{keywords}+'%')
+				)
+			</if>
+		ORDER BY
+			eg.school_id
+	</select>
+
+	<!--根据班级id集合查找所有老师_lwc-->
+	<select id="findTeacherByIds" resultType="pd">
+		SELECT
+			teacher_id,
+			teacher_name
+		FROM
+			<include refid="tableName"></include>
+		WHERE
+			id
+		IN
+			<foreach collection="list" separator="," open="(" close=")" item="gradeId">
+				#{gradeId}
+			</foreach>
+	</select>
+
+	<!-- 通过ID获取数据 -->
+	<select id="findObjectBySchoolId" parameterType="String" resultType="pd">
+		select
+		<include refid="Field"></include>
+		from
+		<include refid="tableName"></include>
+		where
+		school_id = #{schoolId}
+	</select>
+
+	<!--  -->
+</mapper>

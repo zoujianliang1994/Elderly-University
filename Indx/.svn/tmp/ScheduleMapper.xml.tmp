@@ -1,0 +1,182 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="ScheduleMapper">
+	
+	<!--表名 -->
+	<sql id="tableName">
+		edu_schedule
+	</sql>
+	
+	<!-- 字段 -->
+	<sql id="Field">
+		id,
+		semester_id,
+		recess_time,
+		siesta_time,
+		create_time,
+		semester_name,
+		school_id
+
+
+	</sql>
+	
+	<!-- 字段值 -->
+	<sql id="FieldValue">
+		#{id},
+		#{semester_id},
+		#{recess_time},
+		#{siesta_time},
+		getdate(),
+		#{semester_name},
+		#{school_id}
+
+	</sql>
+	
+	<!-- 新增-->
+	<insert id="save" parameterType="pd">
+		insert into 
+	<include refid="tableName"></include>
+		(
+	<include refid="Field"></include>
+		) values (
+	<include refid="FieldValue"></include>
+		)
+	</insert>
+
+	<update id="deleteById" parameterType="String">
+		UPDATE <include refid="tableName"></include> set is_del =0 WHERE id = #{id}
+	</update>
+	
+	<!-- 修改 -->
+	<update id="edit" parameterType="pd">
+		update
+		<include refid="tableName"></include>
+		set
+		classroom_name=#{classroom_name},
+		classroom_size=#{classroom_size},
+		classroom_address=#{classroom_address},
+		classroom_type=#{classroom_type},
+		classroom_describe=#{classroom_describe},
+		school_id=#{school_id}
+		where 
+			id = #{id}
+	</update>
+	
+	<!-- 通过ID获取数据 -->
+	<select id="findById" parameterType="pd" resultType="pd">
+		select 
+		<include refid="Field"></include>
+		from 
+		<include refid="tableName"></include>
+		where 
+			id = #{id}
+	</select>
+	
+	<!-- 列表 -->
+	<select id="schedulelistPage" parameterType="page" resultType="pd">
+		select
+		sc.id,
+		sc.semester_id,
+		sc.recess_time,
+		sc.siesta_time,
+		sc.create_time,
+		sc.semester_name,
+		sc.school_id,
+		s.name school_name
+
+		from
+
+		<include refid="tableName"></include> as sc
+		INNER JOIN edu_school s ON sc.school_id = s.id
+		where
+		1=1
+		and sc.school_id in
+		<foreach item="item" index="index" collection="pd.userSchoolIds" open="(" separator="," close=")">
+			'${item}'
+		</foreach>
+		<if test="pd.keywords != null and pd.keywords != ''"><!-- 关键词检索 -->
+			and
+				(
+				sc.semester_name LIKE ('%'+#{pd.keywords}+'%')
+				 or
+				s.school_name LIKE ('%'+#{pd.keywords}+'%')
+				)
+		</if>
+	</select>
+
+
+	<!-- 列表 -->
+	<select id="getAllSemesterBySchool" resultType="pd">
+
+		SELECT id,name from edu_semester where s_id in
+
+		<foreach collection="array" item="sid" index="index"
+				 open="(" close=")" separator=",">
+			#{sid}
+		</foreach>
+	</select>
+
+	<!-- 列表 -->
+	<select id="getScheduleBySemesterId" parameterType="String" resultType="pd">
+
+		select
+		<include refid="Field"></include>
+		from
+		<include refid="tableName"></include>
+		where
+		semester_id = #{semester_id}
+	</select>
+
+
+<<<<<<< .mine
+	<!-- 列表 -->
+	<select id="getDetailsByid" parameterType="pd" resultType="pd">
+
+		SELECT
+		sd.schedule_id,
+		sd.grades_id,
+		sd.classroom_id,
+		sd.week,
+		sd.period,
+		sd.start_time,
+		sd.end_time,
+		sd.id,
+		c.classroom_name,
+		g.name grades_name,
+		g.teacher_name,
+		g.tuition,
+		g.class_time
+
+		FROM
+		dbo.edu_schedule_details AS sd
+		INNER JOIN dbo.edu_grades AS g ON sd.grades_id = g.name
+		INNER JOIN dbo.edu_classroom AS c ON sd.classroom_id = c.id
+
+		where sd.schedule_id =  #{id}
+	</select>
+
+
+=======
+
+	<!-- 根据学期id和班级id数组查到对应的课程表数据-lwc -->
+	<select id="findByGIdAndSId" parameterType="pd" resultType="pd">
+		select
+			esd.grades_id,
+			esd.week,
+			esd.start_time,
+			esd.end_time
+		from
+			edu_schedule es
+		INNER JOIN edu_schedule_details esd
+			ON (es.id = esd.schedule_id)
+		where
+			es.semester_id = #{semester_id}
+		and esd.grades_id in
+		<foreach collection="gIdArr" item="gId" index="index" open="(" separator="," close=")">
+			#{gId}
+		</foreach>
+	</select>
+
+>>>>>>> .r187
+	<!--  -->
+</mapper>

@@ -1,0 +1,412 @@
+﻿<%@ page language="java" contentType="text/html; charset=UTF-8" pageEncoding="UTF-8" %>
+<%
+    String path = request.getContextPath();
+    String basePath = request.getScheme() + "://" + request.getServerName() + ":" + request.getServerPort() + path + "/";
+%>
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <title>学员报名</title>
+    <%@ include file="../../system/index/headcss.jsp" %>
+</head>
+<body>
+
+<div class="tableBox">
+    <div class="operationBox">
+
+        <form action="list.do" method="post" class="layui-form" name="Form" id="Form">
+            <div class="searchBox fl ">
+                <input id="keywords" name="keywords" type="text" value="${pd.keywords}" placeholder="请输入您想选择的班级名称" class="layui-input fl search">
+
+                <div class="fl srarchBtn" onclick="gsearch()">
+                    <i class="layui-icon">&#xe615;</i>
+                    <span>搜索</span>
+                </div>
+            </div>
+        </form>
+
+    </div>
+
+    <!-- form -->
+    <form class="layui-col-sm12">
+        <p class="class-info-title">选择报名班级</p>
+        <ul class="select">
+            <li class="select-result">
+                <dl>
+                    <dt>已选条件：</dt>
+                    <dd class="select-no">暂时没有选择过滤条件</dd>
+                </dl>
+            </li>
+        </ul>
+        <div class="layui-form" style="padding: 20px 30px;">
+            <div class="layui-inline">
+                <div class="layui-input-block">
+                    <input readonly="readonly" type="hidden" name="school_name" id="school_name" value="${pd.school_name}" />
+                    <select lay-filter='school_id' id="school_id" name="school_id"  class="layui-input-inline" lay-search>
+                        <option value="">请选择学校</option>
+                        <option value="1">成都老年大学</option>
+                        <option value="2">高新老年大学</option>
+                        <option value="3">重庆老年大学</option>
+                        <%--<c:forEach var="var" items="${schoolList}" varStatus="vs">--%>
+                        <%--<option value="${var.schoolId}" <c:if test="${var.schoolId==pd.school_id}"> selected="selected" </c:if> >${var.schoolName}</option>--%>
+                        <%--</c:forEach>--%>
+                    </select>
+                </div>
+            </div>
+            <div class="layui-inline">
+                <div class="layui-input-block">
+                    <input readonly="readonly" type="hidden" name="school_name" id="campus_name" value="${pd.school_name}" />
+                    <select lay-filter='campus_id' id="campus_id" name="campus_id"  class="layui-input-inline"  >
+                        <option value="">请选择校区</option>
+                        <c:forEach var="var" items="${schoolList}" varStatus="vs">
+                            <option value="${var.schoolId}" <c:if test="${var.schoolId==pd.school_id}"> selected="selected" </c:if> >${var.schoolName}</option>
+                        </c:forEach>
+                    </select>
+                </div>
+            </div>
+            <div class="layui-inline">
+                <div class="layui-input-block">
+                    <input readonly="readonly" type="hidden" name="school_name" id="teacher_name" value="${pd.school_name}" />
+                    <select lay-filter='teacher_id' id="teacher_id" name="teacher_id"  class="layui-input-inline"  >
+                        <option value="">请选择教师</option>
+                        <c:forEach var="var" items="${schoolList}" varStatus="vs">
+                            <option value="${var.schoolId}" <c:if test="${var.schoolId==pd.school_id}"> selected="selected" </c:if> >${var.schoolName}</option>
+                        </c:forEach>
+                    </select>
+                </div>
+            </div>
+            <div class="layui-inline">
+                <div class="layui-input-block">
+                    <input readonly="readonly" type="hidden" name="school_name" id="special_name" value="${pd.school_name}" />
+                    <select lay-filter='special_id' id="special_id" name="special_id"  class="layui-input-inline"  >
+                        <option value="">请选择系/专业</option>
+                        <c:forEach var="var" items="${schoolList}" varStatus="vs">
+                            <option value="${var.schoolId}" <c:if test="${var.schoolId==pd.school_id}"> selected="selected" </c:if> >${var.schoolName}</option>
+                        </c:forEach>
+                    </select>
+                </div>
+            </div>
+            <div class="layui-inline">
+                <div class="layui-input-block">
+                    <input readonly="readonly" type="hidden" name="school_name" id="course_name" value="${pd.school_name}" />
+                    <select lay-filter='course_id' id="course_id" name="course_id"  class="layui-input-inline"  >
+                        <option value="">请选择课程</option>
+                        <c:forEach var="var" items="${schoolList}" varStatus="vs">
+                            <option value="${var.schoolId}" <c:if test="${var.schoolId==pd.school_id}"> selected="selected" </c:if> >${var.schoolName}</option>
+                        </c:forEach>
+                    </select>
+                </div>
+            </div>
+
+            <div class="layui-inline">
+                <div class="layui-input-block">
+                    <input readonly="readonly" type="hidden" name="school_name" id="time_name" value="${pd.school_name}" />
+                    <select lay-filter='time_id' id="time_id" name="time_id"  class="layui-input-inline"  >
+                        <option value="">请选择上课时间</option>
+                        <c:forEach var="var" items="${schoolList}" varStatus="vs">
+                            <option value="${var.schoolId}" <c:if test="${var.schoolId==pd.school_id}"> selected="selected" </c:if> >${var.schoolName}</option>
+                        </c:forEach>
+                    </select>
+                </div>
+            </div>
+        </div>
+        <p class="class-info-title">
+            筛选结果
+        </p>
+        <div class="layui-col-sm12">
+            <table class="layui-table center" lay-skin="line" id="table">
+                <colgroup>
+                    <col>
+                    <col>
+                    <col>
+                    <col>
+                    <col>
+                    <col>
+                    <col>
+                    <col>
+                </colgroup>
+                <thead>
+                <tr class="table-head-tr">
+                    <th>班级名称</th>
+                    <th>上课时间</th>
+                    <th>任课老师</th>
+                    <th>人数（人）</th>
+                    <th>学费（元）</th>
+                    <th>操作</th>
+                </tr>
+                </thead>
+                <tbody>
+                <c:choose>
+                    <c:when test="${not empty varList}">
+
+                        <shiro:hasPermission name="edu:school:select">
+                            <c:forEach items="${varList}" var="var" varStatus="vs">
+                                <tr>
+                                    <td>${var.name}</td>
+                                    <td><c:if test="${var.type == 1 }">主校区</c:if>
+                                        <c:if test="${var.type == 2 }">分校区</c:if>
+                                        <c:if test="${var.type == 3 }">教学点</c:if>
+                                    </td>
+                                    <td>${var.location}</td>
+                                    <td>${var.contact}</td>
+                                    <td>${var.tel}</td>
+                                    <td style="text-align: center;">
+                                            <%--这两个选项按钮只能有一个--%>
+                                        <shiro:hasPermission name="edu:school:detail">
+                                            <a class="table-btn-max chakan-btn edit" onclick="edit('${var.id}','1');" >
+                                                    <%--<i class="iconfont icon-chakan"title="查看"></i>--%>
+                                                选择该课程
+                                            </a>
+                                        </shiro:hasPermission>
+
+                                        <shiro:hasPermission name="edu:school:detail">
+                                            <a class="table-btn-max chakan-btn edit" onclick="edit('${var.id}','1');" style="color: #999999;">
+                                                    <%--<i class="iconfont icon-chakan"title="查看"></i>--%>
+                                                已选择该课程
+                                            </a>
+                                        </shiro:hasPermission>
+
+                                    </td>
+                                </tr>
+                            </c:forEach>
+                        </shiro:hasPermission>
+                        <shiro:lacksPermission name="edu:school:select">
+                            <tr>
+                                <td colspan="100" class="center">您无权查看</td>
+                            </tr>
+                        </shiro:lacksPermission>
+                    </c:when>
+                    <c:otherwise>
+                        <tr class="main_info">
+                            <td colspan="100" class="center">没有相关数据</td>
+                        </tr>
+                    </c:otherwise>
+                </c:choose>
+                </tbody>
+            </table>
+
+            <div class="laypageBox">
+                <div id="laypage" class="fr"></div>
+            </div>
+        </div>
+        <p class="class-info-title">
+            您已选择的班级
+        </p>
+        <div class="layui-col-sm12">
+            <table class="layui-table center" lay-skin="line" id="selected_table">
+                <colgroup>
+                    <col>
+                    <col>
+                    <col>
+                    <col>
+                    <col>
+                    <col>
+                    <col>
+                    <col>
+                </colgroup>
+                <thead>
+                <tr class="table-head-tr">
+                    <th>班级名称</th>
+                    <th>上课时间</th>
+                    <th>任课老师</th>
+                    <th>人数（人）</th>
+                    <th>学费（元）</th>
+                    <th>操作</th>
+                </tr>
+                </thead>
+                <tbody>
+                <c:choose>
+                    <c:when test="${not empty varList}">
+
+                        <shiro:hasPermission name="edu:school:select">
+                            <c:forEach items="${varList}" var="var" varStatus="vs">
+                                <tr>
+                                    <td>${var.name}</td>
+                                    <td><c:if test="${var.type == 1 }">主校区</c:if>
+                                        <c:if test="${var.type == 2 }">分校区</c:if>
+                                        <c:if test="${var.type == 3 }">教学点</c:if>
+                                    </td>
+                                    <td>${var.location}</td>
+                                    <td>${var.contact}</td>
+                                    <td>${var.tel}</td>
+                                    <td style="text-align: center;">
+                                            <%--这两个选项按钮只能有一个--%>
+                                        <shiro:hasPermission name="edu:school:detail">
+                                            <a class="table-btn chakan-btn edit" onclick="edit('${var.id}','1');" >
+                                                    <%--<i class="iconfont icon-chakan"title="查看"></i>--%>
+                                                选择该课程
+                                            </a>
+                                        </shiro:hasPermission>
+
+                                        <shiro:hasPermission name="edu:school:detail">
+                                            <a class="table-btn chakan-btn edit" onclick="edit('${var.id}','1');" style="color: #999999;">
+                                                    <%--<i class="iconfont icon-chakan"title="查看"></i>--%>
+                                                已选择该课程
+                                            </a>
+                                        </shiro:hasPermission>
+
+                                    </td>
+                                </tr>
+                            </c:forEach>
+                        </shiro:hasPermission>
+                        <shiro:lacksPermission name="edu:school:select">
+                            <tr>
+                                <td colspan="100" class="center">您无权查看</td>
+                            </tr>
+                        </shiro:lacksPermission>
+                    </c:when>
+                    <c:otherwise>
+                        <tr class="main_info">
+                            <td colspan="100" class="center">没有相关数据</td>
+                        </tr>
+                    </c:otherwise>
+                </c:choose>
+                </tbody>
+            </table>
+
+        </div>
+        <div class="btnbox" id="btnDiv" >
+            <button id="sure" class="layui-btn layui-btn-primary layui-btn-small" style="width: 9rem;">保存班级</button>
+        </div>
+    </form>
+</div>
+
+
+<%@ include file="../../system/index/foot.jsp" %>
+<script type="text/javascript">
+
+    $(document).ready(function(){
+        var form=layui.form
+        form.on('select(school_id)', function(){
+            var copyThisA = $(this).clone();
+            if(!copyThisA.hasClass("layui-select-tips")){
+                console.log(11)
+                if ($("#selectA").length > 0) {
+                    $("#selectA").html($(this).context.innerHTML);
+                } else {
+                    $(".select-result dl").append(copyThisA.attr("id", "selectA").attr("class", "select"));
+                }
+            }
+
+            isShow()
+        });
+
+        form.on('select(campus_id)', function(){
+            var copyThisA = $(this).clone();
+            if(!copyThisA.hasClass("layui-select-tips")) {
+                console.log($("#selectB").length)
+                if ($("#selectB").length > 0) {
+                    $("#selectB").html($(this).context.innerHTML);
+                } else {
+                    $(".select-result dl").append(copyThisA.attr("id", "selectB").attr("class", "select"));
+                }
+            }
+            isShow()
+        });
+
+        form.on('select(teacher_id)', function(){
+            var copyThisA = $(this).clone();
+            if(!copyThisA.hasClass("layui-select-tips")) {
+                console.log($("#selectC").length)
+                if ($("#selectC").length > 0) {
+                    $("#selectC").html($(this).context.innerHTML);
+                } else {
+                    $(".select-result dl").append(copyThisA.attr("id", "selectC").attr("class", "select"));
+                }
+            }
+            isShow()
+        });
+
+        form.on('select(special_id)', function(){
+            var copyThisA = $(this).clone();
+            if(!copyThisA.hasClass("layui-select-tips")) {
+                console.log($("#selectD").length)
+                if ($("#selectD").length > 0) {
+                    $("#selectD").html($(this).context.innerHTML);
+                } else {
+                    $(".select-result dl").append(copyThisA.attr("id", "selectD").attr("class", "select"));
+                }
+            }
+            isShow()
+        });
+
+        form.on('select(course_id)', function(){
+            var copyThisA = $(this).clone();
+            if(!copyThisA.hasClass("layui-select-tips")) {
+                console.log($("#selectE").length)
+                if ($("#selectE").length > 0) {
+                    $("#selectE").html($(this).context.innerHTML);
+                } else {
+                    $(".select-result dl").append(copyThisA.attr("id", "selectE").attr("class", "select"));
+                }
+            }
+            isShow()
+        });
+
+        form.on('select(time_id)', function(){
+            var copyThisA = $(this).clone();
+            if(!copyThisA.hasClass("layui-select-tips")) {
+                console.log($("#selectF").length)
+                if ($("#selectF").length > 0) {
+                    $("#selectF").html($(this).context.innerHTML);
+                } else {
+                    $(".select-result dl").append(copyThisA.attr("id", "selectF").attr("class", "select"));
+                }
+            }
+            isShow()
+        });
+
+        $("#selectA").live("click", function () {
+            $(this).remove();
+            $('#school_id').next().find('.layui-select-tips').click();
+            isShow()
+        });
+
+        $("#selectB").live("click", function () {
+            $(this).remove();
+            $("#campus_id").next().find('.layui-select-tips').click();
+            isShow()
+        });
+        $("#selectC").live("click", function () {
+            $(this).remove();
+            $("#teacher_id").next().find('.layui-select-tips').click();
+            isShow()
+        });
+
+        $("#selectD").live("click", function () {
+            $(this).remove();
+            $("#special_id").next().find('.layui-select-tips').click();
+            isShow()
+        });
+        $("#selectE").live("click", function () {
+            $(this).remove();
+            $("#course_id").next().find('.layui-select-tips').click();
+            isShow()
+        });
+        $("#selectF").live("click", function () {
+            $(this).remove();
+            $("#time_id").next().find('.layui-select-tips').click();
+            isShow()
+        });
+
+        function isShow(){
+            if ($(".select-result dd").length > 1) {
+                $(".select-no").hide();
+            } else {
+                $(".select-no").show();
+            }
+        };
+
+    });
+
+
+
+
+
+
+
+
+
+</script>
+</body>
+</html>

@@ -1,0 +1,112 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="teacherLessonMapper">
+
+    <!-- 分页列表 -->
+    <select id="dataList" parameterType="pd" resultType="pd">
+         SELECT b.week,
+                b.period,
+                a.name kc_name,
+                b.start_time,
+                b.end_time,
+                c.name shcool_name,
+                d.classroom_name
+           FROM edu_grades a,
+                edu_schedule_details b,
+                edu_school c,
+                edu_classroom d
+          WHERE a.id = b.grades_id
+            AND a.school_id = c.id
+            AND b.classroom_id = d.id
+            AND a.teacher_id = #{teacher_id}
+          <if test="keywords != null and keywords != ''">
+            AND ( a.name LIKE ('%'+#{keywords}+'%') )
+          </if>
+          <if test="school_id != null and school_id != ''">
+            AND a.school_id = #{school_id}
+          </if>
+          <if test="week != null and week != ''">
+            AND b.week = #{week}
+          </if>
+          <if test="moreWeek != null and moreWeek != ''">
+            AND b.week in <foreach item="item" index="index" collection="weeks" open="(" separator="," close=")">
+                             '${item}'
+                          </foreach>
+          </if>
+          <if test="period != null and period != ''">
+            AND b.period = #{period}
+          </if>
+          <if test="school_id != null and school_id != ''">
+            AND a.school_id = #{school_id}
+          </if>
+          ORDER BY b.week,
+                   b.period,
+                   b.start_time
+    </select>
+
+    <!-- 通过ID获取学期数据 -->
+    <select id="findBySemester" parameterType="pd" resultType="pd">
+        SELECT MAX (x.semester_start) semester_start,
+	           MAX (x.semester_end) semester_end,
+	           MAX (teacher_id) teacher_id
+          FROM ( SELECT a.semester_start,
+			            a.semester_end,
+			            '' AS teacher_id
+		           FROM edu_semester a,edu_schedule b
+		          WHERE a.id = b.semester_id
+		            AND b.id = #{schedule_id}
+		          UNION
+			     SELECT '' AS semester_start,
+				        '' AS semester_end,
+				        a.teacher_id
+			       FROM edu_grades a
+			      WHERE a.id = #{grades_id}
+	           ) x
+    </select>
+
+    <!-- 查询老师周一到周五的排课情况-->
+    <select id="selectQkList" parameterType="pd" resultType="pd">
+        SELECT b.id schedule_detail_id,
+               b.grades_id grades_id,
+               b.week,
+               b.start_time,
+               b.end_time,
+               a.name kc_name,
+               a.teacher_wages wages
+          FROM edu_grades a,
+               edu_schedule_details b
+         WHERE a.id = b.grades_id
+           AND a.teacher_id = #{teacher_id}
+           AND b.week = #{week}
+           AND b.id = #{schedule_detail_id}
+         ORDER BY b.week
+    </select>
+
+    <!--批量写入老师正常当月排课明细 -->
+    <insert id="addQkBatch" parameterType="java.util.List">
+        insert into edu_teacher_normal (
+                    id,
+                    teacher_id,
+                    grades_id,
+                    schedule_detail_id,
+                    qk_time,
+                    week,
+                    kc_name,
+                    wages,
+                    dy_month,
+                    qj_zt)
+             values <foreach collection="list" item="item" index="index" separator="," >(
+                    #{item.id},
+                    #{item.teacher_id},
+                    #{item.grades_id},
+                    #{item.schedule_detail_id},
+                    #{item.qk_time},
+                    #{item.week},
+                    #{item.kc_name},
+                    #{item.wages},
+                    #{item.dy_month},
+                    #{item.qj_zt})
+                    </foreach>
+    </insert>
+
+</mapper>

@@ -1,0 +1,258 @@
+<!doctype html>
+<html>
+<head>
+<meta charset="utf-8">
+<title>聊天室__</title>
+<link rel="shortcut icon" href="favicon.png">
+<link rel="icon" href="favicon.png" type="image/x-icon">
+<link type="text/css" rel="stylesheet" href="css/style.css">
+<script src="js/moment.min.js"></script>
+<script type="text/javascript" src="js/socket.io/socket.io.js"></script>
+<script type="text/javascript" src="js/jquery.min.js"></script>
+</head>
+
+<body>
+<div class="chatbox">
+  <div class="chat_top fn-clear">
+    <div class="logo"><img src="images/logo.png" width="190" height="60"  alt=""/></div>
+    <div class="uinfo fn-clear">
+      <div class="uface"><img src="images/hetu.jpg" width="40" height="40"  alt=""/></div>
+      <div class="uname">
+        河图<i class="fontico down"></i>
+        <ul class="managerbox">
+          <li><a href="#"><i class="fontico lock"></i>修改密码</a></li>
+          <li><a href="#"><i class="fontico logout"></i>退出登录</a></li>
+        </ul>
+      </div>
+    </div>
+  </div>
+  <div class="chat_message fn-clear">
+    <div class="chat_left">
+      <div class="message_box" id="message_box">
+        <div class="msg_item fn-clear">
+          <div class="uface"><img src="images/53f44283a4347.jpg" width="40" height="40"  alt=""/></div>
+          <div class="item_right">
+            <div class="msg">近日，TIOBE发布了2014年9月的编程语言排行榜，Java、C++跌至历史最低点，前三名则没有变化，依旧是C、Java、Objective-C。</div>
+            <div class="name_time">猫猫 · 3分钟前</div>
+          </div>
+        </div>
+        
+        <div class="msg_item fn-clear">
+          <div class="uface"><img src="images/53f442834079a.jpg" width="40" height="40"  alt=""/></div>
+          <div class="item_right">
+            <div class="msg">(Visual) FoxPro, 4th Dimension/4D, Alice, APL, Arc, Automator, Awk, Bash, bc, Bourne shell, C++CLI, CFML, cg, CL (OS/400), Clean, Clojure, Emacs Lisp, Factor, Forth, Hack, Icon, Inform, Io, Ioke, J, JScript.NET, LabVIEW, LiveCode, M4, Magic, Max/MSP, Modula-2, Moto, NATURAL, OCaml, OpenCL, Oz, PILOT, Programming Without Coding Technology, Prolog, Pure Data, Q, RPG (OS/400), S, Smalltalk, SPARK, Standard ML, TOM, VBScript, Z shell</div>
+            <div class="name_time">白猫 · 1分钟前</div>
+          </div>
+        </div>
+        
+        <div class="msg_item fn-clear">
+          <div class="uface"><img src="images/hetu.jpg" width="40" height="40"  alt=""/></div>
+          <div class="item_right">
+            <div class="msg own">那个统计表也不能说明一切</div>
+            <div class="name_time">河图 · 30秒前</div>
+          </div>
+        </div>
+      </div>
+      <div class="write_box">
+        <textarea id="message" name="message" class="write_area" placeholder="说点啥吧..." style="resize:none"></textarea>
+        <input type="hidden" name="fromname" id="fromname" value="河图" />
+        <input type="hidden" name="to_uid" id="to_uid" value="0">
+        <div class="facebox fn-clear">
+          <div class="m-menu">
+<!-- 	            <a class="smile" href="javascript:;" title="插入表情" onclick=""></a>
+ -->	           <!--  <label class="upimg" href="javascript:;" title="上传图片" for="imginput"> -->
+	                <input id=file-field type="file" accept="image/*" onchange="">
+	            </label>
+<!-- 	            <a class="clear" href="javascript:;" title="清空聊天记录" onclick=""></a>
+ -->	            <button name="" class="sub_but">发 送</button>
+          </div>
+        </div>
+      </div>
+    </div>
+    <div class="chat_right">
+      <ul class="user_list" title="双击用户私聊">
+        <li class="fn-clear selected"><em>所有用户</em></li>
+        <li class="fn-clear" data-id="1"><span><img src="images/hetu.jpg" width="30" height="30"  alt=""/></span><em>河图</em><small class="online" title="在线"></small></li>
+        <li class="fn-clear" data-id="2"><span><img src="images/53f44283a4347.jpg" width="30" height="30"  alt=""/></span><em>猫猫</em><small class="online" title="在线"></small></li>
+        <li class="fn-clear" data-id="3"><span><img src="images/53f442834079a.jpg" width="30" height="30"  alt=""/></span><em>白猫</em><small class="offline" title="离线"></small></li>
+      </ul>
+    </div>
+  </div>
+</div>
+<script type="text/javascript">
+//模拟客户端
+var clientid="test_client_02";
+var targetClientId= 'test_client_01'; 
+
+//连接服务器
+var socket =  io.connect('http://172.32.2.150:9092?clientid='+clientid);
+
+socket.on('connect', function() {
+	alert('socketio client connected');
+});
+
+//接收服务器消息数据
+socket.on('messageEvent', function(data) {
+	displayMsg(data);
+});
+//监听断开连接
+socket.on('disconnect', function() {
+	alert("The client has disconnected!");
+});
+
+$(document).ready(function(e) {
+	$('#message_box').scrollTop($("#message_box")[0].scrollHeight + 20);
+	$('.uname').hover(
+	    function(){
+		    $('.managerbox').stop(true, true).slideDown(100);
+	    },
+		function(){
+		    $('.managerbox').stop(true, true).slideUp(100);
+		}
+	);
+	
+	var fromname = $('#fromname').val();
+	var to_uid   = 0; // 默认为0,表示发送给所有用户
+	var to_uname = '';
+	$('.user_list > li').dblclick(function(){
+		to_uname = $(this).find('em').text();
+		to_uid   = $(this).attr('data-id');
+		if(to_uname == fromname){
+		    alert('您不能和自己聊天!');
+			return false;
+		}
+		if(to_uname == '所有用户'){
+		    $("#toname").val('');
+			$('#chat_type').text('群聊');
+		}else{
+		    $("#toname").val(to_uid);
+			$('#chat_type').text('您正和 ' + to_uname + ' 聊天');
+		}
+		$(this).addClass('selected').siblings().removeClass('selected');
+	    $('#message').focus().attr("placeholder", "您对"+to_uname+"说：");
+	});
+	
+	$('.sub_but').click(function(event){
+	    sendMessage(event, fromname, to_uid, to_uname);
+	});
+	
+	/*按下按钮或键盘按键*/
+	$("#message").keydown(function(event){
+		var e = window.event || event;
+        var k = e.keyCode || e.which || e.charCode;
+		//按下ctrl+enter发送消息
+		if((event.ctrlKey && (k == 13 || k == 10) )){
+			sendMessage(event, fromname, to_uid, to_uname);
+		}
+	});
+	//监听附件按钮
+    var fileInput = $('#file-field');
+    
+    fileInput.bind({
+     	 change: function() {
+     		sendFiles(this.files);
+     	 }
+    });
+});
+//发送附件信息
+function sendFiles(files) {
+	//var msgType="";
+    $.each(files, function(i, file) {   
+	      var reader = new FileReader();
+		 ///*  if (file.type.match(/image.*/)) {
+			//  msgType="imgs";
+	     // }else{
+	    	//  msgType="files";
+	      //} */
+		  var sendData={sourceClientId: clientid, 
+	          targetClientId: targetClientId, 
+	          msgType: file.type.match(/image.*/)?"imgs":"files", 
+	          msgBroadcastType:'0',
+	          fileName:file.name,
+	          fileSuffix:file.type
+	       };
+	      reader.onload = function(e) {
+				 // socket.emit('recieveImgs', e.target.result);
+				  sendData.fileData=e.target.result;
+				  socket.emit('chatevent', sendData);
+	      };
+	      //二进制
+	     // reader.readAsBinaryString(file);
+	      reader.readAsArrayBuffer(file);
+	     // reader.readAsDataURL(file);
+	     if (!FileReader.prototype.readAsBinaryString) {
+			    FileReader.prototype.readAsBinaryString = function (fileData) {
+			       var binary = "";
+			       var pt = this;
+			       var reader = new FileReader();      
+			       reader.onload = function (e) {
+			           var bytes = new Uint8Array(reader.result);
+			           var length = bytes.byteLength;
+			           for (var i = 0; i < length; i++) {
+			               binary += String.fromCharCode(bytes[i]);
+			           }
+			        //pt.result  - readonly so assign binary
+			        pt.content = binary;
+			        $(pt).trigger('onload');
+			    }
+			    reader.readAsArrayBuffer(fileData);
+		    }
+		}
+    });
+}
+//发送文本消息
+function sendMessage(event, from_name, to_uid, to_uname){
+	 var message = $('#message').val();
+     $('#message').val('');
+     socket.emit('chatevent',{sourceClientId: clientid, 
+          targetClientId: targetClientId, 
+          msgType: 'chat', 
+          msgBroadcastType:'0',
+          msgContent: message}
+      ); 
+}
+
+//显示消息数据
+function displayMsg(data){
+	var msg = $("#message").val();
+	var currentTime = "<span class='time'>" +  moment().format('HH:mm:ss') + "</span>";
+	var htmlData= '<div class="msg_item fn-clear">'
+        + '   <div class="uface"><img src="images/hetu.jpg" width="40" height="40"  alt=""/></div>'
+	       + '   <div class="item_right">';
+	if(data.msgType=="chat"){
+		       htmlData+= '     <div class="msg own">' + data.msgContent + '</div>'
+		       + '     <div class="name_time">  '+currentTime+ '</div>'
+		       + '   </div>'
+		       + '</div>';
+	}else{
+		var arrayBuffer = new Uint8Array(data.fileData).buffer;
+        var blob        = new Blob([arrayBuffer],{type:data.fileSuffix});
+  		var objecturl=window.URL.createObjectURL(blob);
+		if(data.msgType=="imgs"){
+			       htmlData+=  '     <div class="msg own"><img src="' + objecturl + '" width="80%" height="80%" /></div>'
+			       + '     <div class="name_time">  '+currentTime+ '</div>'
+			       + '   </div>'
+			       + '</div>';
+		}else{
+	 		 htmlData+=  '     <div class="msg own"><a  href="' + objecturl + '"  >'+data.fileName+'</a></div>'
+	 		       + '     <div class="name_time">  '+currentTime+ '</div>'
+	 		       + '   </div>'
+	 		       + '</div>';
+		}
+	}
+
+	$("#message_box").append(htmlData);
+  	$('#message_box').scrollTop($("#message_box")[0].scrollHeight + 20);
+  	$("#message").val(''); 	
+}
+function dataURLtoBlob(dataurl) {
+	  var arr = dataurl.split(','), mime = arr[0].match(/:(.*?);/)[1],
+	    bstr = atob(arr[1]), n = bstr.length, u8arr = new Uint8Array(n);
+	  while(n--){
+	    u8arr[n] = bstr.charCodeAt(n);
+	  }
+	  return new Blob([u8arr], {type:mime});
+}
+</script>
+</body>
+</html>

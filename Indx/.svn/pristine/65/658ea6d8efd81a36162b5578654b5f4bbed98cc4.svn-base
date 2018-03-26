@@ -1,0 +1,78 @@
+package com.zhimu.service.manager.message;
+
+import java.util.List;
+
+import com.zhimu.commons.utils.PageData;
+import com.zhimu.dao.entity.message.Message;
+import com.zhimu.dao.entity.system.Page;
+
+/**
+ *   推送消息接口类
+ * @author Weiyunchao
+ *
+ * 2017年7月20日下午2:45:46
+ */
+public interface MessageManager {
+	
+	/**
+	 *   保存推送消息
+	 * @param message
+	 * @return
+	 */
+	public void sendMessage(Message message) throws Exception;
+	/**
+	 *   保存并发送多用户信息
+	 * @param message
+	 * @return
+	 */
+	public void sendMoreMessage(Message message) throws Exception;
+	/**
+	 *    根据消息ID查询
+	 * @param id
+	 * @return
+	 */
+	public Message findById(String id) throws Exception;
+	/**
+	 *   根据消息的用户ID查询
+	 * @param pd
+	 * @return
+	 */
+	public List<PageData> findByUserId(PageData pd) throws Exception;
+
+	/**
+	 *  查询个人公告列表
+	 * @param page
+	 * @return
+	 * @throws Exception
+	 */
+	public List<PageData> listPageByUser(Page page) throws  Exception;
+
+	/**
+	 *  查询个人公告通知列表
+	 * @param page
+	 * @return
+	 * @throws Exception
+	 */
+	public List<PageData> listAllMessage(Page page) throws  Exception;
+	/**
+	 *   查询所有消息列表
+	 * @param message
+	 * @return
+	 */
+	public List<Message> listAll(Message message) throws Exception;
+
+	/**
+	 * 根据id删除消息
+	 * @param id
+	 * @throws Exception
+	 */
+	public void delete(String id) throws Exception;
+
+	/**
+	 * 修改消息
+	 * @param message
+	 * @throws Exception
+	 */
+	public void edit(Message message) throws Exception;
+}
+

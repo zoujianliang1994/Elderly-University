@@ -1,0 +1,206 @@
+/**
+ * 学校资质管理
+ * @author wangyong
+ */
+package com.zhimu.service.manager.edu.school;
+
+import java.util.List;
+
+import javax.annotation.Resource;
+
+import org.springframework.stereotype.Service;
+
+import com.zhimu.commons.utils.DateUtil;
+import com.zhimu.commons.utils.PageData;
+import com.zhimu.commons.utils.PropertyUtils;
+import com.zhimu.commons.utils.UuidUtil;
+import com.zhimu.commons.utils.mail.SimpleMailSender;
+import com.zhimu.dao.DaoSupport;
+import com.zhimu.dao.entity.school.SchoolAptitude;
+import com.zhimu.dao.entity.system.Page;
+import com.zhimu.dao.enums.AuditStatus;
+import com.zhimu.service.manager.system.user.impl.UserService;
+
+@Service("schoolAptitudeService")
+public class SchoolAptitudeService {
+
+	@Resource(name = "daoSupport")
+	private DaoSupport dao;
+	@Resource(name = "userService")
+	private UserService userService;
+	@Resource(name = "schoolService")
+	private SchoolService schoolService;
+
+	/**
+	 * 平台内新增
+	 * 
+	 * @param pd
+	 * @throws Exception
+	 */
+	public PageData save(SchoolAptitude schoolAptitude) throws Exception {
+		// 创建学校信息
+		PageData result = new PageData();
+		String sId = UuidUtil.get32UUID();
+		PageData schoolPd = new PageData();
+		schoolPd.put("id", sId);
+		schoolPd.put("name", schoolAptitude.getName());
+		schoolPd.put("type", "1");
+		schoolPd.put("location", schoolAptitude.getAddress());
+		schoolPd.put("contact", schoolAptitude.getContanct_name());
+		schoolPd.put("tel", schoolAptitude.getContanct_phone());
+		schoolPd.put("description", "");
+		schoolPd.put("createTime", DateUtil.getDay());
+		schoolPd.put("createName", "");
+		schoolPd.put("createId", schoolAptitude.getCreate_id());
+		schoolPd.put("status", "1");
+		schoolPd.put("pid", "");
+		schoolService.save(schoolPd);
+		// 设置关联
+		schoolAptitude.setS_id(sId);
+		if ("1".equals(schoolAptitude.getrType())) {
+			// 平台录入，不需要审核
+			// 初始化学校管理员账号信息
+			PageData pd = new PageData();
+			pd.put("sName", schoolAptitude.getName());
+			pd.put("NAME", schoolAptitude.getName());
+			pd.put("pwdStrategy", "1");
+			pd.put("SCHOOL_ID", sId);
+			pd.put("SCHOOL_NAME", schoolAptitude.getName());
+			pd.put("TYPE", "2");// 标记为学校管理员
+			pd.put("ROLE_ID", PropertyUtils.getValue("MANAGER_ROLE_ID"));// 默认平台管理员角色
+			result = this.userService.initeAccount(pd);
+			schoolAptitude.setCreate_id(result.getString("userId"));
+			dao.save("SchoolAptitudeMapper.save", schoolAptitude);
+			pd.put("title", "系统通知");
+			pd.put("content", "恭喜你，学校资质已通过平台审核。学校管理员平台登录账号：" + result.getString("userName") + "  密码：" + result.getString("password"));
+			pd.put("toAddress", schoolAptitude.getEmail());
+			// 发送邮件通知
+			SimpleMailSender.sendMessageToSchool(pd);
+		} else {
+			dao.save("SchoolAptitudeMapper.save", schoolAptitude);
+		}
+		return result;
+	}
+
+	/**
+	 * 删除
+	 * 
+	 * @param pd
+	 * @throws Exception
+	 */
+	public void delete(PageData pd) throws Exception {
+		dao.delete("SchoolAptitudeMapper.delete", pd);
+	}
+
+	/**
+	 * 修改
+	 * 
+	 * @param pd
+	 * @throws Exception
+	 */
+	public void edit(SchoolAptitude schoolAptitude) throws Exception {
+		dao.update("SchoolAptitudeMapper.edit", schoolAptitude);
+	}
+
+	/**
+	 * 审核
+	 * 
+	 * @param pd
+	 * @throws Exception
+	 */
+	public PageData audit(PageData pd) throws Exception {
+		// 审核结果
+		String result = pd.getString("result");
+		// 审核原因
+		String options = pd.getString("options");
+		// 查询学校资质信息
+		pd = (PageData) dao.findForObject("SchoolAptitudeMapper.findById", pd);
+		pd.put("title", "系统通知");
+		if (AuditStatus.PASS.toString().equals(result)) {// 审核通过
+			pd.put("status", "1");
+			// 生成注册学校管理员账号
+			pd.put("ROLE_ID", PropertyUtils.getValue("MANAGER_ROLE_ID"));// 默认平台管理员角色
+			pd.put("NAME", pd.getString("name"));
+			pd.put("sName", pd.getString("name"));
+			pd.put("pwdStrategy", "1");
+			pd.put("SCHOOL_ID", pd.getString("s_id"));
+			pd.put("SCHOOL_NAME", pd.getString("name"));
+			pd.put("TYPE", "2");// 标记为学校管理员
+			PageData resultPd = this.userService.initeAccount(pd);
+			// 创建学校信息
+			// PageData schoolPd = new PageData();
+			// schoolPd.put("id", UuidUtil.get32UUID());
+			// schoolPd.put("name", pd.getString("name"));
+			// schoolPd.put("type", "1");
+			// schoolPd.put("location", pd.getString("address"));
+			// schoolPd.put("contact", pd.getString("contanct_name"));
+			// schoolPd.put("tel", pd.getString("contanct_phone"));
+			// schoolPd.put("description", "");
+			// schoolPd.put("createTime", DateUtil.getDay());
+			// schoolPd.put("createName", "");
+			// schoolPd.put("createId", resultPd.getString("userId"));
+			// schoolPd.put("status", "1");
+			// schoolPd.put("pid", "");
+			// schoolService.save(schoolPd);
+			pd.put("create_id", resultPd.getString("userId"));
+			pd.put("content", "恭喜你，学校资质已通过平台审核。学校管理员平台登录账号：" + resultPd.getString("userName") + "  密码：" + resultPd.getString("password") + "  平台地址：");
+		} else if (AuditStatus.NOT.toString().equals(result)) {
+			pd.put("status", "2");
+			pd.put("content", "很遗憾，学校资质未通过平台审核，具体原因如下：" + options);
+		}
+		pd.put("toAddress", pd.getString("email"));
+		// 更新审核状态
+		pd.put("options", options);
+		dao.update("SchoolAptitudeMapper.editStatus", pd);
+		// 发送邮件通知
+		SimpleMailSender.sendMessageToSchool(pd);
+		// 更新学校创建者
+		pd.put("id", pd.getString("s_id"));
+		pd.put("createId", pd.getString("create_id"));
+		dao.update("SchoolMapper.editAuThor", pd);
+		return pd;
+	}
+
+	/**
+	 * 列表
+	 * 
+	 * @param page
+	 * @throws Exception
+	 */
+	@SuppressWarnings("unchecked")
+	public List<PageData> list(Page page) throws Exception {
+		return (List<PageData>) dao.findForList("SchoolAptitudeMapper.datalistPage", page);
+	}
+
+	/**
+	 * 通过id获取数据
+	 * 
+	 * @param pd
+	 * @throws Exception
+	 */
+	public PageData findById(PageData pd) throws Exception {
+		return (PageData) dao.findForObject("SchoolAptitudeMapper.findById", pd);
+	}
+
+	/**
+	 * 通过学校id获取数据
+	 * 
+	 * @param pd
+	 * @throws Exception
+	 */
+	public PageData findBySid(PageData pd) throws Exception {
+		return (PageData) dao.findForObject("SchoolAptitudeMapper.findBySid", pd);
+	}
+
+	/**
+	 * 通过创建人id和学校类型获取数据
+	 * 
+	 * @param pd
+	 * @throws Exception
+	 */
+	@SuppressWarnings("unchecked")
+	public List<PageData> findByCid(PageData pd) throws Exception {
+		return (List<PageData>) dao.findForList("SchoolAptitudeMapper.findByCid", pd);
+	}
+
+}

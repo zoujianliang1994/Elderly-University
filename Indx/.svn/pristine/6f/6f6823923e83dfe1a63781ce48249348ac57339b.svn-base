@@ -1,0 +1,15 @@
+package com.zhimu.service.manager.edu.activity;
+
+import com.zhimu.commons.utils.PageData;
+import com.zhimu.dao.entity.system.Page;
+
+import java.util.List;
+
+/**
+ * 活动管理服务层_lwc
+ */
+public interface ActivityManager {
+
+	public List<PageData> listPage(Page pd) throws Exception;
+
+}

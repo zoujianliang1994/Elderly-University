@@ -1,0 +1,197 @@
+<%@ page language="java" contentType="text/html; charset=UTF-8" pageEncoding="UTF-8"%>
+
+<%
+	String path = request.getContextPath();
+	String basePath = request.getScheme() + "://" + request.getServerName() + ":" + request.getServerPort() + path + "/";
+%>
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<base href="<%=basePath%>">
+<!-- jsp文件头和头部 -->
+	<%@ include file="../../system/index/headcss.jsp"%>
+
+    <style>
+		.imgBox{
+			position:relative;
+		}
+		#imgfile{
+			position:absolute;
+			z-index: -1;
+			top: 0px;
+			left:0
+		}
+		.layui-upload-drag{
+			background-size:cover;
+		}
+
+	</style>
+</head>
+<body >
+<div class="edit_menu" class="disnone">
+
+	<form action="schedule/${msg}.do" class="layui-form"  name="form1" id="form1" >
+		<input type="hidden" name="id" id="id" value="${pd.id}" />
+		<c:if test="${msg eq 'add'}">
+		<div class="layui-form-item">
+			<div class="layui-row">
+
+				<div class="form-item-inline">
+					<label class="form-label title-max" style="width: 100px"><span>所属校区</span><span>/教学点</span></label>
+					<div class="layui-input-block school_id">
+						<select lay-filter='school_id' id="school_id" name="school_id"  class="layui-input-inline"  >
+							<option value="">请选择</option>
+							<c:forEach var="var" items="${schoolList}" varStatus="vs">
+								<option value="${var.schoolId}" <c:if test="${var.schoolId==pd.school_id}"> selected="selected" </c:if> >${var.schoolName}</option>
+							</c:forEach>
+						</select>
+					</div>
+				</div>
+
+
+				<div class="form-item-inline">
+					<label class="form-label"><span class="red-star">*</span>学期</label>
+					<div class="layui-input-block semester_id">
+						<input readonly="readonly" type="hidden" name="semester_name" id="semester_name" value="${pd.semester_name}" />
+						<select lay-filter='semester_id' id="semester_id" name="semester_id"  class="layui-input-inline"  >
+							<option value="">请选择</option>
+							<c:forEach var="var" items="${semesterList}" varStatus="vs">
+								<option value="${var.id}" <c:if test="${var.id==pd.semester_id}"> selected="selected" </c:if>  >${var.name}</option>
+							</c:forEach>
+						</select>
+
+					</div>
+				</div>
+			</div>
+		</div>
+
+		</c:if>
+		<div class="layui-form-item">
+			<div class="layui-row">
+
+				<div class="form-item-inline">
+					<label class="form-label title-max" style="width: 90px"><span><span class="red-star">*</span>课间休息</span><span>时间</span> </label>
+					<div class="layui-input-block">
+						<input name="recess_time" id="recess_time" value="${pd.recess_time}" type="number" class="layui-input layui-input-color">
+					</div>
+				</div>
+
+				<div class="form-item-inline">
+					<label class="form-label"><span class="red-star">*</span>午休时间</label>
+					<div class="layui-input-block">
+						<input name="siesta_time" id="siesta_time" value="${pd.siesta_time}" type="number"	class="layui-input layui-input-color">
+					</div>
+				</div>
+
+			</div>
+		</div>
+
+
+
+
+	</form>
+
+	<div class="btnbox" >
+		<c:if test="${pd.type=='0'}">
+			<button id="sure" class="layui-btn layui-btn-primary layui-btn-small">保存</button>
+		</c:if>
+		<button id="cancel" class="layui-btn layui-btn-primary layui-btn-small">取消</button>
+	</div>
+</div>
+
+
+	<!-- 页面底部js¨ -->
+	<%@ include file="../../system/index/foot.jsp"%>
+	<!--提示框-->
+	<script type="text/javascript">
+
+
+        var form = layui.form;
+
+        var type = '${pd.type}';
+        $.myType(type);
+
+        $(document).ready(function(){
+            form.on('select(semester_id)', function(data){
+                $("#semester_name").val(data.elem[data.elem.selectedIndex].text);
+            });
+
+
+            $("#sure").on("click",function(){
+
+				<c:if test="${msg eq 'add'}">
+                if ($("#school_id").val() == "") {
+                    layer.tips('请选择学校',  $(".school_id"), {
+                        tips: [4, '#D16E6C'],
+                        time: 4000
+                    });
+                    $("#school_id").focus();
+                    return false;
+                }
+
+                if ($("#semester_id").val() == "") {
+                    layer.tips('请选择学期',  $(".semester_id"), {
+                        tips: [4, '#D16E6C'],
+                        time: 4000
+                    });
+                    $("#semester_id").focus();
+                    return false;
+                }
+				</c:if>
+                if ($("#recess_time").val() == "") {
+                    layer.tips('请确认课间休息时间',  $("#recess_time"), {
+                        tips: [4, '#D16E6C'],
+                        time: 4000
+                    });
+                    $("#recess_time").focus();
+                    return false;
+                }
+
+                if ($("#siesta_time").val() == "") {
+                    layer.tips('请确认写午休时间',  $("#siesta_time"), {
+                        tips: [4, '#D16E6C'],
+                        time: 4000
+                    });
+                    $("#siesta_time").focus();
+                    return false;
+                }
+
+
+
+               var page ="${pd.currentPage}";
+               var sum ="&keywords=${pd.keywords}";
+
+
+                $("#form1").ajaxSubmit({
+                    type: 'post',
+                    dataType:"html",
+                    success: function(data) {
+                        var jso = JSON.parse(data);
+                        if ("success" == jso.msg) {
+                            parent.layer.transmit.location.href = "<%=basePath%>schedule/list.do?currentPage=" + page + sum;
+                            parent.layer.closeAll();
+                        } else if ("error" == jso.msg) {
+                            layer.msg('系统异常,保存失败!', {icon: 5});
+                        }else if ("false" == jso.msg) {
+                            layer.msg('该学期已存在请直接排课!', {icon: 5});
+                        }else if ("false2" == jso.msg) {
+                            layer.msg('该学期已存在排课!', {icon: 5});
+                        }
+                    }
+				});
+
+            });
+
+            $("#cancel").on("click",function(){
+                parent.layer.closeAll();
+            })
+        });
+
+        function test(file_name,symbol){
+            var result = file_name.split(symbol);
+            return result[result.length-1];
+        }
+	</script>
+</body>
+</html>
+

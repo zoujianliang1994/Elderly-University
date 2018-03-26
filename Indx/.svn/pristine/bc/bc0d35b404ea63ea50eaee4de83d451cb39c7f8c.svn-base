@@ -1,0 +1,118 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="TeacherApplyMapper">
+
+    <!--表名 -->
+    <sql id="tableName">
+		edu_teacher_apply
+	</sql>
+
+    <!-- 字段 -->
+    <sql id="Field">
+		id,
+        teacher_id,
+        school_id,
+        qjlx,
+        begin_time,
+        end_time,
+        dwkc_number,
+        qjly,
+        create_time,
+        zt,
+        shyj
+	</sql>
+
+    <!-- 字段值 -->
+    <sql id="FieldValue">
+		#{id},
+        #{teacher_id},
+        #{school_id},
+        #{qjlx},
+        #{begin_time},
+        #{end_time},
+        #{dwkc_number},
+        #{qjly},
+        #{create_time},
+        #{zt},
+        #{shyj}
+	</sql>
+
+    <!-- 新增-->
+    <insert id="addData" parameterType="pd">
+        insert into <include refid="tableName"/> ( <include refid="Field"/> ) values (<include refid="FieldValue"/>)
+    </insert>
+
+    <!-- 删除-->
+    <delete id="deleteData" parameterType="pd">
+        delete from <include refid="tableName"/> where id = #{id}
+    </delete>
+
+    <!-- 修改 -->
+    <update id="editData" parameterType="pd">
+        update edu_teacher_apply set zt = #{zt},shyj = #{shyj} where id = #{id};
+        update edu_teacher_normal set qj_zt = #{zt} where teacherApply_id = #{id}
+    </update>
+
+    <!-- 通过ID获取数据 -->
+    <select id="findDataById" parameterType="pd" resultType="pd">
+        SELECT a.*,
+               b.name school_name,
+               c.name teacher_name
+          FROM edu_teacher_apply a,
+               edu_school b,
+               edu_teacher c
+         WHERE a.school_id = b.id
+           AND a.teacher_id = c.id
+           AND a.id = #{id}
+    </select>
+
+    <!-- 分页列表 -->
+    <select id="datalistPage" parameterType="page" resultType="pd">
+        SELECT a.*,
+               b.name school_name,
+               c.name teacher_name
+          FROM edu_teacher_apply a,
+               edu_school b,
+               edu_teacher c
+         WHERE a.school_id = b.id
+           AND a.teacher_id = c.id
+           and a.school_id in
+         <foreach item="item" index="index" collection="pd.userSchoolIds" open="(" separator="," close=")">
+            '${item}'
+         </foreach>
+         <if test="pd.qjlx != null and pd.qjlx != ''">
+           and a.qjlx = #{pd.qjlx}
+         </if>
+         <if test="pd.school_id != null and pd.school_id != ''">
+           and a.school_id = #{pd.school_id}
+         </if>
+         order by a.create_time desc
+    </select>
+
+    <!-- 普通列表 -->
+    <select id="selectList" parameterType="pd" resultType="pd">
+        SELECT a.*,
+               b.name school_name,
+               c.name teacher_name
+          FROM edu_teacher_apply a,
+               edu_school b,
+               edu_teacher c
+         WHERE a.school_id = b.id
+           AND a.teacher_id = c.id
+         <if test="school_id != null and school_id != ''">
+           AND a.school_id = #{school_id}
+         </if>
+         order by a.create_time desc
+    </select>
+
+    <!-- 修改老师正常排课情况 改成请假-->
+    <update id="updateTeacherPk"  parameterType="pd">
+       update edu_teacher_normal
+          set qj_zt = '0',
+              teacherApply_id = #{teacherApply_id}
+        where qk_time >= #{begin_time}
+          <![CDATA[  AND qk_time <= #{end_time}]]>
+          AND teacher_id = #{teacher_id}
+    </update>
+
+</mapper>

@@ -1,0 +1,34 @@
+package com.zhimu.service.manager.edu.studentInfo.impl;
+
+
+import com.zhimu.commons.utils.PageData;
+import com.zhimu.dao.DaoSupport;
+import com.zhimu.dao.entity.system.Page;
+import com.zhimu.service.manager.edu.studentFiles.ScheduleManager;
+import com.zhimu.service.manager.edu.studentInfo.StudentInfoManager;
+import org.springframework.stereotype.Service;
+
+import javax.annotation.Resource;
+import java.util.ArrayList;
+import java.util.LinkedHashMap;
+import java.util.List;
+import java.util.Map;
+
+@Service("studentInfoService")
+public class StudentInfoService implements StudentInfoManager {
+
+  @Resource(name = "daoSupport")
+  private DaoSupport dao;
+
+  @Override
+  public List<PageData> studentInfolistPage(Page pd) throws Exception {
+
+    return (List<PageData>) dao.findForList("StudentInfoMapper.datalistPage", pd);
+
+  }
+
+  @Override
+  public PageData findObjectById(PageData pd) throws Exception {
+    return (PageData) dao.findForObject("StudentInfoMapper.findById", pd);
+  }
+}

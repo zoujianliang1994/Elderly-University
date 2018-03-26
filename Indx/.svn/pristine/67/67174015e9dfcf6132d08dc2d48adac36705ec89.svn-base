@@ -1,0 +1,158 @@
+.report_edit_head{
+  -webkit-user-select: none;
+  user-select: none;
+  .redspan{
+    color:#FF5722;
+    font-size:12px;
+  }
+  .selectBox{
+    width:400px;
+    padding:10px;
+    height:500px;
+      .typeSelectBox{
+        height:100%;
+        border:1px solid #ddd;
+        border-radius: 2px;
+        padding:10px;
+      }
+  }
+  input{
+    font-size:13px;
+  }
+  .agearea{
+    height:115px;
+    overflow:auto;
+    .li{
+      position:relative;
+      display:inline-block;
+      padding: 0 20px 0 ;
+      height: 30px;
+      color: #333;
+      text-align: center;
+      border: 1px solid #ddd;
+      background: #fff;
+      cursor: pointer;
+      margin: 10px;
+      line-height: 30px;
+      &:hover{
+        border:1px solid #108ee9;
+      }
+
+      .remove{
+        position:absolute;
+        font-size:12px;
+        right:5px;
+        color:#999;
+      }
+    }
+    .active{
+      background:#fff;
+      border:1px solid #108ee9;
+      .remove{
+        color:#fff
+      }
+    }
+  }
+  .layui-table{
+    .active{background:#FFF};
+    cursor: pointer;
+    th{
+      position:relative
+    }
+    .remove{
+      position:absolute;
+      right:0;
+      top:0;
+      border-radius:0 0 0 100%;
+      display:block;
+      text-indent:8px;
+      cursor: pointer;
+      width:20px;
+      font-size:12px;
+      border:1px solid #ddd;
+    }
+    .remove:hover{
+      background:#FF5722;
+      border:1px solid #FF5722;
+      color:#fff;
+      font-size:12px;
+    }
+
+  }
+  .h2{
+    font-size:14px;
+    color:#000
+  }
+  .containerBox{
+    padding:10px;
+    border:1px solid #ddd;
+    .layui-form-label{
+      text-align:left!important;
+      color:#666;
+      font-size:13px;
+    }
+    .layui-col-xs11{
+      font-size:13px;
+    }
+    ul{
+      max-height:200px;
+      overflow:auto
+    }
+    .item{
+      display:inline-block;
+      padding:0 20px;
+      height:30px;
+      color:#333;
+      text-align:center;
+      background:#f2f2f2;
+      cursor: pointer;
+      margin:10px;
+      line-height:30px;
+
+    }
+    .li-item{
+      display:inline-block;
+      line-height:30px;
+      padding:0 10px;
+      height:30px;
+      color:#108ee9;
+      text-align:center;
+      background:#fff;
+      cursor: pointer;
+      margin:10px;
+      box-sizing: border-box;
+      border-bottom:1px solid #fff;
+      font-size:13px;
+      border: 1px solid #108ee9;
+    }
+    .li-item:hover{
+      color:#fff;
+      background:#108ee9;
+
+    }
+    .active{
+      background:#108ee9;
+      color:#fff;
+    }
+    .remove:hover{
+      color:#FF5722;
+      cursor: pointer;
+    }
+    .active2{
+      color:#fff;
+      background:#108ee9;
+    }
+    .item:hover{
+      background:#108ee9;
+      color:#fff;
+
+    }
+    .insert{
+      position:absolute;
+      right:-80px;
+      top:0
+    }
+  }
+
+}
+

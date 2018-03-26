@@ -1,0 +1,172 @@
+﻿<%@ page language="java" contentType="text/html; charset=UTF-8" pageEncoding="UTF-8" %>
+<%
+    String path = request.getContextPath();
+    String basePath = request.getScheme() + "://" + request.getServerName() + ":" + request.getServerPort() + path + "/";
+%>
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <title>学员管理</title>
+    <%@ include file="../../system/index/headcss.jsp" %>
+</head>
+<body>
+
+<div class="tableBox">
+    <div class="operationBox">
+
+        <form action="list.do" method="post" class="layui-form" name="Form" id="Form">
+            <div class="layui-inline" >
+                <input id="month" name="" type="text"  placeholder="请选择月份" class="layui-input layui-input-color">
+            </div>
+            <div class="layui-inline">
+                <div class="layui-input-block " style="width: 16rem;">
+                    <select lay-filter='lesson_periods' id="" name="lesson_periods"  class="layui-input-inline"  >
+                        <option value="">请选择学校</option>
+                        <c:forEach var="var" items="${periodsList}" varStatus="vs">
+                            <option value="${var.no}" <c:if test="${var.no==pd.lesson_periods}"> selected="selected" </c:if> >${var.no}</option>
+                        </c:forEach>
+
+                    </select>
+                </div>
+            </div>
+            <div class="layui-inline">
+                <div class="layui-input-block " style="width: 16rem;">
+                    <select lay-filter='lesson_periods' id="" name="lesson_periods"  class="layui-input-inline"  >
+                        <option value="">请选择校区</option>
+                        <c:forEach var="var" items="${periodsList}" varStatus="vs">
+                            <option value="${var.no}" <c:if test="${var.no==pd.lesson_periods}"> selected="selected" </c:if> >${var.no}</option>
+                        </c:forEach>
+
+                    </select>
+                </div>
+            </div>
+            <div class="srarchBtn" onclick="gsearch()">
+                <i class="layui-icon">&#xe615;</i>
+                <span>搜索</span>
+            </div>
+            <div class="layui-inline">
+                <span class="checking-style normal-style">正常打卡</span>
+                <span class="checking-style anomaly-style">考勤异常</span>
+            </div>
+        </form>
+
+
+    </div>
+
+    <!-- table -->
+    <div class="layui-col-sm12">
+        <div id="attend_wrap" class="container">
+
+            <div id="attend_b" class="row">
+                <ul class="col-md-9 bor_r">
+                    <li id="rili_wrap"></li>
+                </ul>
+                <ul class="col-md-3">
+                    <li id="date_ch">
+                        <p class="d_c_name">选择日期</p>
+                        <p class="d_c_form" id="rili_se"></p>
+                    </li>
+
+                </ul>
+            </div>
+        </div>
+    </div>
+</div>
+
+
+<%@ include file="../../system/index/foot.jsp" %>
+<script type="text/javascript">
+    var first = true;
+    var form = layui.form;
+    layui.use('laydate', function(){
+        var laydate = layui.laydate;
+
+        //执行一个laydate实例
+        laydate.render({
+            elem: '#month'
+            ,type: 'month'
+        });
+    });
+
+    layui.use('laypage', function () {
+        var laypage = layui.laypage;
+        var layer = layui.layer;
+        form.on('select(sectionId)', function (data) {
+            gsearch()
+        });
+
+        //执行一个laypage实例
+        laypage.render({
+            elem: 'laypage',
+            count: ${page.totalResult},
+            curr: ${page.currentPage},
+            layout: ['prev', 'page', 'next', 'count', 'skip'],
+            jump: function (obj, first) {
+                if (!first) {
+                    window.location.href = "<%=basePath%>school/list.do?&currentPage=" + obj.curr + '&keywords=' + '${keywords}';
+                }
+            }
+        });
+    });
+
+
+    $("#keywords").keydown(function (e) {
+        var ev = e || window.event;
+        if (ev.keyCode == "13") {
+            gsearch();
+        }
+    });
+
+
+    //检索
+    function gsearch() {
+        $("#Form").submit();
+    }
+
+    //新增
+    $("#add").on("click", function () {
+        parent.parent.layer.edit = window;
+        parent.parent.layer.open({
+            title: "新增",
+            type: 2,
+            content: '<%=basePath%>school/goAdd.do?currentPage=' + ${page.currentPage},
+            area: ["800px", "550px"]
+        });
+    });
+
+    function edit(id, type) {
+        var msg = type == '1' ? '查看' : '编辑';
+        var area = type == '1' ? ["800px", "430px"] : ["800px", "550px"];
+        parent.parent.layer.edit = window;
+        parent.parent.layer.open({
+            title: msg,
+            type: 2,
+            content: '<%=basePath%>school/goEdit.do?id=' + id + '&currentPage=${page.currentPage}'+'&type='+type,
+            area: area
+        });
+    }
+
+    function del(id) {
+        parent.parent.layer.confirm("是否删除此学校?", {
+            btn: ['确定', '取消'],
+            resize: false,
+            title: "提示",
+            maxWidth: 800
+        }, function (index) {
+            var url = "<%=basePath%>school/delete.do?id=" + id;
+            $.get(url, function (data) {
+                if ("success" == data.result) {
+                    window.location.href = "<%=basePath%>school/list.do?currentPage=${page.currentPage}";
+                    parent.parent.layer.closeAll();
+                } else if("error" == data.result){
+                    parent.layer.msg('当前学校还有人员存在，不能删除!', {icon: 5});
+                }else {
+                    parent.layer.msg('系统异常,删除失败!', {icon: 5});
+                }
+            });
+        });
+    }
+
+</script>
+</body>
+</html>

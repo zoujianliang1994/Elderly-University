@@ -1,0 +1,194 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN"
+        "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="FolderMapper">
+    <resultMap type="Folder" id="FolderResultMap">
+        <id column="KEY" property="KEY"/>
+        <result column="FOLDER_ID" property="FOLDER_ID"/>
+        <result column="FATHER_ID" property="FATHER_ID"/>
+        <result column="ENAME" property="ENAME"/>
+        <result column="NAME" property="NAME"/>
+        <result column="PATH" property="PATH"/>
+        <result column="CONTENT" property="CONTENT"/>
+        <result column="LEVEL" property="LEVEL"/>
+        <result column="STATUS" property="STATUS"/>
+        <result column="ISCHECK" property="ISCHECK"/>
+        <result column="CREATE_TIME" property="CREATE_TIME"/>
+        <result column="UPDATE_TIME" property="UPDATE_TIME"/>
+        <result column="TITLE" property="TITLE"/>
+    </resultMap>
+
+    <!--表名 -->
+    <sql id="tableName">
+        cms_folder
+    </sql>
+
+    <!-- 字段 -->
+    <sql id="Field">
+        FOLDER_ID,
+        FATHER_ID,
+        ENAME,
+        NAME,
+        PATH,
+        SORT,
+        STATUS,
+        ISCHECK,
+        CREATE_TIME,
+        TITLE,
+        PICTURES_ID,
+        PICTURES_PATH,
+        TYPE
+    </sql>
+
+
+    <!-- 字段值 -->
+    <sql id="FieldValue">
+		#{FOLDER_ID},
+		#{FATHER_ID},
+		#{ENAME},
+		#{NAME},
+		#{PATH},
+		#{SORT},
+		#{STATUS},
+		#{ISCHECK},
+		#{CREATE_TIME},
+		#{TITLE},
+		#{PICTURES_ID},
+		#{PICTURES_PATH},
+		#{TYPE}
+	</sql>
+
+
+    <!-- ############################## -->
+    <!-- ###### 增加 ###### -->
+    <!-- ############################## -->
+    <insert id="addFolder" parameterType="pd">
+        insert into
+        <include refid="tableName"></include>
+        (
+        <include refid="Field"></include>
+        ) values (
+        <include refid="FieldValue"></include>
+        )
+    </insert>
+
+    <!-- ############################## -->
+    <!-- ###### 删除 ###### -->
+    <!-- ############################## -->
+
+    <delete id="deleteFolder" parameterType="pd">
+        delete from
+        <include refid="tableName"></include>
+        where FOLDER_ID=#{FOLDER_ID}
+    </delete>
+
+
+    <!-- ############################## -->
+    <!-- ###### 修改 ###### -->
+    <!-- ############################## -->
+
+    <update id="updateSort" parameterType="folder">
+        UPDATE
+        <include refid="tableName"></include>
+        SET
+        SORT=#{sort}
+        WHERE
+        FOLDER_ID=#{folderId}
+    </update>
+
+    <update id="updateFolder" parameterType="pd">
+        UPDATE
+        <include refid="tableName"></include>
+        SET
+        ENAME=#{ENAME}, NAME=#{NAME},
+        FATHER_ID=#{FATHER_ID},SORT=#{SORT},STATUS=#{STATUS},
+        PICTURES_PATH = #{PICTURES_PATH},PATH = #{PATH}
+        WHERE
+        FOLDER_ID=#{FOLDER_ID}
+    </update>
+
+
+    <!-- ############################## -->
+    <!-- ###### 查询 ###### -->
+    <!-- ############################## -->
+
+    <select id="getFolderById" resultType="com.zhimu.dao.entity.cms.Folder" parameterType="String">
+        select
+        *
+        from
+        <include refid="tableName"></include>
+        where FOLDER_ID=#{folderId}
+    </select>
+
+    <select id="getFolderPath" resultType="String" parameterType="String">
+        select
+        PATH
+        from
+        <include refid="tableName"></include>
+        where FOLDER_ID=#{folderId}
+    </select>
+    <select id="getFolderListByFatherId" resultType="pd" parameterType="String">
+		select * from cms_folder where FATHER_ID=#{fatherId}
+		order by sort
+	</select>
+
+    <select id="getAllFolderList" parameterType="page" resultType="pd">
+        select * from cms_folder where 1=1
+        and FOLDER_ID != '1'
+        <if test="pd.TYPE != null and pd.TYPE != ''">
+            and type = #{pd.TYPE}
+        </if>
+        order by SORT
+    </select>
+
+    <select id="getFolderByEname" resultType="pd" parameterType="String">
+        select * from cms_folder
+        where ENAME=#{ename}
+    </select>
+    <select id="getAllFolder" resultType="pd">
+		select * from cms_folder
+		where    FATHER_ID!='0' and TYPE='normal' ORDER BY SORT
+	</select>
+
+    <select id="getAllFolderByType" parameterType="String" resultType="pd">
+		select * from cms_folder
+		where STATUS = 'display'  and FATHER_ID!='0'  and TYPE=#{type}  ORDER BY SORT
+	</select>
+    <!-- 列表 -->
+    <select id="datalistPage" parameterType="page" resultType="pd">
+        select
+        NAME,
+        ENAME,
+        FOLDER_ID,
+        PATH,
+        SORT,
+        FATHER_ID,
+        TITLE,
+        (SELECT name from sys_dictionaries d where d.NAME_EN=STATUS) STATUS_NAME,
+        STATUS STATUS,
+        (SELECT name from sys_dictionaries d where d.NAME_EN=ISCHECK) ISCHECK_NAME,
+        ISCHECK ISCHECK,
+        CONVERT(varchar(100), CREATE_TIME, 20) CREATE_TIME
+        from
+        cms_folder
+        where 1=1
+        and TYPE=#{pd.TYPE}
+        and FOLDER_ID != '1'
+        <if test="pd.keywords != null and pd.keywords != ''"><!-- 关键词检索 -->
+            and
+            (
+            NAME LIKE ('%'+#{pd.keywords}+'%')
+            )
+        </if>
+        order by SORT
+    </select>
+    <!-- 通过ID获取数据 -->
+    <select id="findById" parameterType="pd" resultType="pd">
+        select
+        <include refid="Field"></include>
+        from
+        <include refid="tableName"></include>
+        where
+        FOLDER_ID = #{FOLDER_ID}
+    </select>
+</mapper>

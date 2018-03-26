@@ -1,0 +1,134 @@
+package com.zhimu.controller.manager.stu.leave;
+
+import com.zhimu.commons.utils.*;
+import com.zhimu.controller.manager.base.BaseController;
+import com.zhimu.dao.entity.system.Page;
+import com.zhimu.dao.entity.system.User;
+import com.zhimu.service.manager.stu.leave.LeaveManager;
+import org.springframework.stereotype.Controller;
+import org.springframework.web.bind.annotation.RequestMapping;
+import org.springframework.web.bind.annotation.ResponseBody;
+import org.springframework.web.servlet.ModelAndView;
+
+import javax.annotation.Resource;
+import java.util.Date;
+import java.util.HashMap;
+import java.util.List;
+import java.util.Map;
+
+@Controller
+@RequestMapping(value = "/student_leave")
+public class LeaveController extends BaseController {
+
+  @Resource(name = "leaveService")
+  private LeaveManager leaveService;
+
+
+  /**
+   * 个人请假列表
+   * @param page
+   * @return
+   * @throws Exception
+   */
+  @RequestMapping(value = "/list")
+  public ModelAndView list(Page page) throws Exception {
+    ModelAndView mv = this.getModelAndView();
+    PageData pd = getPageData();
+    try {
+      String keywords = pd.getString("keywords"); // 检索条件
+      if (null != keywords && !"".equals(keywords)) {
+        pd.put("keywords", keywords.trim());
+      }
+      //获取当前登陆用户的id作为查询条件
+      pd.put("createBy", this.getUserInfo().getUSERNAME());
+      page.setPd(pd);
+      List<PageData> varList = leaveService.listPage(page);
+      User user = this.getUserInfo();
+      String[] schIds = user.getSchoolId().split(","); // 学校id
+      String[] schNames = user.getSchoolName().split(","); // 学校名字
+      pd.put("schIds", schIds);
+      pd.put("schNames", schNames);
+
+      mv.setViewName("stu/leave/leave_list");
+      mv.addObject("leaveList", varList);
+      mv.addObject("pd", pd);
+    } catch (Exception e) {
+      logger.error(ErrorUtils.getErrorMessage(e, "查询学生个人请假列表异常!"));
+    }
+    return mv;
+  }
+
+  /**
+   * 去请假新增页面
+   * @return
+   * @throws Exception
+   */
+  @RequestMapping(value = "/goAdd")
+  public ModelAndView goAdd() throws Exception {
+    ModelAndView mv = this.getModelAndView();
+    PageData pd = getPageData();
+    // 获取当前用户所属的学校集合
+    User user = this.getUserInfo();
+    String[] schIds = user.getSchoolId().split(","); // 学校id
+    String[] schNames = user.getSchoolName().split(","); // 学校名字
+    pd.put("schIds", schIds);
+    pd.put("schNames", schNames);
+
+    mv.addObject("pd", pd);
+    mv.addObject("msg", "save");
+    mv.setViewName("stu/leave/leave_edit");
+    return mv;
+  }
+
+  /**
+   * 保存学生请假信息
+   * @return
+   */
+  @RequestMapping(value = "/save")
+  @ResponseBody
+  public Object save() {
+    Map<String, String> map = new HashMap<>();
+    PageData pd = this.getPageData();
+    String msg;
+    try {
+      String schoolId = pd.getString("school_id");
+      User user = this.getUserInfo();
+      if ("all".equals(schoolId)) { // 如果是选择所有学校,就将该学生所属的所有学校进行保存
+        pd.put("school_id", user.getSchoolId());
+        pd.put("school_name", user.getSchoolName());
+      }
+      pd.put("id", this.get32UUID());
+      pd.put("create_by", user.getUSERNAME()); // 创建人
+      pd.put("create_time", DateUtil.getTime()); // 创建时间
+      // 执行保存
+      leaveService.save(pd);
+      msg = "success";
+    } catch (Exception e) {
+      msg = "error";
+      logger.error(ErrorUtils.getErrorMessage(e, "保存学生请假信息异常_lwc"));
+    }
+    map.put("result", msg);
+    return AppUtil.returnObject(new PageData(), map);
+  }
+
+  /**
+   * 去详情页面
+   * @return
+   */
+  @RequestMapping(value = "/goDetail")
+  public ModelAndView goDetail() {
+    ModelAndView mv = this.getModelAndView();
+    PageData pd = getPageData();
+    try {
+      String currentPage = pd.getString("currentPage");
+      pd = leaveService.findDataById(pd);
+      pd.put("currentPage", currentPage);
+      mv.addObject("pd", pd);
+      mv.setViewName("stu/leave/leave_detail");
+    } catch (Exception e) {
+      logger.error(ErrorUtils.getErrorMessage(e, "去学生请假单详情页面_lwc"));
+    }
+    return mv;
+  }
+
+}

@@ -1,0 +1,302 @@
+<%@ page language="java" contentType="text/html; charset=UTF-8" pageEncoding="UTF-8" %>
+<%
+    String path = request.getContextPath();
+    String basePath = request.getScheme() + "://" + request.getServerName() + ":" + request.getServerPort() + path + "/";
+%>
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <title>公告编辑</title>
+    <%@ include file="../../system/index/headcss.jsp" %>
+    <link rel="stylesheet" type="text/css" href="<%=basePath %>static/source/public/css/list.css">
+</head>
+<body>
+<div class="edit_menu">
+    <form action="${msg}.do" class="layui-form" id="editForm" lay-filter="editForm" method="post">
+        <input type="hidden" id="id" name="name" value="${message.id}">
+        <div class="layui-form-item">
+            <div class="layui-row">
+
+                <div class="form-item-inline">
+                    <label class="form-label"><i class="require">*</i>公告名称<span class="colon">：</span></label>
+                    <div class="layui-input-block">
+                        <input type="text" value="${message.title }" name="title" id="title" required lay-verify="required" placeholder="请输入公告名称"
+                               autocomplete="off" maxlength="200"
+                               class="layui-input layui-input-color">
+                    </div>
+                </div>
+
+                <div class="form-item-inline">
+                    <label class="form-label">创建日期<span class="colon">：</span></label>
+                    <div class="layui-input-block">
+                        <input type="text" value="${message.createTime }" name="createTime" id="createTime" required lay-verify="required" placeholder="请输入创建日期"
+                               autocomplete="off"
+                               class="layui-input layui-input-color">
+                    </div>
+                </div>
+
+            </div>
+        </div>
+
+        <div class="layui-form-item" id="mimaDiv">
+            <div class="layui-row">
+
+                <div class="form-item-inline">
+                    <label class="form-label">发布日期<span class="colon">：</span></label>
+                    <div class="layui-input-block">
+                        <input type="text" value="${message.createTime }" name="publishTime" id="publishTime" required lay-verify="required" placeholder="请输入发布日期"
+                               autocomplete="off"
+                               class="layui-input layui-input-color">
+                    </div>
+                </div>
+
+                    <div class="form-item-inline">
+                    <label class="form-label">发布范围</label>
+                    <input type="hidden" value="${pd.SCHOOL_ID}" name="SCHOOL_ID" id="SCHOOL_ID"/>
+                    <input type="hidden" value="${pd.SCHOOL_NAME}" name="SCHOOL_NAME" id="SCHOOL_NAME">
+                    <div class="layui-input-block sTree" id="schoolStree">
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <div class="layui-form-item">
+            <div class="layui-row">
+                <div class="form-item-inline" style="width:98%;">
+                    <label class="form-label">发布范围</label>
+                    <div class="layui-input-block">
+                        <input type="text" value="${message.userId }" name="USER_ID" id="USER_ID" required lay-verify="required" placeholder="请选择发布范围"
+                               autocomplete="off" class="layui-input layui-input-color">
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <div class="layui-form-item">
+
+            <div class="layui-row">
+                <div class="form-item-inline" style="width:98%;">
+                    <label class="form-label" >通知内容</label>
+                    <div class="layui-input-block" >
+                        <textarea class="layui-textarea layui-input-color" name="content" id="content"
+                            placeholder="请输入通知内容">${message.content}</textarea>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <div class="layui-form-item">
+
+            <div class="layui-row">
+                <div class="form-item-inline">
+                    <label class="form-label">附件上传</label>
+                    <div class="layui-input-block img-block">
+                        <input readonly="readonly" type="hidden" name="PHOTO_URL" id="PHOTO_URL" value="${pd.PHOTO_URL}"/>
+                        <%--<c:if test="${pd.PHOTO_URL != null && pd.PHOTO_URL != ''}">--%>
+                            <%--<img class="img" src="<%=basePath %>uploadFiles/file/${pd.PHOTO_URL}"/>--%>
+                        <%--</c:if>--%>
+                        <%--<div class="layui-upload-drag"  style="width:326px">--%>
+                        <%--<i class="layui-icon"></i>--%>
+                        <%--<p class="name">点击上传附件</p>--%>
+                        <%--</div>--%>
+                        <input type="file" class="imgfile">
+                    </div>
+                </div>
+            </div>
+        </div>
+
+    </form>
+
+    <div class="btnbox" id="btnDiv" hidden="true">
+        <button id="sure" class="layui-btn layui-btn-primary layui-btn-small">保存</button>
+        <button id="cancel" class="layui-btn layui-btn-primary layui-btn-small">取消</button>
+    </div>
+</div>
+<%@ include file="../../system/index/foot.jsp" %>
+<script>
+    $(function () {
+        var form = layui.form;
+        var TYPE = '${pd.TYPE}';
+
+        if (1 == TYPE) {
+            $.formToDiv(true);
+            $("#btnDiv").hide();
+            $("#cancel").hide();
+            $(".colon").show();
+            $("input,select,radio,textarea").attr("disabled", "disabled").css("background-color", "#f2f2f2");
+            $("input").removeAttr("placeholder", "");
+            $("label").addClass("layui-form-label");
+            $("label").removeClass("form-label");
+            $(".layui-input-block").css("color","#666")
+        } else {
+            $("#btnDiv").show();
+            $(".colon").hide();
+            $("label").removeClass("layui-form-label");
+            $("label").addClass("form-label");
+            $(".layui-input-block").css("color","#000")
+        }
+
+        layui.use('laydate', function () {
+            var laydate = layui.laydate;
+
+            //执行一个laydate实例
+            laydate.render({
+                elem: '#createTime' //指定元素
+            });
+            laydate.render({
+                elem: '#publishTime' //指定元素
+            });
+        });
+
+        $("#sure").on("click", function () {
+//            if ($("#NAME").val() == "") {
+//                layer.tips('姓名不能为空', $("#NAME"), {
+//                    tips: [3, '#D16E6C'],
+//                    time: 4000
+//                });
+//                $("#NAME").focus();
+//                return false;
+//            }
+//            if ($("#USERNAME").val() == "") {
+//                layer.tips('登陆账号不能为空', $("#USERNAME"), {
+//                    tips: [3, '#D16E6C'],
+//                    time: 4000
+//                });
+//                $("#USERNAME").focus();
+//                return false;
+//            }
+//
+//            if (InValidChar($("#USERNAME").val())){
+//                layer.tips('登陆账号仅限英文和数字', $("#USERNAME"), {
+//                    tips: [3, '#D16E6C'],
+//                    time: 4000
+//                });
+//                $("#USERNAME").focus();
+//                return false;
+//            }
+//            if ($("#USER_ID").val() == "" && $("#PASSWORD").val() == "") {
+//                layer.tips('登陆密码不能为空', $("#PASSWORD"), {
+//                    tips: [3, '#D16E6C'],
+//                    time: 4000
+//                });
+//                $("#PASSWORD").focus();
+//                return false;
+//            }
+//            if ($("#PASSWORD").val() != $("#QRPASSWORD").val()) {
+//                layer.tips('两次密码不相同', $("#QRPASSWORD"), {
+//                    tips: [3, '#D16E6C'],
+//                    time: 4000
+//                });
+//                $("#QRPASSWORD").focus();
+//                return false;
+//            }
+//            var card = $("#IDCARD").val();
+//            if (card) {
+//                if (!isCardNo(card) || !checkProvince(card) || !checkBirthday(card) || !checkParity(card)) {
+//                    layer.tips('请输入正确的身份证号码', $("#IDCARD"), {
+//                        tips: [3, '#D16E6C'],
+//                        time: 4000
+//                    });
+//                    $("#IDCARD").focus();
+//                    return false;
+//                }
+//            }
+            parent.layer.load(1);
+//            var idStr= $.getString(sTree.arr,"id"); // 获取到权限id拼接到保存url后面
+            $.post('${msg}.do', $('#editForm').serialize(), function (data) {
+                parent.layer.closeAll('loading');
+                if ("success" == data.result) {
+                    parent.layer.edit.location.href = "<%=basePath%>notice/list.do?currentPage=${currentPage}";
+                    parent.layer.closeAll();
+                } else {
+                    layer.msg('系统异常,保存失败!', {icon: 5});
+                }
+            });
+        });
+        $("#cancel").on("click", function () {
+            parent.layer.closeAll();
+        });
+
+
+        $("#mechanism").on("click","dd",function(){
+            $("#areaName").val($(this).text());
+
+        });
+
+        $(window).on("click",function(){
+            $("#adminSelect").hide();
+        });
+
+        $.post("<%=basePath%>school/listSchoolsById.do", '', function (data) {
+            var data = eval(data.data);
+            var schoolId='${pd.SCHOOL_ID}'.substring(0,'${pd.SCHOOL_ID}'.length-1);
+            var schoolStree = $.Stree({
+                title: "${pd.SCHOOL_NAME}",
+                <%--type:${pd.TYPE == '1'},--%>
+                el: $("#schoolStree"),
+                oldData: schoolId.split(","),
+                isSingle: false,  //单选
+                data: data,
+                callback: function () {
+                    if(this.arr == ""){
+                        $("#SCHOOL_NAME").val("");
+                        $("#SCHOOL_ID").val("")
+                        return
+                    }
+                    $("#SCHOOL_NAME").val($.getString(this.arr, "title") + ',');
+                    $("#SCHOOL_ID").val($.getString(this.arr, "id") + ',')
+                }
+            });
+        })
+
+    });
+
+    //判断登陆账号是否存在
+    function checkUserName() {
+        var USERNAME = $.trim($("#USERNAME").val());
+        $.ajax({
+            type: "POST",
+            url: 'checkUserName',
+            data: {USERNAME: USERNAME},
+            dataType: 'json',
+            cache: false,
+            success: function (data) {
+                if ("yes" == data.result) {
+                    layer.tips('该登陆账号已经存在!', $("#USERNAME"), {
+                        tips: [3, '#D16E6C'],
+                        time: 4000
+                    });
+                    $("#USERNAME").val('');
+                } else if ('error' == data.result) {
+                    layer.msg('系统异常,请稍后再试!', {icon: 5});
+                    $("#USERNAME").val('');
+                } else {
+                    //...
+                }
+            }
+        });
+    }
+
+    function isCharsNotInBag (s, bag) //逐个判断s字符串中每个字符是否都在限定范围bag内
+    {
+        var i,c;
+        for (i = 0; i < s.length; i++)
+        {
+            c = s.charAt(i);
+            if (bag.indexOf(c) < 0) //不在则返回真
+                return true;
+        }
+        return false;
+    }
+
+    function InValidChar(s) //无效输入判断(为真说明输入无效）
+    {
+        var haserrorChar;
+        var CorrectChar = "ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789";
+        haserrorChar = isCharsNotInBag(s, CorrectChar);
+        return haserrorChar;
+    }
+
+</script>
+</body>
+</html>

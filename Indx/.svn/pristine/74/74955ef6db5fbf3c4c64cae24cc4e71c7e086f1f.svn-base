@@ -1,0 +1,61 @@
+<%@ page language="java" contentType="text/html; charset=UTF-8" pageEncoding="UTF-8" %>
+<%
+	String path = request.getContextPath();
+	String basePath = request.getScheme() + "://" + request.getServerName() + ":" + request.getServerPort() + path + "/";
+%>
+<!DOCTYPE html>
+<html lang="en">
+<head>
+	<title>网上报名</title>
+	<%@ include file="../../system/index/headcss.jsp" %>
+	<link rel="stylesheet" type="text/css" href="<%=basePath %>static/source/public/css/list.css">
+</head>
+<body>
+<div class="edit_menu" class="disnone">
+	<form action="${msg}.do" class="layui-form" id="editForm" lay-filter="editForm" method="post">
+
+
+
+
+				<div class=""style="float: left;width: 49%;">
+					<label class="form-label label-pay">支付宝支付</label>
+					<div class="layui-input-block zfb-pay">
+						<img src="<%=basePath%>static/source/public/images/icon-zfb.png"/>
+					</div>
+				</div>
+
+				<div class="" style="float: left;width: 49%;">
+					<label class="form-label label-pay" >微信支付</label>
+					<div class="layui-input-block wx-pay">
+						<i class="iconfont icon-weixin"></i>
+						<div>微信支付</div>
+					</div>
+				</div>
+
+
+	</form>
+
+	<div class="btnbox" id="btnDiv" >
+		<button id="cancel" class="layui-btn layui-btn-primary layui-btn-small">取消支付</button>
+	</div>
+</div>
+<%@ include file="../../system/index/foot.jsp" %>
+<script>
+    $(function () {
+        var type = '${pd.optype}';
+        $(".layui-input-block").on("click",function(){
+            $(".layui-input-block").removeClass("active-pay").attr("data-id",0)
+            $(this).addClass("active-pay").attr("data-id",1);
+		})
+       $("#cancel").on("click",function () {
+           parent.layer.closeAll();
+       })
+
+
+
+
+    });
+
+</script>
+</body>
+</html>

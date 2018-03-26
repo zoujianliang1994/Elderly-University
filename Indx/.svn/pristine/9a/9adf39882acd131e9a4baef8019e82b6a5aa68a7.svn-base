@@ -1,0 +1,308 @@
+.operationBox {
+  color: #596980;
+  height: 40px;
+  width: 100%;
+  font-size: 13px;
+}
+.operationBox .sTree .input {
+  height: 39px;
+  border-right: 0;
+}
+.operationBox .layui-btn {
+  font-size: 13px;
+}
+.operationBox .searchPackage {
+  border: 1px solid #ccc;
+}
+.operationBox .searchBox .search {
+  /*border-right: 0;*/
+  width: 200px;
+  box-sizing: border-box;
+  height: 39px;
+}
+.operationBox .searchBox .srarchBtn {
+  margin: 0px 1rem;
+  text-align: center;
+  line-height: 3rem;
+  cursor: pointer;
+  width: 6rem;
+  height: 3rem;
+  background-color: #3779f7;
+  border: solid 0rem #3879f7;
+  color: #fff;
+}
+
+
+.operationBox .searchBox .srarchBtn:hover {
+  /*color: #000;*/
+}
+@media screen and (max-width: 1200px) {
+  .searchBox .search {
+    width: 140px!important;
+  }
+}
+/* table */
+.layui-table {
+  color: #000;
+}
+.layui-table thead th {
+  text-align: center;
+}
+.layui-table .tab-btn {
+  text-align: center;
+  cursor: pointer;
+  font-size: 16px;
+}
+.layui-table .layui-icon {
+  padding: 5px;
+}
+.layui-table .layui-icon:hover {
+  color: #2795cd;
+}
+.laypageBox {
+  overflow: hidden;
+  padding-bottom: 20px;
+}
+.editHtml {
+  width: 400px;
+}
+.sTreeBox {
+  width: 100%;
+  height: 300px;
+}
+/*men-list*/
+.menu-list {
+  overflow: hidden;
+  position: absolute;
+  height: 100%;
+  width: 100%;
+}
+.menu-list .tree {
+  margin: 10px 0;
+}
+/*edit_menu*/
+.edit_menu {
+  padding: 2.5rem;
+  color: #000;
+}
+.btnbox {
+  margin: 20px 0;
+  text-align: center;
+}
+/*form*/
+label .require {
+  font-size: 15px;
+  color: #FF5722;
+}
+.layui-form {
+  font-size: 14add-btnpx;
+}
+.layui-form .layui-input-block {
+  line-height: 38px;
+  color: #000;
+}
+.layui-form .label-long .layui-form-label {
+  width: 190px;
+  text-align: left;
+}
+.layui-form .label-long .layui-input-block {
+  margin-left: 220px;
+}
+.layui-btn-blue {
+  background: #108ee9 !important;
+  color: #fff;
+}
+.layui-btn-blue:hover {
+  color: #fff;
+  opacity: 0.8;
+  border: 0;
+}
+.layui-tree .layui-tree-branch {
+  display: none;
+}
+.layui-tree .layui-tree-leaf {
+  opacity: 0;
+}
+.layui-tree .active {
+  color: #108ee9;
+}
+.btnbox .layui-btn-primary {
+  color: #fff;
+  border: 1px solid #fff;
+}
+.btnbox .layui-btn-primary:hover {
+  border: 1px solid #fff;
+}
+.btnbox #sure {
+    border-radius: 0px;
+    width: 100px;
+    height: 40px;
+    background-color: #3779f7;
+    border: solid 1px #3879f7;
+
+}
+.btnbox #cancel {
+    border-radius: 0px;
+    width: 6rem;
+    height: 3rem;
+    background-color: #ffffff;
+    border: solid 1px #3879f7;
+    color: #3879f7;
+
+}
+.table-check {
+  width: 15px;
+  height: 15px;
+}
+.add-btn{
+    background-color: #ffc020;
+    width: 6rem;
+    height: 3rem;
+    border: solid 0rem #ffc020;
+    cursor: pointer;
+    font-family: PingFangSC-Regular;
+    font-size: 14px;
+    font-weight: normal;
+    font-stretch: normal;
+    line-height: 0px;
+    letter-spacing: 0px;
+    color: #ffffff;
+    position: absolute;
+    right: 10px;
+}
+.back-btn{
+    width: 6rem;
+    height: 3rem;
+    background-color: #ffffff;
+    border: solid 1px #3879f7;
+    font-size: 14px;
+    font-weight: normal;
+    font-stretch: normal;
+    line-height: 0px;
+    letter-spacing: 0px;
+    color: #3879f7;
+    cursor: pointer;
+
+}
+.table-btn{
+    display: inline-block;
+    /*margin-left: 1rem;*/
+    width: 50px;
+    height: 25px;
+    cursor: pointer;
+}
+.bianji-btn{
+
+    color:  #26c181;;
+  /*background-color: #26c181;*/
+  /*border: solid 1px #27c281;*/
+  /*border-radius: 50%;*/
+}
+
+.shanchu-btn{
+
+    color: #999999;
+  /*background-color: #f63a3a;*/
+  /*border: solid 1px #f63a3a;*/
+  /*border-radius: 50%;*/
+
+}
+.chakan-btn{
+
+    color: #3779f7;
+  /*background-color: #3779f7;*/
+  /*border: solid 1px #3879f7;*/
+  /*border-radius: 50%;*/
+}
+.quanxiantianjia-btn{
+
+    color:#377444;
+    /*background-color: #377444;*/
+    /*border: solid 1px #387444;*/
+    /*border-radius: 50%;*/
+}
+.yonghu-btn{
+
+    color: #377444;
+  /*background-color: #377444;*/
+  /*border: solid 1px #377444;*/
+  /*border-radius: 50%;*/
+}
+.shezhi-btn{
+
+    color: #3779f7;
+  /*background-color: #3779f7;*/
+  /*border: solid 1px #3779f7;*/
+  /*border-radius: 50%;*/
+}
+.chakan-btn{
+
+    color:#3779f7;
+    /*background-color: #3779f7;*/
+    /*border: solid 1px #3779f7;*/
+    /*border-radius: 50%;*/
+}
+.bianji-btn i,.shanchu-btn i,.chakan-btn i,.quanxiantianjia-btn i,.shezhi-btn i,.yonghu-btn i,.chakan-btn i{
+    display: block;
+    color: #fff;
+    margin: 2px 0 0 0;
+    /*font-size: 12px;*/
+}
+body .demo-class .iconfont{
+    font-size: 20px;
+}
+.table-head-tr{
+    background-color: #f3f8ff !important;
+}
+body .demo-class .layui-layer-title{
+    height: 4rem;
+    line-height: 4rem;
+    background-color: #3779f7;
+    border: solid 1px #3879f7;
+    font-size: 20px;
+    color: #ffffff;
+}
+.layui-input-color{
+    background-color: #f9f9f9;
+    border: solid 1px #dce3eb;
+}
+.layui-form-select dl dd.layui-this{
+    background-color: #f3f8ff;
+    color: #666;
+}
+.layui-form-select dl{
+    top: 36px;
+    padding: 0;
+    min-height: 100px;
+}
+.layui-form-select .layui-input{
+    padding-left: 1rem;
+    color: #666;
+    background-color: #f9f9f9;
+    border: solid 1px #dce3eb;
+}
+
+.layui-form-select dl dd{
+    /*font-family: PingFangSC-Regular;*/
+    font-size: 1rem;
+    padding-left: 1rem;
+    color: #666666;
+    background-color: #ffffff;
+    border-bottom: solid 1px #dce3eb;
+
+}
+
+.layui-form-select dl dd:hover{
+    background-color: #f3f8ff;
+
+}
+.red-star{
+    color: #f63b3b;
+}
+.font-gou{
+    color: #24cbfc;
+}
+.layui-form-radioed i{
+    color: #25cbfc;
+}
+

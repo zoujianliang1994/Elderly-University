@@ -1,0 +1,103 @@
+package com.zhimu.service.manager.edu.teacherWages.impl;
+
+import com.zhimu.commons.utils.DateUtil;
+import com.zhimu.commons.utils.PageData;
+import com.zhimu.commons.utils.UuidUtil;
+import com.zhimu.dao.DaoSupport;
+import com.zhimu.dao.entity.system.Page;
+import com.zhimu.service.manager.edu.teacherWages.TeacherWagesManager;
+import org.springframework.scheduling.annotation.Scheduled;
+import org.springframework.stereotype.Service;
+
+import javax.annotation.Resource;
+import java.util.List;
+
+@Service("teacherWagesService")
+public class TeacherWagesService implements TeacherWagesManager {
+
+  @Resource(name = "daoSupport")
+  private DaoSupport dao;
+
+  public List<PageData> teacherWagesListPage(Page pd) throws Exception {
+    return (List<PageData>) dao.findForList("TeacherWagesMapper.datalistPage", pd);
+  }
+
+  public List<PageData> teacherWagesList(PageData pd) throws Exception {
+    return (List<PageData>) dao.findForList("TeacherWagesMapper.selectList", pd);
+  }
+
+  public PageData findDataById(PageData pd) throws Exception {
+    return (PageData) dao.findForObject("TeacherWagesMapper.findDataById", pd);
+  }
+
+  public void editData(PageData pd) throws Exception {
+    dao.update("TeacherWagesMapper.editData", pd);
+  }
+
+  public void deleteData(PageData pd) throws Exception {
+    dao.delete("TeacherWagesMapper.deleteData", pd);
+  }
+
+  //定时任务 每月1号凌晨3点生成教师上月的工资
+  @Scheduled(cron = "0 0 3 1 * ?")
+  public void insertTeacherWagse() throws Exception {
+    try {
+      //获取教师列表
+      List<PageData> teacherList = (List<PageData>) dao.findForList("TeacherMapper.selectList", new PageData());
+      for (PageData pd : teacherList) {
+        pd.put("teacher_id", pd.getString("id"));
+        pd.put("id", UuidUtil.get32UUID());
+        pd.put("dy_month", DateUtil.getYearMonth(-1));
+        //查询教师当月正常上课
+        pd.put("zc", "yes");
+        List<PageData> zc = selectPkList(pd);
+        //正常上课数
+        int zcks = zc.size();
+        int zckf = 0;
+        //正常上课的累计课费
+        for (PageData z : zc) {
+          zckf += Integer.parseInt(z.get("wages") + "");
+        }
+        //已经上课总数
+        pd.put("yjsk", zcks);
+        //查询教师当月请假未上课
+        pd.put("zc", "");
+        pd.put("qj", "yes");
+        List<PageData> qj = selectPkList(pd);
+        //请假课数
+        int qqks = qj.size();
+        //请假累计扣费
+        int qjkf = 0;
+        for (PageData q : qj) {
+          qjkf += Integer.parseInt(q.get("wages") + "");
+        }
+        //缺勤课数
+        pd.put("qqks", qqks);
+        //应发金额 (正常上课+请假扣费)
+        pd.put("yf_wages", zckf + qjkf);
+        //扣发金额 (请假扣费)
+        pd.put("kf_wages", qjkf);
+        //调整金额 默认 0
+        pd.put("tz_wages", 0);
+        //实发金额 (正常上课的课费)
+        pd.put("sf_wages", zckf);
+        dao.save("TeacherWagesMapper.addData", pd);
+      }
+    } catch (Exception e) {
+      e.printStackTrace();
+    }
+  }
+
+  //查询老师当月上课情况
+  public List<PageData> selectPkList(PageData pd) throws Exception {
+    return (List<PageData>) dao.findForList("TeacherWagesMapper.selectPkList", pd);
+  }
+
+  public List<PageData> myWagesList(PageData pd) throws Exception {
+    return (List<PageData>) dao.findForList("TeacherWagesMapper.myWagesList", pd);
+  }
+
+  public List<PageData> myWagesDetail(PageData pd) throws Exception {
+    return (List<PageData>) dao.findForList("TeacherWagesMapper.myWagesDetail", pd);
+  }
+}

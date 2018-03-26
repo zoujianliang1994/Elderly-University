@@ -1,0 +1,106 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="NavigationMapper">
+
+    <resultMap id="NavigationResultMap" type="com.zhimu.dao.entity.cms.Navigation">
+        <id column="ID" property="ID" />
+        <result column="ENAME" property="ENAME" />
+        <result column="NAME" property="NAME" />
+        <result column="PARENT_ID" property="PARENT_ID" />
+        <result column="PATH" property="PATH" />
+        <result column="SORT" property="SORT" />
+        <result column="STATUS" property="STATUS" />
+    </resultMap>
+
+
+    <!--表名 -->
+    <sql id="tableName">
+        cms_navigation
+    </sql>
+
+    <!-- 字段 -->
+    <sql id="Field">
+        ID,
+        ENAME,
+        NAME,
+        PARENT_ID,
+        PATH,
+        SORT,
+        STATUS
+    </sql>
+
+
+    <!-- 字段值 -->
+    <sql id="FieldValue">
+		#{ID},
+		#{ENAME},
+		#{NAME},
+		#{PARENT_ID},
+		#{PATH},
+		#{SORT},
+		#{STATUS}
+	</sql>
+
+    <!-- ###### 增加 ###### -->
+    <insert id="addData" parameterType="pd">
+        insert into
+        <include refid="tableName"></include>
+        (
+        <include refid="Field"></include>
+        ) values (
+        <include refid="FieldValue"></include>
+        )
+    </insert>
+
+
+    <!-- ###### 删除 ###### -->
+    <delete id="delData" parameterType="pd">
+        delete from <include refid="tableName"/> where ID=#{ID};
+        delete from <include refid="tableName"/> where PARENT_ID=#{ID}
+    </delete>
+
+
+    <update id="updateData" parameterType="pd">
+        UPDATE <include refid="tableName"></include>
+           SET ENAME=#{ENAME}, NAME=#{NAME},
+               PARENT_ID=#{PARENT_ID},PATH=#{PATH},
+               SORT = #{SORT},STATUS=#{STATUS}
+         WHERE ID=#{ID}
+    </update>
+
+    <!-- 列表 -->
+    <select id="datalistPage" parameterType="page" resultType="pd">
+        select <include refid="Field"></include>
+          from <include refid="tableName"></include>
+         where 1 = 1
+        <if test="pd.PARENT_ID != null and pd.PARENT_ID != ''">
+           and PARENT_ID = #{pd.PARENT_ID}
+        </if>
+        <if test="pd.keywords != null and pd.keywords != ''">
+           and NAME LIKE ('%'+#{pd.keywords}+'%')
+        </if>
+         order by SORT
+    </select>
+
+
+    <!-- 列表 -->
+    <select id="cmsListIndex" parameterType="String" resultMap="NavigationResultMap">
+        select <include refid="Field"></include>
+          from <include refid="tableName"></include>
+         where 1 = 1
+        <if test="_parameter != null and _parameter != ''">
+           and PARENT_ID = #{_parameter}
+        </if>
+         order by SORT
+    </select>
+
+
+    <!-- 通过ID获取信息 -->
+    <select id="getIdInfo" parameterType="pd" resultType="pd">
+        select <include refid="Field"></include>
+          from <include refid="tableName"></include>
+         where STATUS = '1'
+           and ID = #{PARENT_ID}
+    </select>
+
+</mapper>

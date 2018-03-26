@@ -1,0 +1,88 @@
+/**
+ * 学期
+ * @author wangyong
+ */
+package com.zhimu.service.manager.edu.semester;
+
+import java.util.List;
+
+import javax.annotation.Resource;
+
+import org.springframework.stereotype.Service;
+
+import com.zhimu.commons.utils.PageData;
+import com.zhimu.dao.DaoSupport;
+import com.zhimu.dao.entity.system.Page;
+import com.zhimu.service.manager.system.user.impl.UserService;
+
+@Service("semesterService")
+public class SemesterService {
+
+	@Resource(name = "daoSupport")
+	private DaoSupport dao;
+	@Resource(name = "userService")
+	private UserService userService;
+
+	/**
+	 * 新增
+	 * 
+	 * @param pd
+	 * @throws Exception
+	 */
+	public void save(PageData pd) throws Exception {
+		dao.save("SemesterMapper.save", pd);
+	}
+
+	/**
+	 * 删除
+	 * 
+	 * @param pd
+	 * @throws Exception
+	 */
+	public void delete(PageData pd) throws Exception {
+		dao.delete("SemesterMapper.delete", pd);
+
+	}
+
+	/**
+	 * 修改
+	 * 
+	 * @param pd
+	 * @throws Exception
+	 */
+	public void edit(PageData pd) throws Exception {
+		dao.update("SemesterMapper.edit", pd);
+	}
+
+	/**
+	 * 列表
+	 * 
+	 * @param page
+	 * @throws Exception
+	 */
+	@SuppressWarnings("unchecked")
+	public List<PageData> list(Page page) throws Exception {
+		return (List<PageData>) dao.findForList("SemesterMapper.datalistPage", page);
+	}
+
+	/**
+	 * 通过id获取数据
+	 * 
+	 * @param pd
+	 * @throws Exception
+	 */
+	public PageData findById(PageData pd) throws Exception {
+		return (PageData) dao.findForObject("SemesterMapper.findById", pd);
+	}
+
+	/**
+	 * 通过时间获取数据
+	 * 
+	 * @param pd
+	 * @throws Exception
+	 */
+	public List<PageData> findByDateAndSid(PageData pd) throws Exception {
+		return (List<PageData>) dao.findForList("SemesterMapper.findByDateAndSid", pd);
+	}
+
+}

@@ -1,0 +1,13 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<project version="4">
+  <component name="ProjectModuleManager">
+    <modules>
+      <module fileurl="file://$PROJECT_DIR$/.idea/Indx.iml" filepath="$PROJECT_DIR$/.idea/Indx.iml" />
+      <module fileurl="file://$PROJECT_DIR$/lndx-commons/lndx-commons.iml" filepath="$PROJECT_DIR$/lndx-commons/lndx-commons.iml" />
+      <module fileurl="file://$PROJECT_DIR$/lndx-dao/lndx-dao.iml" filepath="$PROJECT_DIR$/lndx-dao/lndx-dao.iml" />
+      <module fileurl="file://$PROJECT_DIR$/lndx/lndx-managementCenter.iml" filepath="$PROJECT_DIR$/lndx/lndx-managementCenter.iml" />
+      <module fileurl="file://$PROJECT_DIR$/lndx-parent-project/lndx-parent-project.iml" filepath="$PROJECT_DIR$/lndx-parent-project/lndx-parent-project.iml" />
+      <module fileurl="file://$PROJECT_DIR$/lndx-service/lndx-service.iml" filepath="$PROJECT_DIR$/lndx-service/lndx-service.iml" />
+    </modules>
+  </component>
+</project>

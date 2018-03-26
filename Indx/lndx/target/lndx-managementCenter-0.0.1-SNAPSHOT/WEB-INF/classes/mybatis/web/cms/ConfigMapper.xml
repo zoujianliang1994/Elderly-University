@@ -1,0 +1,87 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" 
+	"http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="ConfigMapper">
+
+	<resultMap type="Config" id="ConfigResultMap">
+		<id column="KEY_ID" property="KEY_ID"/>
+		<result column="VALUE" property="VALUE"/>
+		<result column="DESCRIPTION" property="DESCRIPTION"/>
+		<result column="CREATE_TIME" property="CREATE_TIME"/>
+	</resultMap>
+	
+	<!--表名 -->
+	<sql id="tableName">
+		  cms_config
+	</sql>
+	
+	<!-- 字段 -->
+	<sql id="Field">
+		KEY_ID,
+		VALUE,
+		CREATE_TIME
+	</sql>
+	
+	<!-- 字段值 -->
+	<sql id="FieldValue">
+		#{KEY_ID},
+		#{VALUE},
+		#{CREATE_TIME}
+	</sql>
+	
+	
+	<!-- ############################## -->
+	<!-- ###### 增加 ###### -->
+	<!-- ############################## -->
+	<insert id="addConfig" parameterType="com.zhimu.dao.entity.cms.Config" >
+		insert into 
+			<include refid="tableName"></include> 
+		(
+			<include refid="Field"></include>
+		) values (
+			<include refid="FieldValue"></include>
+		)
+	</insert>
+	
+	<!-- ############################## -->
+	<!-- ###### 删除 ###### -->
+	<!-- ############################## -->
+
+	<delete id="deleteConfig" parameterType="com.zhimu.dao.entity.cms.Config">
+		delete from 
+		<include refid="tableName"></include> 
+		where KEY_ID=#{KEY} 
+	</delete>
+	
+	<!-- ############################## -->
+	<!-- ###### 修改 ###### -->
+	<!-- ############################## -->
+
+	<update id="updateConfig" parameterType="com.zhimu.dao.entity.cms.Config">
+		UPDATE <include refid="tableName"></include> 
+		 SET
+		
+			VALUE=#{value}
+		WHERE
+			KEY_ID=#{key}
+	</update>
+	
+	
+	<!-- ############################## -->
+	<!-- ###### 查询 ###### -->
+	<!-- ############################## -->
+
+	<select id="getConfigByKey" parameterType="String" resultType="com.zhimu.dao.entity.cms.Config">
+			select  
+			<include refid="Field"></include>
+		 from 
+			<include refid="tableName"></include>
+		 where KEY_ID=#{key}
+	</select>
+	
+	<select id="getAllConfig"
+			resultType="Config">
+			select <include refid="Field"></include> from <include refid="tableName"></include>
+		</select>
+	
+</mapper>

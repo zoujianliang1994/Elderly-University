@@ -1,0 +1,188 @@
+.wrap {
+  position: fixed;
+  width: 100%;
+  height: 100%;
+  /*.line{
+		background:yellow;
+		width:10px;
+		height:100%;
+		position:absolute;
+		left:225px;
+		top:0;
+		cursor:w-resize;
+	}*/
+}
+.wrap.wrap-map {
+  background: url('../images/mapbg.png') center 0;
+  background-size: cover;
+}
+.wrap.wrap-map .header {
+  background: transparent;
+}
+.wrap .header {
+  width: 100%;
+  height: 60px;
+  background: #1a53b3;
+  background: -webkit-linear-gradient(left, #2795cd, #1a53b3);
+  /* Safari 5.1 - 6.0 */
+  background: -o-linear-gradient(right, #1a53b3, #2795cd);
+  /* Opera 11.1 - 12.0 */
+  background: -moz-linear-gradient(right, #1a53b3, #2795cd);
+  /* Firefox 3.6 - 15 */
+  background: linear-gradient(to right, #1a53b3, #2795cd);
+  /* 标准的语法 */
+}
+.wrap .contentBox {
+  position: absolute;
+  top: 60px;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  background: #fff;
+}
+.wrap .back {
+  margin-left: 20px;
+  font-size: 13px;
+}
+.wrap .back:hover {
+  color: #108ee9;
+}
+.wrap .menu {
+  position: fixed;
+  left: 0;
+  top: 60px;
+  bottom: 0;
+  width: 240px;
+  color: #000;
+  padding: 10px;
+  background: #fff;
+  overflow-y: auto;
+  overflow-x: hidden;
+  /*&.unactive {
+			box-shadow: none;
+			border-right: 20px solid #fff;
+		}
+		&.active {
+			box-shadow: 10px 5px 30px rgba(0,0,0,.1);
+			border-right: 5px solid #fff;
+			border-right: 5px solid #ddd\0;       !* IE8支持*!
+		}*/
+}
+.wrap .menu .treeView .treeBox {
+  border-right: none;
+}
+.wrap .menu .treeView .treeItem {
+  margin-right: 32px;
+}
+.wrap .menu .treeView .treeItem .title {
+  width: auto;
+}
+.wrap .menu .treeView .treeItem .item-switch {
+  right: 0px;
+}
+.wrap .contentBody {
+  position: absolute;
+  top: 0;
+  right: 0;
+  bottom: 0;
+  left: 240px;
+  padding: 0 20px 20px 20px;
+  background: #fff;
+  min-width: 1000px;
+  box-shadow: 0 5px 15px rgba(0, 0, 0, 0.2);
+}
+.wrap .iframe {
+  border: 1px solid #fff;
+  width: 100%;
+  height: 98%;
+  border-radius: 5px;
+}
+.wrap .layui-tab-title li {
+  color: #999;
+}
+.wrap .layui-tab-title li.layui-this {
+  color: #0c64b5;
+}
+.wrap .layui-tab-title .btn-back {
+  display: inline-block;
+  vertical-align: middle;
+  font-size: 14px;
+  transition: all .2s;
+  -webkit-transition: all .2s;
+  position: relative;
+  line-height: 40px;
+  min-width: 65px;
+  padding: 0 15px;
+  padding-left: 0;
+  text-align: center;
+  cursor: pointer;
+}
+.wrap .layui-tab-title .btn-back > i {
+  margin-right: 5px;
+  vertical-align: middle;
+}
+.wrap .layui-tab-content {
+  background: #fff;
+  background-image: url(../images/blankpage.png);
+  background-size: 300px 300px;
+  background-repeat: no-repeat;
+  background-position: center;
+}
+.wrap .layui-tab-content .layui-tab-item {
+  height: 98%;
+  background: #fff;
+}
+.wrap .mapBox {
+  width: 90%;
+  height: 100%;
+  margin: 0 auto;
+  position: relative;
+}
+.wrap .mapBox .map {
+  width: 100%;
+  height: 100%;
+}
+.wrap .mapBox .sichuan {
+  position: absolute;
+  right: 0;
+  top: 0;
+  font-size: 13px;
+  color: #fff;
+  height: 25px;
+  line-height: 25px;
+}
+.wrap .mapBox .sichuan .title {
+  display: inline-block;
+  width: 175px;
+}
+.wrap .mapBox .sichuan .num {
+  display: inline-block;
+  width: 200px;
+  text-align: center;
+  font-size: 27px;
+  color: #00DEFF ;
+  color: linear-gradient(top bottom, #00DEFF, #559CF2);
+}
+.wrap .suspensionBox {
+  height: 100%;
+  width: 80%;
+  position: absolute;
+  right: -80%;
+  top: 0;
+  background: #fff;
+  box-shadow: 0 25px 25px rgba(0, 0, 0, 0.2);
+  transition: all 1s ease;
+}
+.treeBox {
+  border-right: 1px solid #eee;
+}
+.tableBox {
+  padding: 10px;
+}
+/*
+.layui-tree-branch,.layui-tree-leaf{
+	opacity:0
+}
+.layui-tree li ul{
+	margin-left:0
+}*/

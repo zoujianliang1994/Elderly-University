@@ -1,0 +1,36 @@
+.sliderVerification{
+	-moz-user-select: none;
+    -khtml-user-select: none;
+    user-select: none;
+	margin:50px;
+	position:relative;
+	height:40px;
+	line-height:40px;
+	width:310px;
+	border:1px solid #cdcdcd;
+	box-sizing: border-box;
+	border-radius:5px;
+	font-size:13px;
+	color:#45494c;
+}
+.sliderVerification .bar{
+	position: absolute;
+	left:-1px;
+	top:-1px;
+	width:40px;
+	height:40px;
+	border:1px solid #cdcdcd;
+	background:#fff;
+	cursor: pointer;
+	border-radius:5px;
+}
+
+.sliderVerification .bar:hover{
+	background-color: #2284e6;
+}
+
+.selectNone{
+	-moz-user-select: none;
+	-khtml-user-select: none;
+	user-select: none;
+}

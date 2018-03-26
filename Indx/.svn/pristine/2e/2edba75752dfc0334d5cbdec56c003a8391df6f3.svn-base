@@ -1,0 +1,70 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="LeaveMapper">
+	
+	<!--表名 -->
+	<sql id="tableName">
+		stu_apply_leave
+	</sql>
+	
+	<!-- 字段 -->
+	<sql id="Field">
+		id,
+        school_id,
+        school_name,
+        start_time,
+        end_time,
+        duration,
+        reason,
+        teacher_id,
+        teacher_name,
+        monitor_id,
+        monitor_name,
+        group_leader_id,
+        group_leader_name,
+        create_time,
+        create_by,
+        update_time,
+        update_by
+	</sql>
+	
+	<!-- 字段值 -->
+	<sql id="FieldValue">
+		#{id},
+		#{school_id},
+		#{school_name},
+		#{start_time},
+		#{end_time},
+		#{duration},
+		#{reason},
+		#{teacher_id},
+		#{teacher_name},
+		#{monitor_name},
+		#{group_leader_id},
+		#{group_leader_name},
+		#{create_time},
+		#{create_by},
+		#{update_time},
+		#{update_by}
+	</sql>
+
+	<!-- 请假单列表 -->
+	<select id="listPage" parameterType="page" resultType="pd">
+		select
+			<include refid="Field"></include>
+		FROM
+			<include refid="tableName"></include>
+		where
+			1 = 1
+		and
+			create_by = #{pd.createBy}
+		<if test="pd.keywords!= null and pd.keywords != ''"><!-- 关键词检索 -->
+			and ( school_name like ('%'+#{pd.keywords}+'%') or
+			reason like ('%'+#{pd.keywords}+'%')
+			)
+		</if>
+		order by
+			create_time
+	</select>
+
+</mapper>

@@ -1,0 +1,303 @@
+package com.zhimu.service.manager.system.user.impl;
+
+import java.util.List;
+
+import javax.annotation.Resource;
+
+import org.apache.commons.lang.StringUtils;
+import org.apache.shiro.crypto.hash.SimpleHash;
+import org.springframework.stereotype.Service;
+import org.springframework.web.multipart.MultipartFile;
+
+import com.zhimu.commons.utils.FtpUtils;
+import com.zhimu.commons.utils.PageData;
+import com.zhimu.commons.utils.PhoneUtils;
+import com.zhimu.commons.utils.PingYinTools;
+import com.zhimu.commons.utils.SmsUtil;
+import com.zhimu.commons.utils.UuidUtil;
+import com.zhimu.commons.utils.mail.SimpleMailSender;
+import com.zhimu.dao.DaoSupport;
+import com.zhimu.dao.entity.system.Page;
+import com.zhimu.dao.entity.system.Role;
+import com.zhimu.dao.entity.system.User;
+import com.zhimu.service.manager.system.user.UserManager;
+
+/**
+ * 系统用户
+ * 
+ * @author wy
+ */
+@Service("userService")
+public class UserService implements UserManager {
+
+	@Resource(name = "daoSupport")
+	private DaoSupport dao;
+
+	/**
+	 * 登录判断
+	 */
+	@Override
+	public PageData getUserByNameAndPwd(PageData pd) throws Exception {
+		return (PageData) dao.findForObject("UserMapper.getUserInfo", pd);
+	}
+
+	/**
+	 * 更新登录时间
+	 */
+	@Override
+	public void updateLastLogin(PageData pd) throws Exception {
+		dao.update("UserMapper.updateLastLogin", pd);
+	}
+
+	/**
+	 * 通过用户ID获取用户信息和角色信息
+	 */
+	@Override
+	public User getUserAndRoleById(String USER_ID) throws Exception {
+		return (User) dao.findForObject("UserMapper.getUserAndRoleById", USER_ID);
+	}
+
+	/**
+	 * 通过USERNAEME获取数据
+	 */
+	@Override
+	public PageData findByUsername(PageData pd) throws Exception {
+		return (PageData) dao.findForObject("UserMapper.findByUsername", pd);
+	}
+
+	/**
+	 * 列出某角色下的所有用户
+	 */
+	@SuppressWarnings("unchecked")
+	@Override
+	public List<PageData> listAllUserByRoldId(PageData pd) throws Exception {
+		return (List<PageData>) dao.findForList("UserMapper.listAllUserByRoldId", pd);
+
+	}
+
+	/**
+	 * 保存用户IP
+	 */
+	@Override
+	public void saveIP(PageData pd) throws Exception {
+		dao.update("UserMapper.saveIP", pd);
+	}
+
+	/**
+	 * 用户列表
+	 */
+	@Override
+	@SuppressWarnings("unchecked")
+	public List<PageData> listUsers(Page page) throws Exception {
+		return (List<PageData>) dao.findForList("UserMapper.userlistPage", page);
+	}
+
+	/**
+	 * 通过邮箱获取数据
+	 */
+	@Override
+	public PageData findByUE(PageData pd) throws Exception {
+		return (PageData) dao.findForObject("UserMapper.findByUE", pd);
+	}
+
+	/**
+	 * 通过编号获取数据
+	 */
+	@Override
+	public PageData findByUN(PageData pd) throws Exception {
+		return (PageData) dao.findForObject("UserMapper.findByUN", pd);
+	}
+
+	/**
+	 * 通过id获取数据
+	 */
+	@Override
+	public PageData findById(PageData pd) throws Exception {
+		return (PageData) dao.findForObject("UserMapper.findById", pd);
+	}
+
+	private String returnPicturePath(PageData pd) throws Exception {
+		// 保存图片信息
+		MultipartFile files = (MultipartFile) pd.get("files");
+		String PICTURES_FLAG = pd.getString("PICTURES_FLAG");
+		String picturePath = "";
+		if (files != null && "1".equals(PICTURES_FLAG)) {
+			picturePath = FtpUtils.uploadImg(FtpUtils.multipartToFile(files));
+		} else {
+			picturePath = pd.getString("PICTURES_PATH");
+		}
+		return picturePath;
+	}
+
+	/**
+	 * 保存用户
+	 */
+	@Override
+	public void saveU(PageData pd) throws Exception {
+		// pd.put("PICTURES_PATH", returnPicturePath(pd));
+		delLastComma(pd);
+		dao.save("UserMapper.saveU", pd);
+	}
+
+	private void delLastComma(PageData pd) {
+		String schoolId = pd.getString("SCHOOL_ID"); // 学校id
+		// 如果最后一个字符是逗号,就将schoolId和schoolName最后的逗号去掉
+		if (!schoolId.isEmpty() && schoolId.endsWith(",")) {
+			schoolId = schoolId.substring(0, schoolId.length() - 1);
+			String schoolName = pd.getString("SCHOOL_NAME");
+			schoolName = schoolName.substring(0, schoolName.length() - 1);
+			pd.put("SCHOOL_ID", schoolId);
+			pd.put("SCHOOL_NAME", schoolName);
+		}
+	}
+
+	/**
+	 * 修改用户
+	 */
+	@Override
+	public void editU(PageData pd) throws Exception {
+		// pd.put("PICTURES_PATH", returnPicturePath(pd));
+		delLastComma(pd);
+		dao.update("UserMapper.editU", pd);
+	}
+
+	/**
+	 * 删除用户
+	 */
+	@Override
+	public void deleteU(PageData pd) throws Exception {
+		dao.delete("UserMapper.deleteU", pd);
+	}
+
+	/**
+	 * 批量删除用户
+	 */
+	@Override
+	public void deleteAllU(String[] USER_IDS) throws Exception {
+		dao.delete("UserMapper.deleteAllU", USER_IDS);
+	}
+
+	/**
+	 * 用户列表(全部)
+	 */
+	@SuppressWarnings("unchecked")
+	@Override
+	public List<PageData> listAllUser(PageData pd) throws Exception {
+		return (List<PageData>) dao.findForList("UserMapper.listAllUser", pd);
+	}
+
+	/**
+	 * 获取总数
+	 */
+	@Override
+	public PageData getUserCount(String value) throws Exception {
+		return (PageData) dao.findForObject("UserMapper.getUserCount", value);
+	}
+
+	@Override
+	public void updateOnline(PageData pd) throws Exception {
+		dao.update("UserMapper.updateOnline", pd);
+	}
+
+	@SuppressWarnings("unchecked")
+	@Override
+	public List<Role> findByAllRolePermisson(String[] ROLEID) throws Exception {
+		return (List<Role>) dao.findForList("UserMapper.findByAllRolePermisson", ROLEID);
+	}
+
+	@SuppressWarnings("unchecked")
+	@Override
+	public List<User> listUsersByRoleId(PageData pd) throws Exception {
+		return (List<User>) this.dao.findForList("UserMapper.listUsersByRoleId", pd);
+	}
+
+	@SuppressWarnings("unchecked")
+	@Override
+	public List<User> listUsersByName(String keyword) throws Exception {
+		return (List<User>) this.dao.findForList("UserMapper.listUsersByName", keyword);
+	}
+
+	@SuppressWarnings("unchecked")
+	@Override
+	public List<PageData> findByRoleAndDept(PageData pd) throws Exception {
+		return (List<PageData>) this.dao.findForList("UserMapper.findByRoleAndDept", pd);
+	}
+
+	@Override
+	public boolean hasUsers(String unitCode) throws Exception {
+		@SuppressWarnings("unchecked")
+		List<PageData> pageList = (List<PageData>) dao.findForList("UserMapper.getByUnitCode", unitCode);
+		return !(null == pageList || pageList.size() <= 0);
+	}
+
+	@Override
+	public void editPassWord(PageData pd) throws Exception {
+		dao.update("UserMapper.updatePassWord", pd);
+	}
+
+	@Override
+	public void updateStatus(PageData pd) throws Exception {
+		dao.update("UserMapper.updateStatus", pd);
+	}
+
+	@SuppressWarnings("unchecked")
+	@Override
+	public List<PageData> listAllUserBySid(PageData pd) throws Exception {
+		return (List<PageData>) dao.findForList("UserMapper.listAllUserBySid", pd);
+	}
+
+	@Override
+	public void editUserSchool(PageData pd) throws Exception {
+		dao.update("UserMapper.editUserSchool", pd);
+	}
+
+	@Override
+	public PageData initeAccount(PageData pd) throws Exception {
+		String pwdStrategy = pd.getString("pwdStrategy");
+		String phone = pd.getString("phone");
+		String userName = phone;
+		String userId = pd.getString("USER_ID");
+		if (StringUtils.isEmpty(userId)) {
+			userId = UuidUtil.get32UUID();
+		}
+		String password = pd.getString("password");
+		pd.put("USER_ID", userId); // ID 主键
+		pd.put("STATUS", "0");
+		if ("1".equals(pwdStrategy)) {
+			// 默认初始密码123456
+			password = "123456";
+			userName = PingYinTools.getPinYinHeadChar(pd.getString("sName"));
+			// 名称简称策略
+			pd.put("PASSWORD", new SimpleHash("SHA-1", userName, password).toString()); // 密码加密
+		} else if ("2".equals(pwdStrategy)) {
+			// 手机号策略
+			pd.put("PASSWORD", new SimpleHash("SHA-1", phone, password).toString()); // 密码加密
+		}
+		pd.put("USERNAME", userName);
+		saveU(pd); // 执行保存
+		PageData result = new PageData();
+		result.put("userId", userId);
+		result.put("userName", userName);
+		result.put("password", password);
+		return result;
+	}
+
+	@Override
+	public int getPwdbyUserName(PageData pd) throws Exception {
+		if (PhoneUtils.isMobileNO(pd.getString("userName"))) {
+			// 短信验证
+			return SmsUtil.sendSmsInfo(pd.getString("userName"));
+		} else {
+			// 邮箱验证
+			pd.put("title", "系统通知");
+			pd.put("content", "账号：" + pd.getString("userName") + "的验证码为:");
+			pd.put("toAddress", pd.getString("userName"));
+			// 生成重置密码连接地址
+			// 发送邮件通知
+			SimpleMailSender.sendMessageToSchool(pd);
+		}
+		return 0;
+
+	}
+
+}

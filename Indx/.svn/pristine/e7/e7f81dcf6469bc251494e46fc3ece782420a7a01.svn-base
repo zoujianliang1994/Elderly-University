@@ -1,0 +1,569 @@
+package com.zhimu.controller.manager.edu.studentInfo;
+
+import com.zhimu.commons.constant.Const;
+import com.zhimu.commons.utils.*;
+import com.zhimu.controller.manager.base.BaseController;
+import com.zhimu.dao.entity.system.Page;
+import com.zhimu.service.manager.edu.grades.GradesManager;
+import com.zhimu.service.manager.edu.student.StudentService;
+import com.zhimu.service.manager.edu.studentInfo.StudentInfoManager;
+import net.sf.json.JSONArray;
+import net.sf.json.JSONObject;
+import org.apache.commons.lang.StringUtils;
+import org.springframework.stereotype.Controller;
+import org.springframework.stereotype.Service;
+import org.springframework.web.bind.annotation.RequestMapping;
+import org.springframework.web.bind.annotation.RequestMethod;
+import org.springframework.web.bind.annotation.ResponseBody;
+import org.springframework.web.servlet.ModelAndView;
+
+import javax.annotation.Resource;
+import java.util.ArrayList;
+import java.util.HashMap;
+import java.util.List;
+import java.util.Map;
+
+@Controller
+@RequestMapping(value = "/studentInfo")
+public class StudentInfoController extends BaseController {
+
+  // 文件上传路径
+  private String filePath = PathUtil.getClasspath() + Const.FILEPATHFILE;
+
+
+
+  @Resource(name = "studentInfoService")
+  StudentInfoManager studentInfoService;
+
+  @Resource(name = "studentService")
+  StudentService studentService;
+
+  @Resource(name = "gradesService")
+  GradesManager gradesService;
+
+  /**
+   * 学员档案列表
+   */
+  @RequestMapping(value = "/list")
+  public ModelAndView list(Page page) throws Exception {
+    ModelAndView mv = this.getModelAndView();
+    PageData pd = getPageData();
+    try {
+      String keywords = pd.getString("keywords"); // 检索条件
+      if (null != keywords && !"".equals(keywords)) {
+        pd.put("keywords", keywords.trim());
+      }
+      pd.put("userSchoolIds",getUserInfo().getSchoolId().split(","));
+      page.setPd(pd);
+      List<PageData> list = studentInfoService.studentInfolistPage(page);
+
+      mv.addObject("pd", pd);
+      mv.addObject("list", list);
+      mv.setViewName("edu/studentInfo/studentInfo_list");
+    } catch (Exception e) {
+      logger.error(ErrorUtils.getErrorMessage(e, "查询教师列表异常!"));
+    }
+    return mv;
+  }
+
+
+  /**
+   * 请求编辑
+   *
+   * @return
+   * @throws Exception
+   */
+  @RequestMapping(value = "/goEdit")
+  public ModelAndView toEdit() throws Exception {
+    ModelAndView mv = this.getModelAndView();
+    PageData pd = new PageData();
+    try {
+      pd = this.getPageData();
+      String currentPage = pd.getString("currentPage");
+      String keywords = pd.getString("keywords");
+      String type = pd.getString("type");
+      pd = studentInfoService.findObjectById(pd);
+      pd.put("currentPage", currentPage);
+      pd.put("keywords", keywords);
+      pd.put("type",type);
+      mv.addObject("schoolList", getSchoolList());
+      mv.addObject("msg", "edit");
+      mv.addObject("pd", pd);
+      mv.setViewName("edu/studentInfo/studentInfo_edit");
+    } catch (Exception e) {
+      logger.error(e.toString(), e);
+    }
+    return mv;
+  }
+
+
+  /**
+   * 保存修改
+   *
+   * @return
+   * @throws Exception
+   */
+  @RequestMapping(value = "/edit" ,method = RequestMethod.POST)
+  @ResponseBody
+  public Object edit() throws Exception {
+    ModelAndView mv = this.getModelAndView();
+    PageData pd = new PageData();
+    String msg = "";
+    try {
+      pd = this.getPageData();
+      //检查是否存在排课
+      msg = "success";
+      studentInfoService.edit(pd);
+    } catch (Exception e) {
+      e.printStackTrace();
+      logger.error(e.toString(), e);
+      msg = "error";
+    }
+    Map<String, String> map = new HashMap<String, String>();
+    map.put("msg", msg);
+    return AppUtil.returnObject(new PageData(), map);
+  }
+
+
+
+
+  /**
+   * 请求退学
+   *
+   * @return
+   * @throws Exception
+   */
+  @RequestMapping(value = "/goOut")
+  public ModelAndView goOut() throws Exception {
+    ModelAndView mv = this.getModelAndView();
+    PageData pd = new PageData();
+    try {
+      pd = this.getPageData();
+      String currentPage = pd.getString("currentPage");
+      String keywords = pd.getString("keywords");
+      pd = studentInfoService.findObjectById(pd);
+      pd.put("currentPage", currentPage);
+      pd.put("keywords", keywords);
+      mv.addObject("schoolList", getSchoolList());
+      mv.addObject("msg", "edit");
+      mv.addObject("pd", pd);
+      mv.setViewName("edu/studentInfo/studentInfo_out");
+    } catch (Exception e) {
+      logger.error(e.toString(), e);
+    }
+    return mv;
+  }
+
+  /**
+   * 保存退学
+   *
+   * @return
+   * @throws Exception
+   */
+  @RequestMapping(value = "/out")
+  @ResponseBody
+  public Object out() throws Exception {
+    ModelAndView mv = this.getModelAndView();
+    PageData pd = new PageData();
+    String msg = "";
+    try {
+      pd = this.getPageData();
+      //判断是否需要修改学员状态
+      /*event_type
+      value="1" title="退学"
+      value="2" title="休学"
+      value="3" title="退班"
+       */
+      PageData tyep =  new PageData();
+      if(!pd.getString("event_type").equals("3")){
+        //退学处理等待接口
+        tyep.put("status","2");
+      }else{
+        tyep.put("status","3");
+      }
+
+      //解析checkedList
+      String checkedList = pd.getString("checkedList");
+      JSONArray json = JSONArray.fromObject(checkedList);
+      List<PageData> list = new ArrayList<PageData>();
+      if(json.size()>0){
+        for(int i=0;i<json.size();i++){
+          PageData pg = this.getPageData();
+          JSONObject job = json.getJSONObject(i);
+          pg.put("grades_id",job.get("id"));//班级id
+          pg.put("pay",job.get("tuition_fee"));//班级id
+          pg.put("id",get32UUID());//班级id
+          list.add(pg);
+
+          //改变该学员所在班级的状态
+          tyep.put("grades_id",job.get("id"));//班级id
+          tyep.put("id",pg.getString("student_id"));//班级id
+          studentService.editGrades(tyep);
+        }
+      }
+      //记录操作变化
+      studentInfoService.addTuition(list);
+
+      msg = "success";
+
+    } catch (Exception e) {
+      e.printStackTrace();
+      logger.error(e.toString(), e);
+      msg = "error";
+    }
+    Map<String, String> map = new HashMap<String, String>();
+    map.put("msg", msg);
+    return AppUtil.returnObject(new PageData(), map);
+  }
+
+
+  /**
+   * 请求转班
+   *
+   * @return
+   * @throws Exception
+   */
+  @RequestMapping(value = "/goTransfer")
+  public ModelAndView goTransfer(Page page) throws Exception {
+    ModelAndView mv = this.getModelAndView();
+    PageData pd = new PageData();
+    try {
+      pd = this.getPageData();
+
+      //查询条件
+      if(StringUtils.isEmpty(getUserInfo().getSchoolId())){
+        return mv;
+      }
+      pd.put("userSchoolIds",getUserInfo().getSchoolId().split(","));
+      page.setPd(pd);
+      page.setShowCount(5);
+      List<PageData> grades_List = gradesService.gradeslistPage(page); // 列出所有的角色
+
+      //查询学生资料
+      PageData pc = studentInfoService.findObjectById(pd);
+      pc.put("gradesIds",pc.getString("c_id").split(","));
+      List<PageData> allGrades = studentInfoService.getAllStudentBycId(pc);
+
+      mv.addObject("stu", pc);
+      mv.addObject("pd", pd);
+      mv.addObject("list", grades_List);
+      mv.addObject("allGrades", allGrades);
+      mv.setViewName("edu/studentInfo/studentInfo_transfer");
+    } catch (Exception e) {
+      e.printStackTrace();
+      logger.error(e.toString(), e);
+    }
+    return mv;
+  }
+
+
+  /**
+   * 保存转班
+   *
+   * @return
+   * @throws Exception
+   */
+  @RequestMapping(value = "/transfer")
+  @ResponseBody
+  public Object transfer() throws Exception {
+    ModelAndView mv = this.getModelAndView();
+    PageData pd = new PageData();
+    String msg = "";
+    try {
+      pd = this.getPageData();
+
+      pd.put("id",get32UUID());
+
+      //转出班级 clrea_grades
+      String clrea_grades =pd.getString("clrea_grades");
+      //转入班级 grades_id
+      String grades_id =pd.getString("grades_id");
+
+      List<PageData> list = new ArrayList<PageData>();
+      pd.put("income","0");
+      pd.put("grades_id",clrea_grades);
+      list.add(pd);
+
+      PageData pa = this.getPageData();
+      pa.put("pay","0");
+      pa.put("event_type","5");
+      pa.put("id",get32UUID());
+      list.add(pa);
+
+      //记录操作变化
+      studentInfoService.addTuition(list);
+      //更变student c_id
+      PageData info = this.getPageData();
+      studentInfoService.studentTransfer(info);
+      msg = "success";
+
+    } catch (Exception e) {
+      e.printStackTrace();
+      logger.error(e.toString(), e);
+      msg = "error";
+    }
+    Map<String, String> map = new HashMap<String, String>();
+    map.put("msg", msg);
+    return AppUtil.returnObject(new PageData(), map);
+  }
+
+
+
+
+  /**
+   * 请求转班
+   *
+   * @return
+   * @throws Exception
+   */
+  @RequestMapping(value = "/goJoin")
+  public ModelAndView goJoin(Page page) throws Exception {
+    ModelAndView mv = this.getModelAndView();
+    PageData pd = new PageData();
+    try {
+      pd = this.getPageData();
+
+      //查询条件
+      if(StringUtils.isEmpty(getUserInfo().getSchoolId())){
+        return mv;
+      }
+      pd.put("userSchoolIds",getUserInfo().getSchoolId().split(","));
+      page.setPd(pd);
+      page.setShowCount(5);
+      List<PageData> grades_List = gradesService.gradeslistPage(page); // 列出所有的角色
+
+      //查询学生资料
+      PageData pc = studentInfoService.findObjectById(pd);
+
+      mv.addObject("stu", pc);
+      mv.addObject("pd", pd);
+      mv.addObject("list", grades_List);
+      mv.setViewName("edu/studentInfo/studentInfo_join");
+    } catch (Exception e) {
+      e.printStackTrace();
+      logger.error(e.toString(), e);
+    }
+    return mv;
+  }
+
+
+
+  /**
+   * 保存插班
+   *
+   * @return
+   * @throws Exception
+   */
+  @RequestMapping(value = "/join")
+  @ResponseBody
+  public Object join() throws Exception {
+    ModelAndView mv = this.getModelAndView();
+    PageData pd = new PageData();
+    String msg = "";
+    try {
+      pd = this.getPageData();
+
+      PageData stu = new PageData();
+      stu.put("id",pd.getString("student_id"));//学生id
+      stu = studentInfoService.findObjectById(stu);//查询学生
+      String gradesId=stu.getString("c_id");
+      if(gradesId.indexOf(pd.getString("grades_id"))<0){
+        gradesId = StringUtils.isEmpty(gradesId)?pd.getString("grades_id"):gradesId+","+pd.getString("grades_id");
+        stu.put("c_id",gradesId);
+        studentInfoService.studentJoin(stu);
+
+        // 插入关系表
+        PageData gradesStu = new PageData();
+        gradesStu.put("g_id",pd.getString("grades_id"));
+        gradesStu.put("student_id",pd.getString("student_id"));
+        gradesStu.put("user_id",getUserInfo().getUSER_ID());
+        studentService.saveGrades(gradesStu);
+
+
+        pd.put("id",get32UUID());
+        List<PageData> list = new ArrayList<PageData>();
+        pd.put("pay","0");
+        list.add(pd);
+        //记录操作变化
+        studentInfoService.addTuition(list);
+        //更变student c_id
+        msg = "success";
+      }else{
+        msg = "false";
+      }
+
+
+    } catch (Exception e) {
+      e.printStackTrace();
+      logger.error(e.toString(), e);
+      msg = "error";
+    }
+    Map<String, String> map = new HashMap<String, String>();
+    map.put("msg", msg);
+    return AppUtil.returnObject(new PageData(), map);
+  }
+
+
+
+
+  /**
+   * 请求结业
+   *
+   * @return
+   * @throws Exception
+   */
+  @RequestMapping(value = "/goGraduation")
+  public ModelAndView goGraduation(Page page) throws Exception {
+    ModelAndView mv = this.getModelAndView();
+    PageData pd = new PageData();
+    try {
+      pd = this.getPageData();
+      //查询条件
+      if(StringUtils.isEmpty(getUserInfo().getSchoolId())){
+        return mv;
+      }
+      //查询学生资料
+      PageData pc = studentInfoService.findObjectById(pd);
+      //查询学生在读课程
+      List<PageData> mapJson = studentInfoService.getStuGradesLesson(pc);
+
+      org.json.JSONObject json = new org.json.JSONObject();
+      json.put("json" ,mapJson);
+
+      mv.addObject("stu", pc);
+      mv.addObject("pd", pd);
+      mv.addObject("mapJson", json.toString());
+
+
+      mv.setViewName("edu/studentInfo/studentInfo_graduation");
+    } catch (Exception e) {
+      e.printStackTrace();
+      logger.error(e.toString(), e);
+    }
+    return mv;
+  }
+
+
+
+  @RequestMapping(value = "/graduation")
+  @ResponseBody
+  public Object graduation() throws Exception {
+    ModelAndView mv = this.getModelAndView();
+    PageData pd = new PageData();
+    String msg = "";
+    try {
+      pd = this.getPageData();
+      //修改student表
+      int i  = studentInfoService.graduation(pd);
+
+      msg = "success";
+
+    } catch (Exception e) {
+      e.printStackTrace();
+      logger.error(e.toString(), e);
+      msg = "error";
+    }
+    Map<String, String> map = new HashMap<String, String>();
+    map.put("msg", msg);
+    return AppUtil.returnObject(new PageData(), map);
+  }
+
+
+
+
+
+  //查询班级情况
+  @RequestMapping(value = "/getStuGrades")
+  @ResponseBody
+  public Object getStuGrades() throws Exception {
+    ModelAndView mv = this.getModelAndView();
+
+    Map<String, Object> map = new HashMap<String, Object>();
+    PageData pd = new PageData();
+    String msgs = "";
+    try {
+      pd = this.getPageData();
+      List<PageData> mapJson = studentInfoService.getStuGradesJson(pd);
+
+      map.put("grades",mapJson);
+
+    } catch (Exception e) {
+      e.printStackTrace();
+      logger.error(e.toString(), e);
+      msgs = "error";
+    }
+    map.put("msg", msgs);
+    return AppUtil.returnObject(new PageData(), map);
+  }
+
+
+  //查询班级情况
+  @RequestMapping(value = "/getStuGradesTuition")
+  @ResponseBody
+  public Object getStuGradesTuition() throws Exception {
+    ModelAndView mv = this.getModelAndView();
+
+    Map<String, Object> map = new HashMap<String, Object>();
+    PageData pd = new PageData();
+    String msgs = "";
+    try {
+      pd = this.getPageData();
+      int tuition = studentInfoService.getStuGradesTuition(pd);
+
+      map.put("tuition",tuition);
+    } catch (Exception e) {
+      e.printStackTrace();
+      logger.error(e.toString(), e);
+      msgs = "error";
+    }
+    map.put("msg", msgs);
+    return AppUtil.returnObject(new PageData(), map);
+  }
+
+  /**
+   * 请求结业
+   *
+   * @return
+   * @throws Exception
+   */
+  @RequestMapping(value = "/goSel")
+  public ModelAndView goSel(Page page) throws Exception {
+    ModelAndView mv = this.getModelAndView();
+    PageData pd = new PageData();
+    try {
+      pd = this.getPageData();
+      //查询条件
+      if(StringUtils.isEmpty(getUserInfo().getSchoolId())){
+        return mv;
+      }
+      //查询学生资料
+      PageData pc = studentInfoService.findObjectById(pd);
+      //查询学生在读课程
+      String[]  grades =  pc.getString("c_id").split(",");
+      List<PageData> grades_list = studentInfoService.getStuGradesDetail(grades);
+      //学员操作记录
+      List<PageData> tuition_list = studentInfoService.getStuTuitionDetail(pc.getString("id"));
+      //学籍记录
+      List<PageData> status_list = studentInfoService.getStuStatusDetail(pc.getString("id"));
+
+      mv.addObject("pd", pc);
+      mv.addObject("grades_list", grades_list);
+      mv.addObject("tuition_list", tuition_list);
+      mv.addObject("status_list", status_list);
+
+
+
+      mv.setViewName("edu/studentInfo/studentInfo_sel");
+    } catch (Exception e) {
+      e.printStackTrace();
+      logger.error(e.toString(), e);
+    }
+    return mv;
+  }
+
+
+
+
+
+
+}

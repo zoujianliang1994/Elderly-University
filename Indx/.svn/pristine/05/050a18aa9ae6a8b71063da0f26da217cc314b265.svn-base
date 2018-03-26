@@ -1,0 +1,329 @@
+﻿<%@ page language="java" contentType="text/html; charset=UTF-8" pageEncoding="UTF-8" %>
+<%
+    String path = request.getContextPath();
+    String basePath = request.getScheme() + "://" + request.getServerName() + ":" + request.getServerPort() + path + "/";
+%>
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <title>学员管理</title>
+    <%@ include file="../../system/index/headcss.jsp" %>
+</head>
+<body>
+
+<div class="tableBox">
+
+    <!-- table -->
+    <div class="layui-col-sm12">
+        <form action="${msg}.do" class="layui-form" id="editForm" lay-filter="editForm" method="post">
+            <p class="student-info-title">1. 请填写您的基本资料（以下资料打*号为必填）</p>
+            <div class="layui-form-item" style="padding-bottom: 20px;border-bottom: 1px solid #dce3eb;">
+                <div class="layui-form-item">
+                    <div class="layui-inline">
+                        <label class="form-label"><i class="require">*</i>姓名<span class="colon">：</span></label>
+                        <div class="layui-input-block" style="width: 12rem;">
+                            <input type="text" id="name" required lay-verify="required"
+                                   autocomplete="off" maxlength="200"
+                                   class="layui-input layui-input-color">
+                        </div>
+                    </div>
+                    <div class="layui-inline">
+                        <label class="form-label"><i class="require">*</i>性别<span class="colon">：</span></label>
+                        <div class="layui-input-block" style="width: 10rem;">
+                            <input type="text" id="sex"  required lay-verify="required"
+                                   autocomplete="off" maxlength="200"
+                                   class="layui-input layui-input-color">
+                        </div>
+                    </div>
+                    <div class="layui-inline">
+                        <label class="form-label"><i class="require">*</i>年龄<span class="colon">：</span></label>
+                        <div class="layui-input-block" style="width: 18rem;"  >
+                            <input type="text" id="age" required lay-verify="required"
+                                   autocomplete="off" maxlength="200"
+                                   class="layui-input layui-input-color">
+                        </div>
+                    </div>
+                    <div class="layui-inline">
+                        <label class="form-label"><i class="require">*</i>出生日期<span class="colon">：</span></label>
+                        <div class="layui-input-block" style="width: 18rem;">
+                            <input type="text" id="birth_date"   required lay-verify="required" placeholder="请选择日期"
+                                   autocomplete="off" maxlength="200"
+                                   class="layui-input layui-input-color">
+                        </div>
+                    </div>
+                    <div class="layui-inline">
+                        <label class="form-label"><i class="require">*</i>身份证号<span class="colon">：</span></label>
+                        <div class="layui-input-block" style="width:26rem;">
+                            <input type="text" id="ID_num"  name="NAME"  required lay-verify="required"
+                                   autocomplete="off" maxlength="200"
+                                   class="layui-input layui-input-color">
+                        </div>
+                    </div>
+                </div>
+                <div class="layui-form-item">
+                    <div class="layui-inline">
+                        <label class="form-label">籍贯<span class="colon">：</span></label>
+                        <div class="layui-input-block" style="width: 12rem;">
+                            <input type="text"  required lay-verify="required"
+                                   autocomplete="off" maxlength="200"
+                                   class="layui-input layui-input-color">
+                        </div>
+                    </div>
+                    <div class="layui-inline">
+                        <label class="form-label">民族<span class="colon">：</span></label>
+                        <div class="layui-input-block" style="width: 10rem;">
+                            <input type="text"  required lay-verify="required"
+                                   autocomplete="off" maxlength="200"
+                                   class="layui-input layui-input-color">
+                        </div>
+                    </div>
+                    <div class="layui-inline">
+                        <label class="form-label">手机号码<span class="colon">：</span></label>
+                        <div class="layui-input-block" style="width: 18rem;"  >
+                            <input type="text" required lay-verify="required"
+                                   autocomplete="off" maxlength="200"
+                                   class="layui-input layui-input-color">
+                        </div>
+                    </div>
+                    <div class="layui-inline">
+                        <label class="form-label">电话<span class="colon">：</span></label>
+                        <div class="layui-input-block" style="width: 18rem;">
+                            <input type="text"    required lay-verify="required"
+                                   autocomplete="off" maxlength="200"
+                                   class="layui-input layui-input-color">
+                        </div>
+                    </div>
+                    <div class="layui-inline">
+                        <label class="form-label"><i class="require">*</i>疾病史<span class="colon">：</span></label>
+                        <div class="layui-input-block" style="width:26rem;">
+                            <input type="text" id="diseases_history"  name="NAME"  required lay-verify="required"
+                                   autocomplete="off" maxlength="200"
+                                   class="layui-input layui-input-color">
+                        </div>
+                    </div>
+                </div>
+                <div class="layui-form-item">
+                    <div class="layui-inline">
+                        <label class="form-label">当前住址<span class="colon">：</span></label>
+                        <div class="layui-input-block" style="width: 40rem;">
+                            <input type="text"  required lay-verify="required"
+                                   autocomplete="off" maxlength="200"
+                                   class="layui-input layui-input-color">
+                        </div>
+                    </div>
+                </div>
+            </div>
+            <p class="student-info-title">2. 请填写您家人的联系方式（以下资料打*号为必填）</p>
+            <div class="layui-form-item" >
+                <div class="layui-inline">
+                    <label class="form-label"><i class="require">*</i>家庭联系人<span class="colon">：</span></label>
+                    <div class="layui-input-block" style="width: 12rem;">
+                        <input type="text" id="linkman"  required lay-verify="required"
+                               autocomplete="off" maxlength="200"
+                               class="layui-input layui-input-color">
+                    </div>
+                </div>
+                <div class="layui-inline">
+                    <label class="form-label"><i class="require">*</i>联系人电话<span class="colon">：</span></label>
+                    <div class="layui-input-block" style="width: 18rem;">
+                        <input type="text" id="linkman_phone"   required lay-verify="required"
+                               autocomplete="off" maxlength="200"
+                               class="layui-input layui-input-color">
+                    </div>
+                </div>
+                <div class="layui-inline">
+                    <label class="form-label">第二家庭联系人<span class="colon">：</span></label>
+                    <div class="layui-input-block" style="width: 12rem;">
+                        <input type="text"  required lay-verify="required"
+                               autocomplete="off" maxlength="200"
+                               class="layui-input layui-input-color">
+                    </div>
+                </div>
+                <div class="layui-inline">
+                    <label class="form-label">联系人电话<span class="colon">：</span></label>
+                    <div class="layui-input-block" style="width: 18rem;">
+                        <input type="text"    required lay-verify="required"
+                               autocomplete="off" maxlength="200"
+                               class="layui-input layui-input-color">
+                    </div>
+                </div>
+            </div>
+            <div class="btnbox" id="btnDiv" style="text-align: left;">
+                <button id="sure" class="layui-btn layui-btn-primary layui-btn-small" >提交</button>
+            </div>
+        </form>
+
+    </div>
+</div>
+
+
+<%@ include file="../../system/index/foot.jsp" %>
+<script type="text/javascript">
+    layui.use('laydate', function(){
+        var laydate = layui.laydate;
+        laydate.render({
+            elem: '#birth_date'
+
+        });
+    });
+    $("#sure").on("click", function () {
+        if ($("#name").val() == "") {
+            layer.tips('姓名不能为空', $("#name"), {
+                tips: [3, '#D16E6C'],
+                time: 4000
+            });
+            $("#name").focus();
+            return false;
+        }
+        if ($("#sex").val() == "") {
+            layer.tips('性别不能为空', $("#sex"), {
+                tips: [3, '#D16E6C'],
+                time: 4000
+            });
+            $("#sex").focus();
+            return false;
+        }
+        if ($("#age").val() == "") {
+            layer.tips('年龄不能为空', $("#age"), {
+                tips: [3, '#D16E6C'],
+                time: 4000
+            });
+            $("#age").focus();
+            return false;
+        }
+
+        if ($("#birth_date").val()==""){
+            layer.tips('出生日期不能为空', $("#birth_date"), {
+                tips: [3, '#D16E6C'],
+                time: 4000
+            });
+            $("#birth_date").focus();
+            return false;
+        }
+        if ($("#ID_num").val() == "") {
+            layer.tips('身份证号不能为空', $("#ID_num"), {
+                tips: [3, '#D16E6C'],
+                time: 4000
+            });
+            $("#ID_num").focus();
+            return false;
+        }
+        if ($("#diseases_history").val() == "") {
+            layer.tips('疾病史不能为空', $("#diseases_history"), {
+                tips: [3, '#D16E6C'],
+                time: 4000
+            });
+            $("#diseases_history").focus();
+            return false;
+        }
+        if ($("#linkman").val() == "") {
+            layer.tips('家庭联系人不能为空', $("#linkman"), {
+                tips: [3, '#D16E6C'],
+                time: 4000
+            });
+            $("#linkman").focus();
+            return false;
+        }
+        if ($("#linkman_phone").val() == "") {
+            layer.tips('联系人电话不能为空', $("#linkman_phone"), {
+                tips: [3, '#D16E6C'],
+                time: 4000
+            });
+            $("#linkman_phone").focus();
+            return false;
+        }
+        parent.layer.load(1);
+        $.post('${msg}.do', $('#editForm').serialize(), function (data) {
+            parent.layer.closeAll('loading');
+            if ("success" == data.msg) {
+                parent.layer.edit.location.href = "<%=basePath%>school/list.do?currentPage=${currentPage}";
+                parent.layer.closeAll();
+            } else {
+                layer.msg('系统异常,保存失败!', {icon: 5});
+            }
+        });
+    });
+    var first = true;
+    var form = layui.form;
+    layui.use('laypage', function () {
+        var laypage = layui.laypage;
+        var layer = layui.layer;
+        form.on('select(sectionId)', function (data) {
+            gsearch()
+        });
+
+        //执行一个laypage实例
+        laypage.render({
+            elem: 'laypage',
+            count: ${page.totalResult},
+            curr: ${page.currentPage},
+            layout: ['prev', 'page', 'next', 'count', 'skip'],
+            jump: function (obj, first) {
+                if (!first) {
+                    window.location.href = "<%=basePath%>school/list.do?&currentPage=" + obj.curr + '&keywords=' + '${keywords}';
+                }
+            }
+        });
+    });
+
+
+    $("#keywords").keydown(function (e) {
+        var ev = e || window.event;
+        if (ev.keyCode == "13") {
+            gsearch();
+        }
+    });
+
+
+    //检索
+    function gsearch() {
+        $("#Form").submit();
+    }
+
+    //新增
+    $("#add").on("click", function () {
+        parent.parent.layer.edit = window;
+        parent.parent.layer.open({
+            title: "新增",
+            type: 2,
+            content: '<%=basePath%>school/goAdd.do?currentPage=' + ${page.currentPage},
+            area: ["800px", "550px"]
+        });
+    });
+
+    function edit(id, type) {
+        var msg = type == '1' ? '查看' : '编辑';
+        var area = type == '1' ? ["800px", "430px"] : ["800px", "550px"];
+        parent.parent.layer.edit = window;
+        parent.parent.layer.open({
+            title: msg,
+            type: 2,
+            content: '<%=basePath%>school/goEdit.do?id=' + id + '&currentPage=${page.currentPage}'+'&type='+type,
+            area: area
+        });
+    }
+
+    function del(id) {
+        parent.parent.layer.confirm("是否删除此学校?", {
+            btn: ['确定', '取消'],
+            resize: false,
+            title: "提示",
+            maxWidth: 800
+        }, function (index) {
+            var url = "<%=basePath%>school/delete.do?id=" + id;
+            $.get(url, function (data) {
+                if ("success" == data.result) {
+                    window.location.href = "<%=basePath%>school/list.do?currentPage=${page.currentPage}";
+                    parent.parent.layer.closeAll();
+                } else if("error" == data.result){
+                    parent.layer.msg('当前学校还有人员存在，不能删除!', {icon: 5});
+                }else {
+                    parent.layer.msg('系统异常,删除失败!', {icon: 5});
+                }
+            });
+        });
+    }
+
+</script>
+</body>
+</html>

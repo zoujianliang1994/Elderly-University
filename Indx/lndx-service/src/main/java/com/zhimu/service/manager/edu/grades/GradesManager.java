@@ -1,0 +1,98 @@
+package com.zhimu.service.manager.edu.grades;
+
+import java.util.List;
+import java.util.Map;
+
+import com.zhimu.commons.utils.PageData;
+import com.zhimu.dao.entity.system.Page;
+
+/**
+ * Created by HASEE on 2018/1/3.
+ */
+public interface GradesManager {
+
+	List<PageData> gradeslistPage(Page pd) throws Exception;
+
+	void add(PageData pd) throws Exception;
+
+	PageData findObjectById(PageData pd) throws Exception;
+
+	PageData findLessonById(String id) throws Exception;
+
+	void edit(PageData pd) throws Exception;
+
+	void deleteById(String id) throws Exception;
+
+	List<PageData> getUserLesson(PageData pd) throws Exception;
+
+	List<PageData> getUserTeacher(PageData pd) throws Exception;
+
+	Boolean isCheak(PageData pd) throws Exception;
+
+	List<PageData> studentlistPage(Page page) throws Exception;
+
+	PageData findStudentById(PageData pd) throws Exception;
+
+	void saveClassCommittee(PageData pd) throws Exception;
+
+	List<PageData> getAllStudentBycId(PageData pd) throws Exception;
+
+	List<PageData> allGroupById(String gId) throws Exception;
+
+	void editStudentGroup(PageData pd) throws Exception;
+
+	void editStudentGroupLeader(PageData pd) throws Exception;
+
+	void editStudentGroupAll(PageData pd) throws Exception;
+
+	void editGroup(PageData pd) throws Exception;
+
+	/**
+	 * 根据学校的id数组查出所有的班级--lwc
+	 * 
+	 * @param pageData
+	 * @return
+	 * @throws Exception
+	 */
+	public List<PageData> findBySchools(PageData pageData) throws Exception;
+
+	/**
+	 * 根据班级id集合查找所有老师--lwc
+	 * 
+	 * @param gradeIds
+	 * @return
+	 * @throws Exception
+	 */
+	public List<PageData> findTeacherByIds(List<String> gradeIds) throws Exception;
+
+	/**
+	 * 班级详细
+	 * 
+	 * @param pd
+	 * @return
+	 * @throws Exception
+	 */
+	List<Map<String, Object>> gradesDetaillistPage(Page pd) throws Exception;
+
+	List<PageData> findObjectBySchoolId(String schoolId) throws Exception;
+
+	PageData findStudentCommitteeById(PageData pd) throws Exception;
+
+	void addStudentGroup(PageData pd) throws Exception;
+	/**
+	 * 根据班级id查找班委
+	 * @param gradeIds
+	 * @return
+	 * @throws Exception
+	 */
+	List<PageData> findComtByGrades(List<String> gradeIds) throws Exception;
+
+	/**
+	 * 根据班级和组名查找组长
+	 * @param pd
+	 * @return
+	 * @throws Exception
+	 */
+	List<PageData> findGleaderByGrades(PageData pd) throws Exception;
+
+}

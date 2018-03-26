@@ -1,0 +1,277 @@
+package com.zhimu.controller.manager.system.user;
+
+import java.util.HashMap;
+import java.util.List;
+import java.util.Map;
+
+import javax.annotation.Resource;
+
+import org.apache.shiro.crypto.hash.SimpleHash;
+import org.springframework.stereotype.Controller;
+import org.springframework.web.bind.annotation.RequestMapping;
+import org.springframework.web.bind.annotation.RequestMethod;
+import org.springframework.web.bind.annotation.ResponseBody;
+import org.springframework.web.servlet.ModelAndView;
+
+import com.zhimu.commons.utils.AppUtil;
+import com.zhimu.commons.utils.ErrorUtils;
+import com.zhimu.commons.utils.PageData;
+import com.zhimu.controller.manager.base.BaseController;
+import com.zhimu.dao.entity.system.Page;
+import com.zhimu.dao.entity.system.User;
+import com.zhimu.service.manager.system.role.RoleManager;
+import com.zhimu.service.manager.system.user.UserManager;
+
+/**
+ * 用户管理
+ */
+@Controller
+@RequestMapping(value = "/user")
+public class UserController extends BaseController {
+	@Resource(name = "userService")
+	private UserManager userService;
+	@Resource(name = "roleService")
+	private RoleManager roleService;
+
+	/**
+	 * 显示用户列表
+	 */
+	@RequestMapping(value = "/listUsers")
+	public ModelAndView listUsers(Page page) {
+		ModelAndView mv = this.getModelAndView();
+		PageData pd = getPageData();
+		String keywords = pd.getString("keywords"); // 关键词检索条件
+		if (null != keywords && !"".equals(keywords)) {
+			pd.put("keywords", keywords.trim());
+		}
+		User userInfo = getUserInfo();
+		try {
+			pd.put("type", "1");
+			String status = pd.getString("status");
+			if ("".equals(status) || null == status) {
+				status = "0";
+			}
+			pd.put("status", status);
+			page.setPd(pd);
+			List<PageData> userList = userService.listUsers(page); // 列出用户列表
+			mv.addObject("userList", userList);
+			mv.addObject("pd", pd);
+			mv.addObject("userName", userInfo.getUSERNAME());
+			mv.setViewName("system/user/user_list");
+		} catch (Exception e) {
+			logger.error(ErrorUtils.getErrorMessage(e, "用户列表异常"));
+		}
+		return mv;
+	}
+
+	/**
+	 * 去新增用户页面
+	 */
+	@RequestMapping(value = "/goAddU")
+	public ModelAndView goAddU() {
+		ModelAndView mv = this.getModelAndView();
+		PageData pd = getPageData();
+		try {
+			mv.addObject("msg", "saveU");
+			mv.addObject("pd", pd);
+			mv.addObject("isAdmin", "admin".equals(getUserInfo().getUSERNAME()) ? true : false);
+			mv.setViewName("system/user/user_edit");
+		} catch (Exception e) {
+			logger.error(ErrorUtils.getErrorMessage(e, "打开用户新增页面异常!"));
+		}
+		return mv;
+	}
+
+	/**
+	 * 保存用户
+	 */
+	@RequestMapping(value = "/saveU", method = RequestMethod.POST)
+	@ResponseBody
+	public Object saveU() {
+		Map<String, String> map = new HashMap<String, String>();
+		PageData pd = getPageData();
+		String msg = "";
+		try {
+			pd.put("USER_ID", this.get32UUID()); // ID 主键
+			pd.put("STATUS", "0");
+			pd.put("PASSWORD", new SimpleHash("SHA-1", pd.getString("USERNAME"), pd.getString("PASSWORD")).toString()); // 密码加密
+			if (null == userService.findByUsername(pd)) { // 判断用户名是否存在
+				userService.saveU(pd); // 执行保存
+				msg = "success";
+			} else {
+				msg = "fail";
+			}
+		} catch (Exception e) {
+			msg = "error";
+			logger.error(ErrorUtils.getErrorMessage(e, "保存用户异常!"));
+		}
+		map.put("result", msg);
+		return AppUtil.returnObject(new PageData(), map);
+	}
+
+	/**
+	 * 去修改用户页面
+	 */
+	@RequestMapping(value = "/goEditU")
+	public ModelAndView goEditU() {
+		ModelAndView mv = this.getModelAndView();
+		PageData pd = getPageData();
+		try {
+			String TYPE = pd.getString("TYPE");
+			String currentPage = pd.getString("currentPage");
+			pd = userService.findById(pd); // 根据ID读取
+			pd.put("currentPage", currentPage);
+			pd.put("TYPE", TYPE);
+			mv.addObject("msg", "editU");
+			mv.addObject("pd", pd);
+			mv.addObject("isAdmin", "admin".equals(getUserInfo().getUSERNAME()) ? true : false);
+			mv.setViewName("system/user/user_edit");
+		} catch (Exception e) {
+			logger.error(ErrorUtils.getErrorMessage(e, "去修改用户页面异常!"));
+		}
+		return mv;
+	}
+
+	/**
+	 * 修改用户
+	 */
+	@RequestMapping(value = "/editU", method = RequestMethod.POST)
+	@ResponseBody
+	public Object editU() throws Exception {
+		Map<String, String> map = new HashMap<String, String>();
+		PageData pd = getPageData();
+		String msg = "";
+		try {
+			if (pd.getString("PASSWORD") != null && !"".equals(pd.getString("PASSWORD"))) {
+				pd.put("PASSWORD", new SimpleHash("SHA-1", pd.getString("USERNAME"), pd.getString("PASSWORD")).toString());
+			}
+			userService.editU(pd); // 执行修改
+			msg = "success";
+		} catch (Exception e) {
+			msg = "error";
+			logger.error(ErrorUtils.getErrorMessage(e, "修改用户异常"));
+		}
+		map.put("result", msg);
+		return AppUtil.returnObject(new PageData(), map);
+	}
+
+	/**
+	 * 删除用户
+	 */
+	@RequestMapping(value = "/deleteU")
+	@ResponseBody
+	public Object delete() {
+		Map<String, String> map = new HashMap<String, String>();
+		PageData pd = getPageData();
+		String resultInfo = "";
+		try {
+			userService.deleteU(pd);
+			resultInfo = "success";
+		} catch (Exception e) {
+			resultInfo = "error";
+			logger.error(ErrorUtils.getErrorMessage(e, "删除用户异常!"));
+		}
+		map.put("result", resultInfo);
+		return AppUtil.returnObject(new PageData(), map);
+	}
+
+	/**
+	 * 判断用户名是否存在
+	 * 
+	 * @return
+	 */
+	@RequestMapping(value = "/checkUserName")
+	@ResponseBody
+	public Object checkUserName() {
+		Map<String, String> map = new HashMap<String, String>();
+		String msg = "";
+		PageData pd = getPageData();
+		try {
+			if (userService.findByUsername(pd) == null) {
+				msg = "no";
+			} else {
+				msg = "yes";
+			}
+		} catch (Exception e) {
+			msg = "error";
+			logger.error(ErrorUtils.getErrorMessage(e, "判断用户名是否存在异常!"));
+		}
+		map.put("result", msg);
+		return AppUtil.returnObject(new PageData(), map);
+	}
+
+	/**
+	 * 去修改用户密码页面
+	 */
+	@RequestMapping(value = "/goEditPassWord")
+	public ModelAndView goEditPassWord() {
+		ModelAndView mv = this.getModelAndView();
+		PageData pd = getPageData();
+		try {
+			pd = userService.findById(pd);
+			mv.addObject("msg", "editPassWord");
+			mv.addObject("pd", pd);
+			mv.setViewName("system/user/user_password");
+		} catch (Exception e) {
+			logger.error(ErrorUtils.getErrorMessage(e, "去修改用户密码页面异常!"));
+		}
+		return mv;
+	}
+
+	/**
+	 * 修改用户密码
+	 */
+	@RequestMapping(value = "/editPassWord", method = RequestMethod.POST)
+	@ResponseBody
+	public Object editPassWord() throws Exception {
+		Map<String, String> map = new HashMap<String, String>();
+		PageData pd = getPageData();
+		String msg = "";
+		try {
+			String NEW_PASSWORD = pd.getString("NEW_PASSWORD").trim();
+			String USERNAME = pd.getString("USERNAME").trim();
+			// 密码加密
+			String PASSWORD = new SimpleHash("SHA-1", USERNAME, pd.getString("PASSWORD").trim()).toString();
+			pd.put("USERNAME", USERNAME);
+			pd.put("PASSWORD", PASSWORD);
+			// 根据用户名和密码去读取用户信息
+			pd = userService.getUserByNameAndPwd(pd);
+			if (pd != null) {
+				// 新密码加密
+				String NEW_PWD = new SimpleHash("SHA-1", USERNAME, NEW_PASSWORD).toString();
+				pd.put("NEW_PWD", NEW_PWD);
+				// 执行修改
+				userService.editPassWord(pd);
+				msg = "success";
+			} else {
+				msg = "fail";
+			}
+		} catch (Exception e) {
+			msg = "error";
+			logger.error(ErrorUtils.getErrorMessage(e, "修改用户密码异常"));
+		}
+		map.put("result", msg);
+		return AppUtil.returnObject(new PageData(), map);
+	}
+
+	/**
+	 * 修改用户状态
+	 */
+	@RequestMapping(value = "/updateStatus")
+	@ResponseBody
+	public Object updateStatus() {
+		Map<String, String> map = new HashMap<String, String>();
+		PageData pd = getPageData();
+		String resultInfo = "";
+		try {
+			userService.updateStatus(pd);
+			resultInfo = "success";
+		} catch (Exception e) {
+			resultInfo = "error";
+			logger.error(ErrorUtils.getErrorMessage(e, "修改用户状态异常!"));
+		}
+		map.put("result", resultInfo);
+		return AppUtil.returnObject(new PageData(), map);
+	}
+
+}

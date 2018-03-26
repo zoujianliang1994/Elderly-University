@@ -1,0 +1,198 @@
+package com.zhimu.controller.manager.edu.semester;
+
+import java.text.DateFormat;
+import java.text.SimpleDateFormat;
+import java.util.ArrayList;
+import java.util.Date;
+import java.util.HashMap;
+import java.util.List;
+import java.util.Map;
+
+import javax.annotation.Resource;
+
+import org.springframework.beans.propertyeditors.CustomDateEditor;
+import org.springframework.stereotype.Controller;
+import org.springframework.web.bind.WebDataBinder;
+import org.springframework.web.bind.annotation.InitBinder;
+import org.springframework.web.bind.annotation.RequestMapping;
+import org.springframework.web.bind.annotation.ResponseBody;
+import org.springframework.web.servlet.ModelAndView;
+
+import com.zhimu.commons.utils.AppUtil;
+import com.zhimu.commons.utils.DateUtil;
+import com.zhimu.commons.utils.ErrorUtils;
+import com.zhimu.commons.utils.PageData;
+import com.zhimu.controller.manager.base.BaseController;
+import com.zhimu.dao.entity.system.Page;
+import com.zhimu.dao.entity.system.User;
+import com.zhimu.service.manager.edu.semester.SemesterService;
+import com.zhimu.service.manager.system.user.impl.UserService;
+
+/**
+ * 说明：学期
+ */
+@Controller
+@RequestMapping(value = "/semester")
+public class SemesterController extends BaseController {
+
+	@Resource(name = "semesterService")
+	private SemesterService semesterService;
+	@Resource(name = "userService")
+	private UserService userService;
+
+	/**
+	 * 学期列表
+	 * 
+	 * @param page
+	 * @throws Exception
+	 */
+	@RequestMapping(value = "/list")
+	public ModelAndView list(Page page) {
+		ModelAndView mv = this.getModelAndView();
+		PageData pd = new PageData();
+		pd = this.getPageData();
+		String keywords = pd.getString("keywords"); // 检索条件
+		if (null != keywords && !"".equals(keywords)) {
+			pd.put("keywords", keywords.trim());
+		}
+		pd.put("schooId", getUserInfo().getSchoolId());
+		page.setPd(pd);
+		List<PageData> varList = new ArrayList<PageData>();
+		try {
+			varList = semesterService.list(page);
+		} catch (Exception e) {
+			logger.error(ErrorUtils.getErrorMessage(e, "学校列表异常!"));
+		} // 列表
+		mv.setViewName("edu/semester/semester_list");
+		mv.addObject("varList", varList);
+		return mv;
+	}
+
+	/**
+	 * 去新增页面
+	 * 
+	 * @param
+	 * @throws Exception
+	 */
+	@RequestMapping(value = "/goAdd")
+	public ModelAndView goAdd() {
+		ModelAndView mv = this.getModelAndView();
+		PageData pd = new PageData();
+		pd = this.getPageData();
+		pd.put("create_date", DateUtil.getDay());
+		mv.addObject("currentPage", pd.get("currentPage"));
+		mv.addObject("msg", "save");
+		mv.addObject("pd", pd);
+		mv.setViewName("edu/semester/semester_edit");
+		return mv;
+	}
+
+	/**
+	 * 保存学期
+	 * 
+	 * @param
+	 * @throws Exception
+	 */
+	@RequestMapping(value = "/save")
+	@ResponseBody
+	public Object save() {
+		Map<String, String> map = new HashMap<String, String>();
+		String msg = "success";
+		PageData pd = new PageData();
+		pd = this.getPageData();
+		try {
+			pd.put("id", this.get32UUID()); // 主键
+			pd.put("create_date", DateUtil.getDay());
+			pd.put("creator_id", getUserInfo().getUSER_ID());
+			semesterService.save(pd);
+		} catch (Exception e) {
+			msg = "error";
+			logger.error(ErrorUtils.getErrorMessage(e, "保存学期异常!"));
+		}
+		map.put("msg", msg);
+		return AppUtil.returnObject(new PageData(), map);
+	}
+
+	/**
+	 * 去修改页面
+	 * 
+	 * @param
+	 * @throws Exception
+	 */
+	@RequestMapping(value = "/goEdit")
+	public ModelAndView goEdit() {
+		ModelAndView mv = this.getModelAndView();
+		PageData pd = new PageData();
+		pd = this.getPageData();
+		String type = pd.getString("type");
+		String currentPage = pd.getString("currentPage");
+		try {
+			pd = semesterService.findById(pd);
+		} catch (Exception e) {
+			logger.error(ErrorUtils.getErrorMessage(e, "根据学期ID查询异常!"));
+		} // 根据ID读取
+		pd.put("optype", type);
+		mv.addObject("pd", pd); // 放入视图容器
+		mv.addObject("currentPage", currentPage);
+		mv.setViewName("edu/semester/semester_edit");
+		mv.addObject("msg", "edit");
+		return mv;
+	}
+
+	/**
+	 * 修改学期
+	 * 
+	 * @param
+	 * @throws Exception
+	 */
+	@RequestMapping(value = "/edit")
+	@ResponseBody
+	public Object edit() {
+		Map<String, String> map = new HashMap<String, String>();
+		String msg = "success";
+		PageData pd = new PageData();
+		pd = this.getPageData();
+		User user = getUserInfo();
+		try {
+			pd.put("creator_id", user.getUSER_ID());
+			semesterService.edit(pd);
+		} catch (Exception e) {
+			msg = "error";
+			logger.error(ErrorUtils.getErrorMessage(e, "修改学期异常!"));
+		}
+		map.put("msg", msg);
+		return AppUtil.returnObject(new PageData(), map);
+	}
+
+	/**
+	 * 删除学期
+	 */
+	@RequestMapping(value = "/delete")
+	@ResponseBody
+	public Object delete() {
+		Map<String, String> map = new HashMap<String, String>();
+		PageData pd = getPageData();
+		String resultInfo = "success";
+		try {
+			// 判断当前学校下面是否有人员信息
+			pd.put("SCHOOL_ID", pd.getString("id"));
+			List<PageData> users = userService.listAllUserBySid(pd);
+			if (null != users && users.size() > 0) {
+				resultInfo = "error";
+			} else {
+				semesterService.delete(pd);
+			}
+		} catch (Exception e) {
+			resultInfo = "error";
+			logger.error(ErrorUtils.getErrorMessage(e, "删除学期异常!"));
+		}
+		map.put("result", resultInfo);
+		return AppUtil.returnObject(new PageData(), map);
+	}
+
+	@InitBinder
+	public void initBinder(WebDataBinder binder) {
+		DateFormat format = new SimpleDateFormat("yyyy-MM-dd");
+		binder.registerCustomEditor(Date.class, new CustomDateEditor(format, true));
+	}
+}

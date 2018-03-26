@@ -1,0 +1,362 @@
+.wrap {
+  position: fixed;
+  width: 100%;
+  height: 100%;
+  /*.line{
+		background:yellow;
+		width:10px;
+		height:100%;
+		position:absolute;
+		left:225px;
+		top:0;
+		cursor:w-resize;
+	}*/
+}
+.wrap.wrap-map {
+  background: url('../images/mapbg.png') center 0;
+  background-size: cover;
+}
+.wrap.wrap-map .header {
+  background: transparent;
+}
+.wrap .header {
+  width: 100%;
+  height: 60px;
+  background: #1a53b3;
+  background: -webkit-linear-gradient(left, #2795cd, #1a53b3);
+  /* Safari 5.1 - 6.0 */
+  background: -o-linear-gradient(right, #1a53b3, #2795cd);
+  /* Opera 11.1 - 12.0 */
+  background: -moz-linear-gradient(right, #1a53b3, #2795cd);
+  /* Firefox 3.6 - 15 */
+  background: linear-gradient(to right, #1a53b3, #2795cd);
+  /* 标准的语法 */
+}
+.wrap .contentBox {
+  position: absolute;
+  top: 60px;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  background: #fff;
+}
+.wrap .back {
+  margin-left: 20px;
+  font-size: 13px;
+}
+.wrap .back:hover {
+  color: #108ee9;
+}
+.wrap .menu {
+  position: fixed;
+  left: 0;
+  top: 60px;
+  bottom: 0;
+  width: 240px;
+  color: #000;
+  padding: 10px;
+  background: #fff;
+  overflow-y: auto;
+  overflow-x: hidden;
+  /*&.unactive {
+			box-shadow: none;
+			border-right: 20px solid #fff;
+		}
+		&.active {
+			box-shadow: 10px 5px 30px rgba(0,0,0,.1);
+			border-right: 5px solid #fff;
+			border-right: 5px solid #ddd\0;       !* IE8支持*!
+		}*/
+}
+.wrap .menu .treeView .treeBox {
+  border-right: none;
+}
+.wrap .menu .treeView .treeItem {
+  margin-right: 32px;
+}
+.wrap .menu .treeView .treeItem .title {
+  width: auto;
+}
+.wrap .menu .treeView .treeItem .item-switch {
+  right: 0px;
+}
+.wrap .contentBody {
+  position: absolute;
+  top: 0;
+  right: 0;
+  bottom: 0;
+  left: 240px;
+  padding: 0 20px 20px 20px;
+  background: #fff;
+  min-width: 1000px;
+  box-shadow: 0 5px 15px rgba(0, 0, 0, 0.2);
+}
+.wrap .iframe {
+  border: 1px solid #fff;
+  width: 100%;
+  height: 98%;
+  border-radius: 5px;
+}
+.wrap .layui-tab-title li {
+  color: #999;
+}
+.wrap .layui-tab-title li.layui-this {
+  color: #0c64b5;
+}
+.wrap .layui-tab-title .btn-back {
+  display: inline-block;
+  vertical-align: middle;
+  font-size: 14px;
+  transition: all .2s;
+  -webkit-transition: all .2s;
+  position: relative;
+  line-height: 40px;
+  min-width: 65px;
+  padding: 0 15px;
+  padding-left: 0;
+  text-align: center;
+  cursor: pointer;
+}
+.wrap .layui-tab-title .btn-back > i {
+  margin-right: 5px;
+  vertical-align: middle;
+}
+.wrap .layui-tab-content {
+  background: #fff;
+  background-image: url(../images/blankpage.png);
+  background-size: 300px 300px;
+  background-repeat: no-repeat;
+  background-position: center;
+}
+.wrap .layui-tab-content .layui-tab-item {
+  height: 98%;
+  background: #fff;
+}
+.wrap .mapBox {
+  width: 90%;
+  height: 100%;
+  margin: 0 auto;
+  position: relative;
+}
+.wrap .mapBox .map {
+  width: 100%;
+  height: 100%;
+}
+.wrap .mapBox .sichuan {
+  position: absolute;
+  right: 0;
+  top: 0;
+  font-size: 13px;
+  color: #fff;
+  height: 25px;
+  line-height: 25px;
+}
+.wrap .mapBox .sichuan .title {
+  display: inline-block;
+  width: 175px;
+}
+.wrap .mapBox .sichuan .num {
+  display: inline-block;
+  width: 200px;
+  text-align: center;
+  font-size: 27px;
+  color: #00DEFF ;
+  /*color: linear-gradient(top bottom, #00DEFF, #559CF2);*/
+}
+.wrap .suspensionBox {
+  height: 100%;
+  width: 80%;
+  position: absolute;
+  right: -80%;
+  top: 0;
+  background: #fff;
+  box-shadow: 0 25px 25px rgba(0, 0, 0, 0.2);
+  transition: all 1s ease;
+}
+.treeBox {
+  border-right: 1px solid #eee;
+}
+.back-page{
+  /*margin-top: 20px;*/
+  height: 20px;
+  line-height: 20px;
+  cursor: pointer;
+  padding: 10px 10px;
+    padding-top: 30px;
+  font-family: PingFangSC-Regular;
+  font-size: 14px;
+  font-weight: normal;
+  font-stretch: normal;
+  line-height: 0px;
+  letter-spacing: 0px;
+  color: #666666;
+}
+.back-page i{
+  font-size: 14px;
+  color: #25cbfc;
+}
+
+.layui-tab-title li{
+    margin-right: 3rem;
+    padding: 0;
+    font-family: PingFangSC-Regular;
+    font-size: 1rem;
+    min-width: 5rem;
+    font-weight: normal;
+    font-stretch: normal;
+    letter-spacing: 0px;
+    color: #333333;
+}
+.layui-tab-brief>.layui-tab-title .layui-this{
+  font-family: PingFangSC-Regular;
+
+  font-weight: normal;
+  font-stretch: normal;
+  letter-spacing: 0px;
+  color: #333333;
+
+}
+.layui-tab-brief>.layui-tab-title .layui-this::after{
+  border-bottom:3px solid #25cbfc ;
+}
+input::-webkit-input-placeholder{
+  color:  #cccccc;
+}
+.tableBox {
+  padding: 10px;
+}
+/*
+.layui-tree-branch,.layui-tree-leaf{
+	opacity:0
+}
+.layui-tree li ul{
+	margin-left:0
+}*/
+.form-label{
+  display: block;
+  padding: 5px 0px;
+  width: 150px;
+}
+.layui-form-label{
+  float: left;
+  display: block;
+  width: 120px;
+  font-weight: 400;
+  text-align: right;
+  padding: 9px 0px;
+  font-family: PingFangSC-Regular;
+  font-size: 1rem;
+  font-weight: normal;
+  font-stretch: normal;
+
+  color: #333333;
+}
+.form-item-inline{
+  margin-left: 1%;
+  width: 48%;
+  display: inline-block;
+}
+.hint{
+  display: inline-block;height: 3rem;line-height: 3rem;
+  font-family: PingFangSC-Regular;
+  font-size: 14px;
+  font-weight: normal;
+  font-stretch: normal;
+  letter-spacing: 0px;
+  color: #999999;
+}
+#table .active {
+  border: 1px solid #108ee9;
+}
+#table .item-check{
+  display: inline-block;
+  margin: auto 0;
+  right: 10px;
+  /*position: absolute;*/
+  width: 15px;
+  height: 15px;
+  border-radius: 1px;
+  box-sizing: border-box;
+  border: 1px solid #DAE2EA;
+}
+#table .icon-gou{
+  display: none;
+  width: 15px;
+  height: 15px;
+  color: #108ee9;
+  position: relative;
+  top: -4px;
+  left: -1px;
+
+}
+#table .active .icon-gou{
+  display: inline-block;
+}
+/*.icon-fold{*/
+    /*position: absolute;*/
+    /*top: 12px;*/
+    /*right: 6px;*/
+/*}*/
+.confirm{
+    background-color: #3779f7;
+    width: 6rem;
+    height: 3rem;
+    border: solid 1px #3879f7;
+    cursor: pointer;
+    font-family: PingFangSC-Regular;
+    font-size: 14px;
+    font-weight: normal;
+    font-stretch: normal;
+    line-height: 0px;
+    letter-spacing: 0px;
+    color: #ffffff;
+
+}
+.info-left{
+    /*width: 15%;*/
+    float: left;
+    padding-left: 2rem;
+    padding-top: 3rem;
+    width: 12rem;
+    height: 10rem;
+    background-color: #ffffff;
+    border: solid 0rem #ffffff;
+
+}
+.info-right{
+    width: 85%;
+    padding-top: 2rem;
+    padding-left: 4rem;
+    float: left;
+}
+.info-right .form-label{
+    width: 120px;
+}
+.info-right .btnbox{
+    text-align: left;
+}
+.info-right .layui-inline{
+    margin-right: 1rem;
+}
+.clas-info-title{
+    padding-top: 2rem;
+    padding-bottom: 1rem;
+    font-family: PingFangSC-Medium;
+    font-size: 20px;
+    font-weight: normal;
+    font-stretch: normal;
+    letter-spacing: 0px;
+    color: #666666;
+}
+.layui-form .srarchBtn{
+    display: inline-block;
+    margin: 0px 1rem;
+    text-align: center;
+    line-height: 3rem;
+    cursor: pointer;
+    width: 6rem;
+    height: 3rem;
+    background-color: #3779f7;
+    border: solid 0rem #3879f7;
+    color: #fff;
+}

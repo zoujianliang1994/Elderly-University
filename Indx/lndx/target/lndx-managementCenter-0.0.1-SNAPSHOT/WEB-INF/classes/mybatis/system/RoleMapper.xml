@@ -1,0 +1,283 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" 
+	"http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="RoleMapper">
+	
+	<resultMap type="Role" id="roleResultMap">
+		<id column="ROLE_ID" property="ROLE_ID"/>
+		<result column="ROLE_NAME" property="ROLE_NAME"/>
+		<result column="roleLevel" property="roleLevel"/>
+		<result column="RIGHTS" property="RIGHTS"/>
+	</resultMap>
+	
+	
+	<resultMap type="com.zhimu.dao.entity.system.RolePermission" id="rolePermissResultMap">
+		<id column="id" property="id"/>
+		<result column="role_id" property="role_id"/>
+		<result column="permission_id" property="permission_id"/>
+		<result column="is_select" property="is_select"/>
+		<result column="descp" property="descp"/>
+		<result column="name" property="name"/>
+		<result column="sign" property="sign"/>
+	</resultMap>
+	
+	
+	<!-- 字段 -->
+	<sql id="Field">
+		ROLE_ID,
+		ROLE_NAME,
+		RIGHTS,
+		PARENT_ID,
+		ADD_QX,
+		DEL_QX,
+		EDIT_QX,
+		CHA_QX,
+		roleLevel,
+		IS_PARTY
+	</sql>
+	
+	<!-- 字段值 -->
+	<sql id="FieldValue">
+		#{ROLE_ID},
+		#{ROLE_NAME},
+		#{RIGHTS},
+		#{PARENT_ID},
+		#{ADD_QX},
+		#{DEL_QX},
+		#{EDIT_QX},
+		#{CHA_QX},
+		#{roleLevel},
+		#{IS_PARTY}
+	</sql>
+	
+	<!--表名 -->
+	<sql id="tableName">
+		SYS_ROLE
+	</sql>
+	
+	<!-- 列出此组下的角色 -->
+	<select id="listAllRolesByPId" parameterType="pd" resultMap="roleResultMap">
+		select
+		<include refid="Field"></include>
+		from
+		<include refid="tableName"></include>
+		where
+			PARENT_ID = #{ROLE_ID}
+		ORDER BY ROLE_NAME DESC
+	</select>
+	
+	<!-- 根据层级列出此组下的角色 -->
+	<select id="listAllRolesByPIdLevel" parameterType="pd" resultMap="roleResultMap">
+		select
+		<include refid="Field"></include>
+		from
+		<include refid="tableName"></include>
+		where
+			PARENT_ID = #{ROLE_ID}
+	        AND  roleLevel in
+	        <foreach collection="list" item="item" index="index" open="("  separator="," close=")">
+				#{item}
+			</foreach>
+		ORDER BY ROLE_NAME DESC
+	</select>
+	
+	<!-- 通过id查找 -->
+	<select id="findObjectById" parameterType="pd" resultType="pd">
+		select  
+		<include refid="Field"></include>
+		from 
+		<include refid="tableName"></include>
+		where ROLE_ID = #{ROLE_ID}
+	</select>
+	
+	<!-- 添加 -->
+	<insert id="insert" parameterType="pd">
+		insert into 
+		<include refid="tableName"></include>
+		(
+		<include refid="Field"></include>
+		) values (
+		<include refid="FieldValue"></include>	
+		)
+	</insert>
+	
+	<!-- 保存修改 -->
+	<update id="edit" parameterType="pd">
+		update 
+		<include refid="tableName"></include>
+		set ROLE_NAME = #{ROLE_NAME},
+		roleLevel=#{roleLevel},
+		     IS_PARTY = #{IS_PARTY}
+		where ROLE_ID = #{ROLE_ID}
+	</update>
+	
+	<!-- 删除角色  -->
+	<delete id="deleteRoleById" parameterType="String">
+		delete from 
+		<include refid="tableName"></include>
+		where ROLE_ID=#{ROLE_ID}
+	</delete>
+	
+	<!-- 给当前角色附加菜单权限  -->
+	<update id="updateRoleRights" parameterType="Role">
+		update 
+		<include refid="tableName"></include>
+		set RIGHTS=#{RIGHTS} 
+		where ROLE_ID=#{ROLE_ID}
+	</update>
+	
+	<!-- 通过id查找 -->
+	<select id="getRoleById" parameterType="String" resultMap="roleResultMap">
+		select * from 
+		<include refid="tableName"></include>
+		where ROLE_ID=#{ROLE_ID}
+	</select>
+	
+	<!-- 通过系统管理组id查找所有系统管理员的id -->
+	<select id="findSysRoleId" parameterType="String" resultType="String">
+		select ROLE_ID from 
+		<include refid="tableName"></include>
+		where PARENT_ID=#{id}
+	</select>
+	
+	
+	<!-- 给全部子角色加菜单权限 -->
+	<update id="setAllRights" parameterType="pd">
+		update 
+		<include refid="tableName"></include> 
+		set RIGHTS=#{rights} 
+		where PARENT_ID=#{ROLE_ID}
+	</update>
+	
+	<!-- 新增权限 -->
+	<update id="add_qx" parameterType="pd">
+		update 
+		<include refid="tableName"></include> 
+		set ADD_QX=#{value} 
+		where ROLE_ID=#{ROLE_ID}
+	</update>
+	
+	<!-- 删除权限 -->
+	<update id="del_qx" parameterType="pd">
+		update
+		<include refid="tableName"></include>
+		set DEL_QX=#{value} 
+		where ROLE_ID=#{ROLE_ID}
+	</update>
+	
+	<!-- 修改权限 -->
+	<update id="edit_qx" parameterType="pd">
+		update 
+		<include refid="tableName"></include> 
+		set EDIT_QX=#{value} 
+		where ROLE_ID=#{ROLE_ID}
+	</update>
+	
+	<!-- 查看权限 -->
+	<update id="cha_qx" parameterType="pd">
+		update 
+		<include refid="tableName"></include>
+		set CHA_QX=#{value} 
+		where ROLE_ID=#{ROLE_ID}
+	</update>
+
+	<!-- 查询角色的细化菜单权限 -->
+	<select id="selectRolePermission" parameterType="java.util.Map" resultMap="rolePermissResultMap">
+	   SELECT a.id,
+	          a.role_id, 
+	          a.permission_id, 
+	          a.is_select,
+	          a.descp,
+	          b.name,
+	          b.sign 
+	     FROM sys_role_permission a,
+	          sys_permissions b,
+	          sys_menu_permission c
+	    WHERE a.permission_id = b.id
+	      AND b.is_del = '1'
+	      AND a.is_select = '1'
+	      AND a.permission_id = c.permission_id
+	      AND c.permission_id = b.id
+	      AND a.role_id = #{role_id}
+	      AND c.menu_id = #{menu_id}
+	</select>
+	
+	<!-- 写入角色的细化菜单权限 -->
+	<insert id="insertRolePermission" parameterType="java.util.List">
+	
+	   insert into sys_role_permission (id, role_id,permission_id,is_select,descp)
+             values
+       <foreach collection="list" item="item" index="index" separator=",">
+            (#{item.id}, #{item.role_id},#{item.permission_id},#{item.is_select},#{item.descp})
+       </foreach>
+       
+	</insert>
+	
+	<!-- 修改角色的细化菜单权限 -->
+	<update id="updateRolePermission" parameterType="String">
+	   UPDATE sys_role_permission set is_select = '0' WHERE ROLE_ID = #{role_id}
+	</update>
+	
+	<!-- 删除角色的细化菜单权限 -->
+	<delete id="deleteRolePermission" parameterType="java.util.Map">
+	   DELETE 
+	     FROM sys_role_permission 
+	    WHERE 1 = 1 
+	    <if test="ROLE_ID != null and ROLE_ID !='' ">
+	        AND ROLE_ID = #{ROLE_ID}
+	    </if>
+	    <if test="permission_id != null and permission_id !='' ">
+	        AND permission_id = #{permission_id}
+	    </if>	    
+	</delete>
+	
+	
+	<!-- 分页的角色列表-->
+	<select id="rolelistPage" parameterType="page" resultType="pd" >
+	    select
+		<include refid="Field"></include>
+		from
+		<include refid="tableName"></include>
+		where PARENT_ID = #{pd.PARENT_ID}
+		<if test="pd.keywords!= null and pd.keywords != ''">
+	        AND ROLE_NAME LIKE  ('%'+#{pd.keywords}+'%')
+	    </if>
+		ORDER BY ROLE_NAME DESC
+	</select>
+
+
+
+	<!-- 分页的角色列表-->
+	<select id="getRoleUser" parameterType="String" resultType="java.util.Map" >
+		SELECT
+		u.USER_ID,
+		(case
+				when ROLE_ID LIKE '%'+#{role_id}+'%' THEN 'true'
+				else 'false' end ) AS hasMenu,
+		'' AS subMenu,
+		'' AS pId,
+		'' AS hasMenu,
+		u.NAME AS NAME
+		FROM
+		dbo.sys_user AS u
+
+
+	</select>
+
+
+	<update id="clearUserRole" parameterType="java.util.Map">
+		UPDATE sys_user set role_id =Replace(role_id,#{id},'') WHERE user_id in
+		<foreach collection="list" item="item" index="index" open="("  separator="," close=")">
+			#{item}
+		</foreach>
+	</update>
+
+	<update id="addUserRole" parameterType="java.util.Map">
+		UPDATE sys_user set role_id =role_id+#{id} WHERE user_id in
+		<foreach collection="list" item="item" index="index" open="("  separator="," close=")">
+			#{item}
+		</foreach>
+	</update>
+
+	<!-- fh313596790qq(青苔) -->
+</mapper>

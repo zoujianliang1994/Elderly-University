@@ -1,0 +1,136 @@
+﻿<?xml version="1.0" encoding="UTF-8"?>
+<!-- 日志输出规则  根据当前ROOT 级别，日志输出时，级别高于root默认的级别时  会输出  -->
+<!-- 以下  每个配置的 filter 是过滤掉输出文件里面，会出现高级别文件，依然出现低级别的日志信息，通过filter 过滤只记录本级别的日志  -->
+<!-- 日志级别：从高到地低 OFF、FATAL、 ERROR、WARN、INFO、DEBUG、TRACE、 ALL -->
+
+<configuration>
+
+	<!-- 自定义属性 -->
+	<property name="charset" value="UTF-8"/>
+	<property name="log_dir" value="/llw/logs" />
+	<property name="maxHistory" value="30"/>
+	<!-- 两个属性 key:标识此<timestamp> 的名字；datePattern：设置将当前时间（解析配置文件的时间）
+		转换为字符串的模式，遵循java.txt.SimpleDateFormat的格式。 -->
+	<timestamp key="bySecond" datePattern="yyyyMMdd'T'HHmmss"/> 
+	
+	<!-- 把错误信息 打印到控制台 -->
+  	<appender name="STDOUT" class="ch.qos.logback.core.ConsoleAppender">   
+    <!-- encoder 默认配置为PatternLayoutEncoder -->   
+	    <encoder>   
+	      <pattern>%d{HH:mm:ss.SSS} [%thread] %-5level %logger{36} - %msg%n</pattern>   
+	    </encoder>   
+  </appender>   
+  
+   <!-- 保存系统非用户定义的DEBUG信息 -->
+     <appender name="ALL_DEBUG" class="ch.qos.logback.core.rolling.RollingFileAppender">   
+      
+	    <filter class="ch.qos.logback.classic.filter.LevelFilter">   
+	      <level>DEBUG</level>   
+	      <onMatch>ACCEPT</onMatch>   
+	      <onMismatch>DENY</onMismatch>   
+	    </filter>  
+       <!-- 日志输出策略 -->
+	    <rollingPolicy class="ch.qos.logback.core.rolling.TimeBasedRollingPolicy">   
+	      <fileNamePattern>${log_dir}/%d{yyyy-MM-dd}/all_debug.log</fileNamePattern>   
+	      <maxHistory>${maxHistory}</maxHistory>    
+	    </rollingPolicy>   
+   <!-- 格式化日志格式 -->
+	    <encoder>   
+	    	<pattern>%d{yyyy-MM-dd-HH:mm:ss} [%thread] %-5level %logger{80} %caller{1} - %msg%n %rEx</pattern>
+	    	<charset>${charset}</charset>
+	      <!--  <pattern>%-4relative [%thread] %-5level %logger{35} - %msg%n</pattern>  --> 
+	    </encoder>   
+  </appender>
+  
+  
+  <!-- 保存系统非用户定义的INFO信息 -->
+     <appender name="ALL_INFO" class="ch.qos.logback.core.rolling.RollingFileAppender">   
+      
+	    <filter class="ch.qos.logback.classic.filter.LevelFilter">   
+	      <level>INFO</level>   
+	      <onMatch>ACCEPT</onMatch>   
+	      <onMismatch>DENY</onMismatch>   
+	    </filter>  
+       <!-- 日志输出策略 -->
+	    <rollingPolicy class="ch.qos.logback.core.rolling.TimeBasedRollingPolicy">   
+	      <fileNamePattern>${log_dir}/%d{yyyy-MM-dd}/all_info.log</fileNamePattern>   
+	      <maxHistory>${maxHistory}</maxHistory>    
+	    </rollingPolicy>   
+   <!-- 格式化日志格式 -->
+	    <encoder>   
+	    	<pattern>%d{yyyy-MM-dd-HH:mm:ss} [%thread] %-5level %logger{80} %caller{1} - %msg%n %rEx</pattern>
+	    	<charset>${charset}</charset>
+	      <!--  <pattern>%-4relative [%thread] %-5level %logger{35} - %msg%n</pattern>  --> 
+	    </encoder>   
+  </appender> 
+  
+    <!-- 保存系统非用户定义的WARN信息 -->
+     <appender name="ALL_WARN" class="ch.qos.logback.core.rolling.RollingFileAppender">   
+      
+	    <filter class="ch.qos.logback.classic.filter.LevelFilter">   
+	      <level>WARN</level>   
+	      <onMatch>ACCEPT</onMatch>   
+	      <onMismatch>DENY</onMismatch>   
+	    </filter>  
+       <!-- 日志输出策略 -->
+	    <rollingPolicy class="ch.qos.logback.core.rolling.TimeBasedRollingPolicy">   
+	      <fileNamePattern>${log_dir}/%d{yyyy-MM-dd}/all_warn.log</fileNamePattern>   
+	      <maxHistory>${maxHistory}</maxHistory>    
+	    </rollingPolicy>   
+   <!-- 格式化日志格式 -->
+	    <encoder>   
+	    	<pattern>%d{yyyy-MM-dd-HH:mm:ss} [%thread] %-5level %logger{80} %caller{1} - %msg%n %rEx</pattern>
+	    	<charset>${charset}</charset>
+	      <!--  <pattern>%-4relative [%thread] %-5level %logger{35} - %msg%n</pattern>  --> 
+	    </encoder>   
+  </appender> 
+  
+      <!-- 保存系统非用户定义的ERROR信息 -->
+     <appender name="ALL_ERROR" class="ch.qos.logback.core.rolling.RollingFileAppender">   
+      
+	    <filter class="ch.qos.logback.classic.filter.LevelFilter">   
+	      <level>ERROR</level>   
+	      <onMatch>ACCEPT</onMatch>   
+	      <onMismatch>DENY</onMismatch>   
+	    </filter>  
+       <!-- 日志输出策略 -->
+	    <rollingPolicy class="ch.qos.logback.core.rolling.TimeBasedRollingPolicy">   
+	      <fileNamePattern>${log_dir}/%d{yyyy-MM-dd}/all_error.log</fileNamePattern>   
+	      <maxHistory>${maxHistory}</maxHistory>    
+	    </rollingPolicy>   
+   <!-- 格式化日志格式 -->
+	    <encoder>   
+	    	<pattern>%d{yyyy-MM-dd-HH:mm:ss} [%thread] %-5level %logger{80} %caller{1} - %msg%n %rEx</pattern>
+	    	<charset>${charset}</charset>
+	      <!--  <pattern>%-4relative [%thread] %-5level %logger{35} - %msg%n</pattern>  --> 
+	    </encoder>   
+  </appender>
+  
+    <!-- 把错误信息 打印到文件 按照每天存放 最大存放30天-->
+   <appender name="ALL_INFO_SELF" class="ch.qos.logback.core.rolling.RollingFileAppender">   
+   
+    <rollingPolicy class="ch.qos.logback.core.rolling.TimeBasedRollingPolicy">   
+      <fileNamePattern>${log_dir}/%d{yyyy-MM-dd}/all_log_self.log</fileNamePattern>   
+      <maxHistory>${maxHistory}</maxHistory> 
+    </rollingPolicy>   
+   
+    <encoder>   
+    	<pattern>%d{yyyy-MM-dd-HH:mm:ss} [%thread] %-5level %logger{80} %caller{1} - %msg%n %rEx</pattern>
+    	<charset>${charset}</charset>
+      <!--  <pattern>%-4relative [%thread] %-5level %logger{35} - %msg%n</pattern>  --> 
+    </encoder>   
+  </appender> 
+  
+  <!-- 自己定义的 用logger.debug(""); 会遵守这样的规则，系统报错 直走root  为什么？留个疑问 -->
+	<logger name="com.pdk.service.customer"  level="DEBUG"  additivity="false">
+   		<appender-ref ref="ALL_INFO_SELF"/>
+	</logger>
+   
+  <root>             
+      <!-- <appender-ref ref="STDOUT" /> -->
+     <!--  <appender-ref ref="ALL_DEBUG" /> -->
+      <appender-ref ref="ALL_INFO" />
+      <appender-ref ref="ALL_WARN" />
+     <appender-ref ref="ALL_ERROR" />
+  </root>     
+</configuration>

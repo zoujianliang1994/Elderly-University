@@ -1,0 +1,173 @@
+package com.zhimu.dao.entity.system;
+
+import java.io.Serializable;
+import java.util.List;
+
+/**
+ * 
+ * 类名称：行政区划
+ * 
+ * @author 修改时间：2015年12月16日
+ * @version 2.0
+ */
+public class AreaCode implements Serializable {
+
+	/**
+	 * 
+	 */
+	private static final long serialVersionUID = 1L;
+	private String id; // ID
+	private String parentId;// 父ID
+	private String level;// 层级
+	private String areaCode; // 区划代码
+	private String zipCode; // 邮政编码
+	private String cityCode; // 城市区划代码
+	private String name; // 名字
+	private String shortName; // 简称
+	private String mergerName; // 组合名
+	private String pinyin; // 拼音
+	private String lng; // 经度
+	private String lat; // lat
+	private AreaCode area;
+	private List<AreaCode> subArea;
+	private String targetAreaCode;// 目标区划code
+	private String changeType;// 调整类型 1:新增 2:修改 3:迁移
+	private String oldAreaCode;// 调整后的区划代码
+
+	public String getOldAreaCode() {
+		return oldAreaCode;
+	}
+
+	public void setOldAreaCode(String oldAreaCode) {
+		this.oldAreaCode = oldAreaCode;
+	}
+
+	public String getTargetAreaCode() {
+		return targetAreaCode;
+	}
+
+	public void setTargetAreaCode(String targetAreaCode) {
+		this.targetAreaCode = targetAreaCode;
+	}
+
+	public String getChangeType() {
+		return changeType;
+	}
+
+	public void setChangeType(String changeType) {
+		this.changeType = changeType;
+	}
+
+	public String getId() {
+		return id;
+	}
+
+	public void setId(String id) {
+		this.id = id;
+	}
+
+	public String getParentId() {
+		return parentId;
+	}
+
+	public void setParentId(String parentId) {
+		this.parentId = parentId;
+	}
+
+	public String getLevel() {
+		return level;
+	}
+
+	public void setLevel(String level) {
+		this.level = level;
+	}
+
+	public String getAreaCode() {
+		return areaCode;
+	}
+
+	public void setAreaCode(String areaCode) {
+		this.areaCode = areaCode;
+	}
+
+	public String getZipCode() {
+		return zipCode;
+	}
+
+	public void setZipCode(String zipCode) {
+		this.zipCode = zipCode;
+	}
+
+	public String getCityCode() {
+		return cityCode;
+	}
+
+	public void setCityCode(String cityCode) {
+		this.cityCode = cityCode;
+	}
+
+	public String getName() {
+		return name;
+	}
+
+	public void setName(String name) {
+		this.name = name;
+	}
+
+	public String getShortName() {
+		return shortName;
+	}
+
+	public void setShortName(String shortName) {
+		this.shortName = shortName;
+	}
+
+	public String getMergerName() {
+		return mergerName;
+	}
+
+	public void setMergerName(String mergerName) {
+		this.mergerName = mergerName;
+	}
+
+	public String getPinyin() {
+		return pinyin;
+	}
+
+	public void setPinyin(String pinyin) {
+		this.pinyin = pinyin;
+	}
+
+	public String getLng() {
+		return lng;
+	}
+
+	public void setLng(String lng) {
+		this.lng = lng;
+	}
+
+	public String getLat() {
+		return lat;
+	}
+
+	public void setLat(String lat) {
+		this.lat = lat;
+	}
+
+	public AreaCode getArea() {
+		return area;
+	}
+
+	public void setArea(AreaCode area) {
+		this.area = area;
+	}
+
+	public List<AreaCode> getSubArea() {
+		return subArea;
+	}
+
+	public void setSubArea(List<AreaCode> subArea) {
+		this.subArea = subArea;
+	}
+
+}

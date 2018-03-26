@@ -1,0 +1,187 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="TeacherMapper">
+
+    <!--表名 -->
+    <sql id="tableName">
+		edu_teacher
+	</sql>
+
+    <!-- 字段 -->
+    <sql id="Field">
+		id,
+		name,
+		school_id,
+		idcard,
+		xb,
+		mz,
+		xl,
+		xw,
+		zy,
+		tel,
+		gw_type,
+		addr,
+		photo_url,
+		gz,
+		province,
+		city,
+		area
+	</sql>
+
+    <!-- 字段值 -->
+    <sql id="FieldValue">
+		#{id},
+		#{name},
+		#{school_id},
+		#{idcard},
+		#{xb},
+		#{mz},
+		#{xl},
+		#{xw},
+		#{zy},
+		#{tel},
+		#{gw_type},
+		#{addr},
+		#{photo_url},
+		#{gz},
+		#{province},
+		#{city},
+		#{area}
+	</sql>
+
+    <!-- 新增-->
+    <insert id="addData" parameterType="pd">
+        insert into <include refid="tableName"/> ( <include refid="Field"/> ) values (<include refid="FieldValue"/>)
+    </insert>
+
+    <!-- 删除-->
+    <delete id="deleteData" parameterType="pd">
+        delete from edu_teacher where id = #{id};
+        delete from sys_user where USER_ID = #{id}
+    </delete>
+
+    <!-- 修改 -->
+    <update id="editData" parameterType="pd">
+        update <include refid="tableName"/>
+           set     name = #{name},
+              school_id = #{school_id},
+                 idcard = #{idcard},
+                     xb = #{xb},
+                     mz = #{mz},
+                     xl = #{xl},
+                     xw = #{xw},
+                     zy = #{zy},
+                    tel = #{tel},
+                gw_type = #{gw_type},
+                   addr = #{addr},
+              photo_url = #{photo_url},
+                     gz = #{gz},
+               province = #{province},
+                   city = #{city},
+                   area = #{area}
+        where id = #{id}
+    </update>
+
+    <!-- 修改 -->
+    <update id="updateData" parameterType="pd">
+        update <include refid="tableName"/>
+           set     name = #{xm},
+                 idcard = #{sfz},
+                    tel = #{phone}
+        where id = #{id}
+    </update>
+
+    <!-- 通过ID获取数据 -->
+    <select id="findDataById" parameterType="pd" resultType="pd">
+        select <include refid="Field"/> from <include refid="tableName"/> where id = #{id}
+    </select>
+
+    <!-- 分页列表 -->
+    <select id="datalistPage" parameterType="page" resultType="pd">
+        select <include refid="Field"/>
+          from <include refid="tableName"/>
+         where 1 = 1
+           and school_id in
+         <foreach item="item" index="index" collection="pd.userSchoolIds" open="(" separator="," close=")">
+            '${item}'
+         </foreach>
+         <if test="pd.keywords != null and pd.keywords != ''"><!-- 关键词检索 -->
+           and (  name LIKE ('%'+#{pd.keywords}+'%') or
+                idcard LIKE ('%'+#{pd.keywords}+'%')
+               )
+         </if>
+         order by name
+    </select>
+
+    <!-- 普通列表 -->
+    <select id="selectList" parameterType="pd" resultType="pd">
+        select <include refid="Field"/>
+          from <include refid="tableName"/>
+         where 1 = 1
+         <if test="idcard != null and idcard != ''">
+           and idcard = #{idcard}
+         </if>
+         <if test="school_id != null and school_id != ''">
+           and school_id = #{school_id}
+         </if>
+         order by name
+    </select>
+
+    <!--根据学校id数据查找所有老师_lwc-->
+    <select id="findBySchools" parameterType="pd" resultType="pd">
+        SELECT <include refid="Field"></include>,[type]=('教师'),id AS user_id,idcard AS sfz
+          FROM <include refid="tableName"></include>
+         WHERE 1=1 AND
+         <foreach collection="array" separator="or" open="(" close=")" item="schoolId">
+             school_id LIKE ('%'+#{schoolId}+'%')
+         </foreach>
+         <if test="keywords != null and keywords != ''"><!-- 关键词检索 -->
+           and (  name LIKE ('%'+#{keywords}+'%') or
+                 idcard LIKE ('%'+#{keywords}+'%')
+                )
+          </if>
+         ORDER BY school_id
+    </select>
+
+    <!--根据学校id数据查找所有老师id_lwc-->
+    <select id="findBySId" resultType="String">
+        SELECT id
+          FROM <include refid="tableName"></include>
+         WHERE school_id IN
+         <foreach collection="array" separator="," open="(" close=")" item="schoolId">
+            #{schoolId}
+         </foreach>
+    </select>
+
+    <!--根据用户id查找老师数据_lwc-->
+    <select id="findByUser" parameterType="String" resultType="pd">
+        select id,name AS xm,idcard AS sfz,tel AS phone,[type]=('教师')
+          from <include refid="tableName"></include>
+         where 1=1
+           AND zt != 3
+           AND id  = #{userId}
+    </select>
+
+    <!--查询教师履历信息 -->
+    <select id="teacherLvList" parameterType="pd" resultType="pd">
+        SELECT DISTINCT
+	           e.name shcool_name,
+	           a.name bj_name,
+               d.semester_start,
+               d.semester_end,
+               a.teacher_wages,
+               f.gw_type
+          FROM edu_grades a,
+               edu_schedule b,
+               edu_schedule_details c,
+               edu_semester d,
+               edu_school e,
+               edu_teacher f
+         WHERE a.id = c.grades_id
+           AND b.id = c.schedule_id
+           AND b.semester_id = d.id
+           AND a.school_id = e.id
+           AND a.teacher_id = f.id
+           AND a.teacher_id = #{id}
+    </select>
+</mapper>

@@ -1,0 +1,179 @@
+﻿<%@ page language="java" contentType="text/html; charset=UTF-8" pageEncoding="UTF-8" %>
+<%
+    String path = request.getContextPath();
+    String basePath = request.getScheme() + "://" + request.getServerName() + ":" + request.getServerPort() + path + "/";
+%>
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <title>学员管理</title>
+    <%@ include file="../../system/index/headcss.jsp" %>
+</head>
+<body>
+
+<div class="tableBox">
+
+    <!-- table -->
+    <div class="layui-col-sm12">
+            <p style="font-size: 2rem;color: #333;font-family: PingFangSC-Medium;text-align: center;padding-top: 2rem">老年大学招生学员须知</p>
+            <ul class="enrollment-list" >
+                <li>一、报名时间：1月7日-10日、2月27日-28日、3月1日</li>
+                <li>二、报名地点：成都市金牛区老年办</li>
+                <li>三、所需证件：本人身份证(二代)</li>
+                <li>四、报名条件：</li>
+                <li>1、周一至周五班，女年满45周岁、男年满50周岁以上，由本人持本人身份证报名。</li>
+                <li>2、参加周一至周五晚班学习者，要求年龄在70周岁以下。</li>
+                <li>3、报名者需有完全行为能力、身心健康。入学后，在校期间如因自身原因或突发疾病导致意外事件发生，后果自负。</li>
+                <li>4、学校建议学员购买“老年人意外伤害险”（10元/年）。</li>
+                <li>5、填写《学员登记表》时，内容要填写齐全，字迹工整，确认无误后，本人签字，方可予以报名。(温馨提示：为了便于处理应急事件，请您务必准确填写家属电话)。</li>
+                <li>6、请认真阅读招生简章，慎重选择好学科、专业及上课时间。报名注册后，一经交费，一律不予退费、转班（极特殊情况按学校有关规定办理）。</li>
+                <li>五、咨询电话：招生管理处58567809 收发室58567810</li>
+            </ul>
+
+        <div class="btnbox" id="btnDiv">
+            <button id="sure" class="layui-btn layui-btn-primary layui-btn-small" style="width: 13rem;">同意以上协议并报名</button>
+        </div>
+
+    </div>
+</div>
+
+
+<%@ include file="../../system/index/foot.jsp" %>
+<script type="text/javascript">
+    $("#sure").on("click", function () {
+        if ($("#type").val() == "") {
+            layer.tips('请选择类型', $("#selType"), {
+                tips: [3, '#D16E6C'],
+                time: 4000
+            });
+            $("#selType").focus();
+            return false;
+        }
+        if ($("#name").val() == "") {
+            layer.tips('名称不能为空', $("#name"), {
+                tips: [3, '#D16E6C'],
+                time: 4000
+            });
+            $("#name").focus();
+            return false;
+        }
+        if ($("#location").val() == "") {
+            layer.tips('地理位置不能为空', $("#location"), {
+                tips: [3, '#D16E6C'],
+                time: 4000
+            });
+            $("#location").focus();
+            return false;
+        }
+
+        if ($("#contact").val()==""){
+            layer.tips('负责人姓名不能为空', $("#contact"), {
+                tips: [3, '#D16E6C'],
+                time: 4000
+            });
+            $("#contact").focus();
+            return false;
+        }
+        if ($("#tel").val() == "") {
+            layer.tips('联系电话不能为空', $("#tel"), {
+                tips: [3, '#D16E6C'],
+                time: 4000
+            });
+            $("#tel").focus();
+            return false;
+        }
+        parent.layer.load(1);
+        $.post('${msg}.do', $('#editForm').serialize(), function (data) {
+            parent.layer.closeAll('loading');
+            if ("success" == data.msg) {
+                parent.layer.edit.location.href = "<%=basePath%>school/list.do?currentPage=${currentPage}";
+                parent.layer.closeAll();
+            } else {
+                layer.msg('系统异常,保存失败!', {icon: 5});
+            }
+        });
+    });
+    var first = true;
+    var form = layui.form;
+    layui.use('laypage', function () {
+        var laypage = layui.laypage;
+        var layer = layui.layer;
+        form.on('select(sectionId)', function (data) {
+            gsearch()
+        });
+
+        //执行一个laypage实例
+        laypage.render({
+            elem: 'laypage',
+            count: ${page.totalResult},
+            curr: ${page.currentPage},
+            layout: ['prev', 'page', 'next', 'count', 'skip'],
+            jump: function (obj, first) {
+                if (!first) {
+                    window.location.href = "<%=basePath%>school/list.do?&currentPage=" + obj.curr + '&keywords=' + '${keywords}';
+                }
+            }
+        });
+    });
+
+
+    $("#keywords").keydown(function (e) {
+        var ev = e || window.event;
+        if (ev.keyCode == "13") {
+            gsearch();
+        }
+    });
+
+
+    //检索
+    function gsearch() {
+        $("#Form").submit();
+    }
+
+    //新增
+    $("#add").on("click", function () {
+        parent.parent.layer.edit = window;
+        parent.parent.layer.open({
+            title: "新增",
+            type: 2,
+            content: '<%=basePath%>school/goAdd.do?currentPage=' + ${page.currentPage},
+            area: ["800px", "550px"]
+        });
+    });
+
+    function edit(id, type) {
+        var msg = type == '1' ? '查看' : '编辑';
+        var area = type == '1' ? ["800px", "430px"] : ["800px", "550px"];
+        parent.parent.layer.edit = window;
+        parent.parent.layer.open({
+            title: msg,
+            type: 2,
+            content: '<%=basePath%>school/goEdit.do?id=' + id + '&currentPage=${page.currentPage}'+'&type='+type,
+            area: area
+        });
+    }
+
+    function del(id) {
+        parent.parent.layer.confirm("是否删除此学校?", {
+            btn: ['确定', '取消'],
+            resize: false,
+            title: "提示",
+            maxWidth: 800
+        }, function (index) {
+            var url = "<%=basePath%>school/delete.do?id=" + id;
+            $.get(url, function (data) {
+                if ("success" == data.result) {
+                    window.location.href = "<%=basePath%>school/list.do?currentPage=${page.currentPage}";
+                    parent.parent.layer.closeAll();
+                } else if("error" == data.result){
+                    parent.layer.msg('当前学校还有人员存在，不能删除!', {icon: 5});
+                }else {
+                    parent.layer.msg('系统异常,删除失败!', {icon: 5});
+                }
+            });
+        });
+    }
+
+</script>
+</body>
+</html>

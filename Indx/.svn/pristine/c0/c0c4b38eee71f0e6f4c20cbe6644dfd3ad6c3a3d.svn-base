@@ -1,0 +1,74 @@
+package com.zhimu.controller.manager.stu.studentLesson;
+
+import com.zhimu.commons.utils.ErrorUtils;
+import com.zhimu.commons.utils.PageData;
+import com.zhimu.controller.manager.base.BaseController;
+import com.zhimu.dao.entity.system.User;
+import com.zhimu.service.manager.edu.school.SchoolService;
+import com.zhimu.service.manager.edu.teacherLesson.impl.TeacherLessonService;
+import com.zhimu.service.manager.stu.studentLesson.impl.StudentLessonService;
+import org.json.JSONArray;
+import org.json.JSONObject;
+import org.apache.commons.lang.StringUtils;
+import org.springframework.stereotype.Controller;
+import org.springframework.web.bind.annotation.RequestMapping;
+import org.springframework.web.servlet.ModelAndView;
+
+import javax.annotation.Resource;
+import java.util.Map;
+import java.util.Set;
+
+/**
+ * 学生我的课程表控制层
+ */
+@Controller
+@RequestMapping(value = "/studentLesson")
+public class StudentLessonController extends BaseController {
+
+  @Resource(name = "studentLessonService")
+  private StudentLessonService studentLessonService;
+  @Resource(name = "schoolService")
+  private SchoolService schoolService;
+
+  /**
+   * 学生我的课程列表
+   */
+  @RequestMapping(value = "/list")
+  public ModelAndView list() throws Exception {
+    ModelAndView mv = this.getModelAndView();
+    PageData pd = getPageData();
+    try {
+      String keywords = pd.getString("keywords"); // 检索条件
+      if (null != keywords && !"".equals(keywords)) {
+        pd.put("keywords", keywords.trim());
+      }
+
+      User user = this.getUserInfo();
+      String schoolId = user.getSchoolId();
+      Set<PageData> schoolSet = null;
+      if (StringUtils.isNotBlank(schoolId)){
+        schoolSet = schoolService.listPschools(schoolId.split(",")); // 列出所有学校
+      }
+
+
+      //获取当前登陆登陆学生的ID
+      if (!StringUtils.isEmpty(user.getUSER_ID())) {
+        pd.put("student_id", user.getUSER_ID());
+      }
+      Map<String, Object> map = studentLessonService.studentLessonList(pd);
+      JSONArray array = new JSONArray();
+      JSONObject jsonObject = new JSONObject();
+      jsonObject.put("am", map.get("am"));
+      jsonObject.put("pm", map.get("pm"));
+      array.put(jsonObject);
+      mv.addObject("data", array.toString());
+      mv.addObject("teachers", map.get("teacherNames"));
+      mv.addObject("pd", pd);
+      mv.addObject("schoolList", schoolSet);
+      mv.setViewName("stu/studentLesson/studentLesson_list");
+    } catch (Exception e) {
+      logger.error(ErrorUtils.getErrorMessage(e, "查询学生我的课程列表异常!"));
+    }
+    return mv;
+  }
+}

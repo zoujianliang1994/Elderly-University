@@ -1,0 +1,156 @@
+package com.zhimu.controller.manager.edu.financial;
+
+import com.zhimu.commons.utils.DateUtil;
+import com.zhimu.commons.utils.ErrorUtils;
+import com.zhimu.commons.utils.PageData;
+import com.zhimu.controller.manager.base.BaseController;
+import com.zhimu.dao.entity.system.Page;
+import com.zhimu.service.manager.edu.financial.impl.WagesService;
+import com.zhimu.service.manager.edu.teacher.impl.TeacherService;
+import org.apache.commons.lang.StringUtils;
+import org.springframework.stereotype.Controller;
+import org.springframework.web.bind.annotation.RequestMapping;
+import org.springframework.web.servlet.ModelAndView;
+
+import javax.annotation.Resource;
+import java.util.*;
+
+@Controller
+@RequestMapping(value = "/wages")
+public class WagesController extends BaseController {
+
+  @Resource(name = "wagesService")
+  private WagesService wagesService;
+
+  @Resource(name = "teacherService")
+  private TeacherService teacherService;
+
+  /**
+   * 财务-工资管理列表
+   */
+  @RequestMapping(value = "/list")
+  public ModelAndView list(Page page) throws Exception {
+    ModelAndView mv = this.getModelAndView();
+    PageData pd = getPageData();
+    try {
+      String keywords = pd.getString("keywords"); // 检索条件
+      if (null != keywords && !"".equals(keywords)) {
+        pd.put("keywords", keywords.trim());
+      }
+      //获取当前登陆人员员所属学校ID
+      if (!StringUtils.isEmpty(getUserInfo().getSchoolId())) {
+        pd.put("userSchoolIds", getUserInfo().getSchoolId().split(","));
+      }
+      Calendar date = Calendar.getInstance();
+      String qn = String.valueOf(date.get(Calendar.YEAR));
+      //查询全年工资
+      pd.put("qn", qn);
+      page.setPd(pd);
+      List<PageData> qnList = wagesService.wageslistPage(page);
+      int q_yf = 0;
+      int q_kf = 0;
+      int q_sf = 0;
+      for (PageData q : qnList) {
+        q_yf += Integer.parseInt(q.get("yf_wages") + "");
+        q_kf += Integer.parseInt(q.get("kf_wages") + "");
+        q_sf += Integer.parseInt(q.get("sf_wages") + "");
+      }
+      pd.put("q_yf", q_yf);
+      pd.put("q_kf", q_kf);
+      pd.put("q_sf", q_sf);
+
+      mv.addObject("qnList", qnList);
+      pd.put("qn", "");
+      //查询当月工资
+      String dy_month = pd.getString("dy_month");
+      if ("".equals(dy_month) || null == dy_month) {
+        dy_month = DateUtil.getYearMonth(0);
+        pd.put("dy_month", dy_month);
+      }
+      pd.put("dy", dy_month);
+      page.setPd(pd);
+      List<PageData> dyList = wagesService.wageslistPage(page);
+
+      int d_yf = 0;
+      int d_kf = 0;
+      int d_sf = 0;
+      for (PageData d : dyList) {
+        d_yf += Integer.parseInt(d.get("yf_wages") + "");
+        d_kf += Integer.parseInt(d.get("kf_wages") + "");
+        d_sf += Integer.parseInt(d.get("sf_wages") + "");
+      }
+      pd.put("d_yf", d_yf);
+      pd.put("d_kf", d_kf);
+      pd.put("d_sf", d_sf);
+      mv.addObject("dyList", dyList);
+      mv.addObject("pd", pd);
+      mv.setViewName("edu/wages/wages_list");
+    } catch (Exception e) {
+      logger.error(ErrorUtils.getErrorMessage(e, "查询财务-工资管理列表异常!"));
+    }
+    return mv;
+  }
+
+  /**
+   * 去查看财务-工资管理详情页面
+   */
+  @RequestMapping(value = "/goEditU")
+  public ModelAndView goEditU() {
+    ModelAndView mv = this.getModelAndView();
+    PageData pd = getPageData();
+    PageData teacherPd = new PageData();
+    try {
+      teacherPd.put("id", pd.getString("teacher_id"));
+      teacherPd = teacherService.findDataById(teacherPd);
+      mv.addObject("teacherPd", teacherPd);
+      String type = pd.getString("type");
+      if ("1".equals(type)) {
+        List<PageData> varList = wagesService.selectListMonth(pd);
+        int month_yf = 0;
+        int month_kf = 0;
+        int month_sf = 0;
+        for (PageData p : varList) {
+          month_yf += Integer.parseInt(p.get("yf") + "");
+          month_kf += Integer.parseInt(p.get("kf") + "");
+          month_sf += Integer.parseInt(p.get("sf") + "");
+        }
+        pd.put("month_yf", month_yf);
+        pd.put("month_kf", month_kf);
+        pd.put("month_sf", month_sf);
+        mv.setViewName("edu/wages/wages_month");
+        mv.addObject("varList", varList);
+      } else {
+        int year_yf = 0;
+        int year_kf = 0;
+        int year_sf = 0;
+        List<Map<String, List<?>>> varList = new ArrayList<>();
+        Map map;
+        //获取全年工资1月-12月
+        for (int i = 0; i <= 11; i++) {
+          pd.put("dy_month", DateUtil.getYearMonth(i));
+          List<PageData> temp = wagesService.selectListMonth(pd);
+          for (PageData p : temp) {
+            year_yf += Integer.parseInt(p.get("yf") + "");
+            year_kf += Integer.parseInt(p.get("kf") + "");
+            year_sf += Integer.parseInt(p.get("sf") + "");
+          }
+          if (wagesService.selectListMonth(pd).size() > 0) {
+            map = new HashMap();
+            map.put("dy_month", DateUtil.getYearMonth(i));
+            map.put("list", wagesService.selectListMonth(pd));
+            varList.add(map);
+          }
+        }
+        pd.put("year_yf", year_yf);
+        pd.put("year_kf", year_kf);
+        pd.put("year_sf", year_sf);
+        mv.addObject("varList", varList);
+        mv.setViewName("edu/wages/wages_year");
+      }
+      mv.addObject("pd", pd);
+    } catch (Exception e) {
+      logger.error(ErrorUtils.getErrorMessage(e, "去查看财务-工资管理详情页面异常!"));
+    }
+    return mv;
+  }
+}

@@ -1,0 +1,296 @@
+//过渡
+.prefix-transition(@opt: all linear .15s) {
+    -webkit-transition: @opt;
+    -ms-transition: @opt;
+    -moz-transition: @opt;
+    transition: @opt;
+}
+//全部圆角
+.prefix-border-radius(@angle) {
+    -moz-border-radius: @angle;
+    -webkit-border-radius: @angle;
+    border-radius: @angle;
+}
+//投影
+.prefix-box-shadow(@shadow: 0 3px 5px rgba(0,0,0,.3)) {
+    -webkit-box-shadow: @shadow;    // iOS <4.3 & Android <4.1
+    -ms-box-shadow: @shadow;        //IE11
+    -moz-box-shadow: @shadow;       //firefox
+    box-shadow: @shadow;
+}
+//禁止选中
+//低版本浏览器需要在标签上添加：onselectstart="return false" unselectable="on"
+.prefix-user-select(@mode) {
+    -webkit-touch-callout: @mode;
+    -webkit-user-select: @mode;
+    -khtml-user-select: @mode;
+    -moz-user-select: @mode;
+    -ms-user-select: @mode;
+    user-select: @mode;
+}
+
+
+html,body{
+    height: 100%; 
+}
+.hide {
+    display: none;
+}
+.hidden {
+    visibility: hidden;
+}
+.text-center {
+    text-align: center;
+}
+.wrap {
+    .header {
+        // overflow: hidden;
+        .logo {
+            float: left;
+            width: 300px;
+            height: 60px;
+            background-repeat: no-repeat;
+            background-position: center;
+            background-image: url(../images/logo_ceshi.png);
+        }
+        .navs {
+
+            float: left;
+            .nav {
+                cursor: pointer;
+                display: inline-block;
+                margin: 14px 10px;
+                padding: 5px 20px;
+                height: 22px;
+                line-height: 22px;
+                font-size: 14px;
+                color: #9fc5ff;
+                background: transparent;
+                border: 1px solid transparent;
+                .prefix-transition();
+                &:hover {
+                    color: #fff;
+                    background: #1755b5;
+                    background: rgba(23,85,181,.9);  
+                }
+                &.current,
+                &.current:hover {
+                    color: #fff;
+                    border-color: #00deff;
+                    background: transparent;
+                    cursor: default;
+                }
+            }
+        }
+        .avatar {
+            float: right;
+            height: 60px;
+            // overflow: hidden;
+            .sayhi {
+                float: left;
+                height: 60px;
+                line-height: 60px;
+                color: #9fc5ff;
+                .time {
+                    color: #9fc5ff;
+                }
+                .nickname {
+                    color: #fff;
+                }
+            }
+            .user {
+                float: left;
+                .layui-nav {
+                    padding-left: 0;
+                    .layui-nav-item {
+                        position:relative;
+                        & > a {
+                            padding-left: 5px;
+                        }
+                        .layui-nav-img {
+                            margin-top: 16px;
+                            margin-right: 0;
+                        }
+                        .layui-nav-child {
+                            right: 0;
+                            left: auto;
+                        }
+                        .message_num{
+                            display:inline-block;
+                            position:absolute;
+                            width:15px;
+                            height:15px;
+                            right:16px;
+                            top:12px;
+                            border-radius:50%;
+                            background:#FF5722;
+                            color:#fff;
+                            font-size:10px;
+                            text-align:center;
+                            line-height:15px;
+                        }
+                    }
+                }
+
+            }
+
+        }
+    }
+}
+
+.guide {
+    position: relative;
+    height: 100%;
+    overflow: hidden;
+    font-size: 18px;
+    background: #037dd2;
+    .guide-bg {
+        position: absolute;
+        top: 0;
+        left: 0;
+        width: 100%;
+        height: 100%;
+    }
+    .guide-box {
+        position: absolute;
+        top: 0;
+        left: 0;
+        right: 0;
+        bottom: 0;
+        .btn {
+            position: absolute;
+            top: 65%;
+            left: 50%;
+            margin-top: -25px;
+            margin-left: -120px;
+            width: 240px;
+            height: 50px;
+            line-height: 40px;
+            color: #fff;
+            font-size: 18px;
+            text-align: center;
+            cursor: pointer;
+            background: #0055d9;
+            background: rgba(12,81,205,.8);
+            border: 3px solid #c7f3ff;
+            border: 3px solid rgba(199,243,255,.6);
+            .prefix-transition();
+            .prefix-border-radius(10px);
+            &:hover {
+                margin-top: -27px;
+                .prefix-box-shadow(0 5px 25px rgba(0,90,160,.9));
+            }
+        }
+    }
+    .guide-loading {
+        position: absolute;
+        z-index: 10;
+        top: 60%;
+        left: 50%;
+        margin-left: -16px;
+        width: 32px;
+        height: 32px;
+        background: url(../images/loading.gif);
+    }
+}
+
+.fishmodules {
+    position: absolute;
+    top: 0;
+    left: 0;
+    margin-top: 15px;
+    margin-bottom: 15px;
+    min-width: 580px;
+    .moduleitem {
+        display: inline-block;
+        padding: 10px 30px 15px;
+        border: 1px solid transparent;
+        text-align: center;
+        color: #000;
+        .prefix-user-select(none);
+        .prefix-border-radius(10px);
+        .prefix-transition();
+        img {
+            width: 64px;
+            height: 64px;
+            border: 0;
+        }
+        .ico {
+            margin: 0 auto;
+            width: 120px;
+            height: 120px;
+            background-repeat: no-repeat;
+            background-image: url(../images/module.png);
+            &.ico-user { background-position: 0 0; }
+            &.ico-chart { background-position: -120px 0; }
+            &.ico-userlist { background-position: -240px 0; }
+            &.ico-module { background-position: -360px 0; }
+            &.ico-defense { background-position: 0 -120px; }
+            &.ico-edit { background-position: -120px -120px; }
+            &.ico-list { background-position: -240px -120px; }
+            &.ico-check { background-position: -360px -120px; }
+        }
+        .tit {
+            margin-top: 5px;
+            height: 36px;
+            line-height: 18px;
+            font-size: 14px;
+            overflow: hidden;
+        }
+        &:hover {
+            background: #f3f8ff;
+            background: rgba(243,248,255,.8);
+            border-color: #d1e5ff;
+            margin-top: -2px;
+            color: #108ee9;
+            .prefix-box-shadow(@shadow: 0 3px 20px rgba(0,109,255,.15));
+        }
+    }
+    .stepitem {
+        width: 320px;
+        height: 300px;
+        background-repeat: no-repeat;
+        background-image: url(../images/step.png);
+        &.step1 { background-position: 0 0; }
+        &.step2 { background-position: -320px 0; }
+        &.step3 { background-position: -640px 0; }
+        &.step4 { background-position: -960px 0; }
+    }
+    .stepimg {
+        width: 140px;
+        height: 131px;                  //height = width/1.07
+        border: 0;
+        .prefix-user-select(none);
+    }
+}
+
+@media (min-width: 768px){              //>=768的设备 
+    .fishmodules .moduleitem img {
+        width: 64px;
+        height: 64px;
+    }
+    .fishmodules .stepimg {
+        width: 140px;
+        height: 131px;
+    }
+}
+@media (min-width: 992px){              //>=992的设备 
+    .fishmodules .moduleitem img {
+        width: 80px;
+        height: 80px;
+    }
+    .fishmodules .stepimg {
+        width: 180px;
+        height: 168px;
+    }
+}
+@media (min-width: 1200px){               //>=1200的设备
+    .fishmodules .moduleitem img {
+        width: 100px;
+        height: 100px;
+    }
+    .fishmodules .stepimg {
+        width: 220px;
+        height: 206px;
+    }
+}

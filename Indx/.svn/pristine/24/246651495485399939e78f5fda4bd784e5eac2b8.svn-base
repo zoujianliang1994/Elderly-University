@@ -1,0 +1,184 @@
+package com.zhimu.service.manager.edu.studentInfo.impl;
+
+
+import com.zhimu.commons.utils.DateUtil;
+import com.zhimu.commons.utils.PageData;
+import com.zhimu.dao.DaoSupport;
+import com.zhimu.dao.entity.system.Page;
+import com.zhimu.service.manager.edu.studentFiles.ScheduleManager;
+import com.zhimu.service.manager.edu.studentInfo.StudentInfoManager;
+import org.springframework.stereotype.Service;
+
+import javax.annotation.Resource;
+import java.util.ArrayList;
+import java.util.LinkedHashMap;
+import java.util.List;
+import java.util.Map;
+
+@Service("studentInfoService")
+public class StudentInfoService implements StudentInfoManager {
+
+  @Resource(name = "daoSupport")
+  private DaoSupport dao;
+
+  @Override
+  public List<PageData> studentInfolistPage(Page pd) throws Exception {
+
+    return (List<PageData>) dao.findForList("StudentInfoMapper.datalistPage", pd);
+
+  }
+
+  @Override
+  public PageData findObjectById(PageData pd) throws Exception {
+    return (PageData) dao.findForObject("StudentInfoMapper.findById", pd);
+  }
+
+  @Override
+  public void edit(PageData pd) throws Exception {
+    dao.update("StudentInfoMapper.edit", pd);
+  }
+
+
+  @Override
+  public void addTuition(List<PageData> list) throws Exception {
+    dao.save("StudentInfoMapper.addTuition", list);
+  }
+
+  @Override
+  public List<PageData> getAllStudentBycId(PageData pc) throws Exception {
+    return (List<PageData>) dao.findForList("StudentInfoMapper.getAllStudentBycId", pc);
+  }
+
+  @Override
+  public void studentTransfer(PageData info) throws Exception {
+
+    dao.update("StudentInfoMapper.studentTransfer", info);
+  }
+
+  @Override
+  public void studentJoin(PageData stu) throws Exception {
+
+    dao.update("StudentInfoMapper.studentJoin", stu);
+  }
+
+  @Override
+  public int getStuGradesTuition(PageData pd) throws Exception {
+    String gid = pd.getString("gid");
+    String time = pd.getString("time");
+
+    PageData grades =  (PageData) dao.findForObject("StudentInfoMapper.findGradesById", gid);
+
+    //查询开课时间 开课时间
+    PageData semester = (PageData) dao.findForObject("StudentInfoMapper.findSemestersById", gid);
+
+    //查询该班级的教学计划，如果未查询到数据 退回全部学费
+    PageData teachPlan =  (PageData) dao.findForObject("StudentInfoMapper.findGradesPlanById", gid);
+
+
+    if(teachPlan == null || teachPlan.size()<=0||semester ==null||semester.size()<=0){
+
+      //返回全部学费
+      return Integer.parseInt(grades.get("tuition")+"");
+
+    }else{
+
+      //查询到数据，计算已完成的课课时
+      String ks = teachPlan.get("ks")+"";//该班级总共课数
+      int tuition = Integer.parseInt(grades.get("tuition")+"");//学费
+      String start = semester.getString("semester_start");
+      //计算已上课时
+      int finishWork = finishWork(gid,start,time);
+
+      //计算剩下课时所需学费
+      tuition = (tuition/(Integer.parseInt(ks))*(Integer.parseInt(ks)-finishWork));
+      return tuition;
+
+    }
+
+  }
+
+
+
+
+  @Override
+  public List<PageData> getStuGradesJson(PageData pd) throws Exception {
+
+    //查询出该学员有多少在读班级
+
+    PageData studetn = (PageData) dao.findForObject("StudentInfoMapper.findById", pd);
+    String[] AllGrades = studetn.getString("c_id").split(",");
+
+    List<PageData> list = new ArrayList<PageData>();
+    //查询出学生对应的班级
+    for (int i = 0; i < AllGrades.length; i++) {
+      String gradesId = AllGrades[i];
+      //该查询包含，课程名字 lesson_name，班级名字 name，学费 tuition，班级id id，班级名字name,
+      PageData grades =  (PageData) dao.findForObject("StudentInfoMapper.findGradesById", gradesId);
+      grades.put("entry_time",studetn.get("checkin_date")+"");
+
+      //查询开课时间 开课时间
+      PageData semester = (PageData) dao.findForObject("StudentInfoMapper.findSemestersById", gradesId);
+
+      //查询该班级的教学计划，如果未查询到数据 退回全部学费
+      PageData teachPlan =  (PageData) dao.findForObject("StudentInfoMapper.findGradesPlanById", gradesId);
+
+
+      if(teachPlan == null || teachPlan.size()<=0||semester.size()<=0||semester ==null){
+
+        //返回全部学费
+        grades.put("tuition_fee",grades.get("tuition")+"");
+        grades.put("finish_work","0");
+        grades.put("course_teacher","未开课");
+
+      }else{
+
+        //查询到数据，计算已完成的课课时
+        String ks = teachPlan.get("ks")+"";//该班级总共课数
+        int tuition = Integer.parseInt(grades.get("tuition")+"");//学费
+        String start = semester.getString("semester_start");
+        String end = pd.getString("outDate");
+
+        //计算已上课时
+        int finishWork = finishWork(gradesId,start,end);
+        grades.put("finish_work",finishWork);
+        grades.put("course_time",start);
+
+        //计算剩下课时所需学费
+        tuition = (tuition/(Integer.parseInt(ks))*(Integer.parseInt(ks)-finishWork));
+        grades.put("tuition_fee",tuition);
+
+      }
+      list.add(grades);
+
+
+    }
+
+
+    return list;
+  }
+
+
+
+  //根据id,开始时间，结束时间，计算已完成课时
+  private int finishWork(String gradesId,String start,String end) throws  Exception{
+
+    //查询班级一周排课数量
+    List<PageData> list =  (List<PageData>) dao.findForList("StudentInfoMapper.getGradesWeekClass", gradesId);
+    //计算两个日期中有几个周几然后相加
+    int weekClass=0;
+    for (int i = 0; i < list.size(); i++) {
+      int weekDay = DateUtil.getMondayNumber(start,end,Integer.parseInt(list.get(i).get("week")+""));
+      int dayClass = Integer.parseInt(list.get(i).get("dayClass")+"");
+      weekClass = weekClass+(dayClass*weekDay);
+    }
+
+
+    return weekClass;
+  }
+
+
+
+
+
+
+}

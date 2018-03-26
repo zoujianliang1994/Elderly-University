@@ -1,0 +1,67 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="ActivityMapper">
+	
+	<!--表名 -->
+	<sql id="tableName">
+		edu_activity
+	</sql>
+	
+	<!-- 字段 -->
+	<sql id="Field">
+		id,
+		name,
+		content,
+		people_num,
+		file_url,
+		activity_start_time,
+		activity_end_time,
+		apply_start_time,
+		apply_end_time,
+		create_by,
+		create_time,
+		update_by,
+		update_time,
+		status
+	</sql>
+	
+	<!-- 字段值 -->
+	<sql id="FieldValue">
+		#{id},
+		#{name},
+		#{content},
+		#{people_num},
+		#{file_url},
+		#{activity_start_time},
+		#{activity_end_time},
+		#{apply_start_time},
+		#{apply_end_time},
+		#{create_by},
+		#{create_time},
+		#{update_by},
+		#{update_time},
+		#{status}
+	</sql>
+	
+	<!-- 列表 -->
+	<select id="listPage" parameterType="page" resultType="pd">
+		select
+			<include refid="Field"></include>
+		from 
+			<include refid="tableName"></include>
+		where
+			1=1
+		AND
+			create_by = #{pd.username}
+		<if test="pd.keywords != null and pd.keywords != ''"><!-- 关键词检索 -->
+			and
+				name LIKE ('%'+#{pd.keywords}+'%')
+		</if>
+		<if test="pd.state != null and pd.state != ''"><!-- 状态检索 -->
+			and
+				status = #{pd.state}
+		</if>
+		ORDER BY
+			activity_start_time
+	</select>
+</mapper>

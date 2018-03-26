@@ -1,0 +1,227 @@
+<%@ page language="java" contentType="text/html; charset=UTF-8" pageEncoding="UTF-8" %>
+<%
+    String path = request.getContextPath();
+    String basePath = request.getScheme() + "://" + request.getServerName() + ":" + request.getServerPort() + path + "/";
+%>
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <title>我要报名</title>
+    <%@ include file="../../system/index/headcss.jsp" %>
+</head>
+<body>
+
+<div class="tableBox">
+    <div class="my-apply btn-left btn-select">
+        我要报名
+    </div>
+    <div class="my-yet btn-right btn-select">
+        查看已报班级
+    </div>
+    <div class="layui-col-sm12 student-know">
+        <p >老年大学招生学员须知</p>
+        <ul class="enrollment-list" >
+            <li>一、报名时间：1月7日-10日、2月27日-28日、3月1日</li>
+            <li>二、报名地点：成都市金牛区老年办</li>
+            <li>三、所需证件：本人身份证(二代)</li>
+            <li>四、报名条件：</li>
+            <li>1、周一至周五班，女年满45周岁、男年满50周岁以上，由本人持本人身份证报名。</li>
+            <li>2、参加周一至周五晚班学习者，要求年龄在70周岁以下。</li>
+            <li>3、报名者需有完全行为能力、身心健康。入学后，在校期间如因自身原因或突发疾病导致意外事件发生，后果自负。</li>
+            <li>4、学校建议学员购买“老年人意外伤害险”（10元/年）。</li>
+            <li>5、填写《学员登记表》时，内容要填写齐全，字迹工整，确认无误后，本人签字，方可予以报名。(温馨提示：为了便于处理应急事件，请您务必准确填写家属电话)。</li>
+            <li>6、请认真阅读招生简章，慎重选择好学科、专业及上课时间。报名注册后，一经交费，一律不予退费、转班（极特殊情况按学校有关规定办理）。</li>
+            <li>五、咨询电话：招生管理处58567809 收发室58567810</li>
+        </ul>
+
+        <div class="btnbox" id="btnDiv">
+            <button id="cancel" class="layui-btn layui-btn-primary layui-btn-small"style="width: 13rem;border: 0px;background-color: #e3e4e5;color: #999;">取消</button>
+            <button id="sure" class="layui-btn layui-btn-primary layui-btn-small" style="width: 13rem;">同意以上协议并报名</button>
+        </div>
+
+    </div>
+    <div class="layui-col-sm12 student-pay" style="display: none">
+        <p class="class-info-title">
+            已缴费班级
+        </p>
+        <table class="layui-table center" lay-skin="line" id="table">
+            <colgroup>
+                <col>
+                <col>
+                <col>
+                <col>
+                <col>
+                <col>
+                <col>
+                <col width="170">
+            </colgroup>
+            <thead>
+            <tr class="table-head-tr">
+                <th>班级名称</th>
+                <th>上课时间</th>
+                <th>任课老师</th>
+                <th>人数（人）</th>
+                <th>学费（元）</th>
+                <th>状态</th>
+            </tr>
+            </thead>
+            <tbody>
+            <c:choose>
+                <c:when test="${not empty varList}">
+
+                    <shiro:hasPermission name="edu:school:select">
+                        <c:forEach items="${varList}" var="var" varStatus="vs">
+                            <tr>
+                                <td>${var.name}</td>
+                                <td><c:if test="${var.type == 1 }">主校区</c:if>
+                                    <c:if test="${var.type == 2 }">分校区</c:if>
+                                    <c:if test="${var.type == 3 }">教学点</c:if>
+                                </td>
+                                <td>${var.location}</td>
+                                <td>${var.contact}</td>
+                                <td>${var.tel}</td>
+                                <td style="text-align: center;">
+
+
+                                    <shiro:hasPermission name="edu:school:detail">
+                                        <a class="table-btn chakan-btn edit" onclick="edit('${var.id}','1');" style="color: #999999;">
+                                                <%--<i class="iconfont icon-chakan"title="查看"></i>--%>
+                                            已缴费
+                                        </a>
+                                    </shiro:hasPermission>
+
+                                </td>
+                            </tr>
+                        </c:forEach>
+                    </shiro:hasPermission>
+                    <shiro:lacksPermission name="edu:school:select">
+                        <tr>
+                            <td colspan="100" class="center">您无权查看</td>
+                        </tr>
+                    </shiro:lacksPermission>
+                </c:when>
+                <c:otherwise>
+                    <tr class="main_info">
+                        <td colspan="100" class="center">没有相关数据</td>
+                    </tr>
+                </c:otherwise>
+            </c:choose>
+            </tbody>
+        </table>
+
+        <p class="class-info-title">
+            未交费班级
+        </p>
+        <table class="layui-table center" lay-skin="line" id="selected_table">
+            <colgroup>
+                <col>
+                <col>
+                <col>
+                <col>
+                <col>
+                <col>
+                <col>
+                <col width="170">
+            </colgroup>
+            <thead>
+            <tr class="table-head-tr">
+                <th>班级名称</th>
+                <th>上课时间</th>
+                <th>任课老师</th>
+                <th>人数（人）</th>
+                <th>学费（元）</th>
+                <th>状态</th>
+            </tr>
+            </thead>
+            <tbody>
+            <c:choose>
+                <c:when test="${not empty varList}">
+
+                    <shiro:hasPermission name="edu:school:select">
+                        <c:forEach items="${varList}" var="var" varStatus="vs">
+                            <tr>
+                                <td>${var.name}</td>
+                                <td><c:if test="${var.type == 1 }">主校区</c:if>
+                                    <c:if test="${var.type == 2 }">分校区</c:if>
+                                    <c:if test="${var.type == 3 }">教学点</c:if>
+                                </td>
+                                <td>${var.location}</td>
+                                <td>${var.contact}</td>
+                                <td>${var.tel}</td>
+                                <td style="text-align: center;">
+                                        <%--这两个选项按钮只能有一个--%>
+                                    <shiro:hasPermission name="edu:school:detail">
+                                        <a class="table-btn chakan-btn edit" onclick="edit('${var.id}','1');" >
+                                                <%--<i class="iconfont icon-chakan"title="查看"></i>--%>
+                                            去缴费
+                                        </a>
+                                    </shiro:hasPermission>
+
+                                    <shiro:hasPermission name="edu:school:detail">
+                                        <a class="table-btn chakan-btn edit" onclick="edit('${var.id}','1');">
+                                                <%--<i class="iconfont icon-chakan"title="查看"></i>--%>
+                                            退班
+                                        </a>
+                                    </shiro:hasPermission>
+
+                                </td>
+                            </tr>
+                        </c:forEach>
+                    </shiro:hasPermission>
+                    <shiro:lacksPermission name="edu:school:select">
+                        <tr>
+                            <td colspan="100" class="center">您无权查看</td>
+                        </tr>
+                    </shiro:lacksPermission>
+                </c:when>
+                <c:otherwise>
+                    <tr class="main_info">
+                        <td colspan="100" class="center">没有相关数据</td>
+                    </tr>
+                </c:otherwise>
+            </c:choose>
+            <tr class="main_info">
+                <td colspan="100" style="text-align: left">
+                    <span>合计费用：</span>
+                    <span style="color: #FF5722;padding-right: 1rem;">￥1100</span>
+                    <button id="merge_pay" class="page-btn">合并缴费</button>
+
+                </td>
+            </tr>
+            </tbody>
+        </table>
+    </div>
+
+
+</div>
+
+
+<%@ include file="../../system/index/foot.jsp" %>
+<script type="text/javascript">
+    $(function(){
+        $(".btn-select").on("click",function () {
+            $(".btn-select").removeClass("btn-left").addClass('btn-right');
+            $(this).removeClass("btn-right").addClass("btn-left");
+        })
+        $(".my-apply").on("click",function(){
+            $(".student-know").css("display","block");
+            $(".student-pay").css("display","none");
+            $(".student-enroll").css("display","none");
+
+        })
+        $(".my-yet").on("click",function(){
+            $(".student-pay").css("display","block");
+            $(".student-know").css("display","none");
+            $(".student-enroll").css("display","none");
+        })
+        $("#sure").on("click",function(){
+            window.location.href = "<%=basePath%>studentEnroll/goGrades.do";
+
+        })
+    })
+
+
+
+</script>
+</body>
+</html>

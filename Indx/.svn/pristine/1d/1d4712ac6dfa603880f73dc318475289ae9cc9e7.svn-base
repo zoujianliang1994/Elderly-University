@@ -1,0 +1,102 @@
+package com.zhimu.service.manager.edu.teacherLesson.impl;
+
+import com.zhimu.commons.utils.PageData;
+import com.zhimu.dao.DaoSupport;
+import com.zhimu.service.manager.edu.teacherLesson.TeacherLessonManager;
+import org.springframework.stereotype.Service;
+
+import javax.annotation.Resource;
+import java.util.ArrayList;
+import java.util.LinkedHashMap;
+import java.util.List;
+import java.util.Map;
+
+@Service("teacherLessonService")
+public class TeacherLessonService implements TeacherLessonManager {
+
+  @Resource(name = "daoSupport")
+  private DaoSupport dao;
+
+  public Map<String, Object> teacherLessonList(PageData pd) throws Exception {
+    List<PageData> all = (List<PageData>) dao.findForList("teacherLessonMapper.dataList", pd);
+
+    List<PageData> amMonday = new ArrayList<>();
+    List<PageData> amTuesday = new ArrayList<>();
+    List<PageData> amWednesday = new ArrayList<>();
+    List<PageData> amThursday = new ArrayList<>();
+    List<PageData> amFriday = new ArrayList<>();
+
+    List<PageData> pmMonday = new ArrayList<>();
+    List<PageData> pmTuesday = new ArrayList<>();
+    List<PageData> pmWednesday = new ArrayList<>();
+    List<PageData> pmThursday = new ArrayList<>();
+    List<PageData> pmFriday = new ArrayList<>();
+
+    //循环list
+    for (int j = 0; j < all.size(); j++) {
+      PageData am = new PageData();
+      PageData pm = new PageData();
+      if ("1".equals(all.get(j).get("period") + "")) {
+        //上午
+        am = all.get(j);
+      } else {
+        pm = all.get(j);
+      }
+      switch (Integer.parseInt(all.get(j).get("week") + "")) {
+        case 1:
+          if (am.size() != 0) {
+            amMonday.add(am);
+          } else {
+            pmMonday.add(pm);
+          }
+          break;
+        case 2:
+          if (am.size() != 0) {
+            amTuesday.add(am);
+          } else {
+            pmTuesday.add(pm);
+          }
+          break;
+        case 3:
+          if (am.size() != 0) {
+            amWednesday.add(am);
+          } else {
+            pmWednesday.add(pm);
+          }
+          break;
+        case 4:
+          if (am.size() != 0) {
+            amThursday.add(am);
+          } else {
+            pmThursday.add(pm);
+          }
+          break;
+        case 5:
+          if (am.size() != 0) {
+            amFriday.add(am);
+          } else {
+            pmFriday.add(pm);
+          }
+          break;
+      }
+    }
+    //上午
+    Map<String, Object> amMap = new LinkedHashMap<>();
+    amMap.put("Monday", amMonday);
+    amMap.put("Tuesday", amTuesday);
+    amMap.put("Wednesday", amWednesday);
+    amMap.put("Thursday", amThursday);
+    amMap.put("Friday", amFriday);
+    //下午
+    Map<String, Object> pmMap = new LinkedHashMap<>();
+    pmMap.put("Monday", pmMonday);
+    pmMap.put("Tuesday", pmTuesday);
+    pmMap.put("Wednesday", pmWednesday);
+    pmMap.put("Thursday", pmThursday);
+    pmMap.put("Friday", pmFriday);
+    Map<String, Object> map = new LinkedHashMap<>();
+    map.put("am", amMap);
+    map.put("pm", pmMap);
+    return map;
+  }
+}

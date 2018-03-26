@@ -1,0 +1,537 @@
+package com.zhimu.controller.manager.system.areacode;
+
+import java.util.ArrayList;
+import java.util.HashMap;
+import java.util.List;
+import java.util.Map;
+
+import javax.annotation.Resource;
+import javax.servlet.http.HttpServletRequest;
+
+import net.sf.json.JSONArray;
+
+import org.apache.commons.lang.StringUtils;
+import org.springframework.stereotype.Controller;
+import org.springframework.web.bind.annotation.RequestMapping;
+import org.springframework.web.bind.annotation.RequestMethod;
+import org.springframework.web.bind.annotation.RequestParam;
+import org.springframework.web.bind.annotation.ResponseBody;
+import org.springframework.web.multipart.MultipartFile;
+import org.springframework.web.servlet.ModelAndView;
+
+import com.zhimu.commons.constant.Const;
+import com.zhimu.commons.utils.AppUtil;
+import com.zhimu.commons.utils.AreaCodeUtils;
+import com.zhimu.commons.utils.ErrorUtils;
+import com.zhimu.commons.utils.FileUpload;
+import com.zhimu.commons.utils.GetPinyin;
+import com.zhimu.commons.utils.ObjectExcelRead;
+import com.zhimu.commons.utils.ObjectExcelView;
+import com.zhimu.commons.utils.PageData;
+import com.zhimu.commons.utils.PathUtil;
+import com.zhimu.controller.manager.base.BaseController;
+import com.zhimu.dao.entity.system.AreaCode;
+import com.zhimu.dao.entity.system.Page;
+import com.zhimu.dao.entity.system.User;
+import com.zhimu.service.manager.redis.RedisCacheUtil;
+import com.zhimu.service.manager.system.areacode.AreaCodeService;
+import com.zhimu.service.manager.system.department.DepartmentManager;
+
+/**
+ * 说明：行政区划 创建人：wy 创建时间：2015-12-16
+ */
+@Controller
+@RequestMapping(value = "/areaCode")
+public class AreaCodeController extends BaseController {
+
+	@Resource(name = "areaCodeService")
+	private AreaCodeService areaCodeService;
+	@Resource(name = "departmentService")
+	private DepartmentManager departmentService;
+	@Resource(name = "redisCacheUtil")
+	RedisCacheUtil<?> redisCacheUtil;
+
+	/**
+	 * 显示列表stree
+	 */
+	@RequestMapping(value = "/listAreaCodeStree")
+	@ResponseBody
+	public JSONArray listAreaCodeStree() {
+		JSONArray areaCodeArray = null;
+		try {
+			areaCodeArray = areaCodeService.listAreaCodeStree("0", "0");
+		} catch (Exception e) {
+			logger.error(ErrorUtils.getErrorMessage(e, "显示areacode列表stree异常"));
+		}
+		return areaCodeArray;
+	}
+
+	/**
+	 * 查询所有数据
+	 */
+	@RequestMapping(value = "/findAll")
+	@ResponseBody
+	public List<AreaCode> findAll() {
+		try {
+			return areaCodeService.findAll();
+		} catch (Exception e) {
+			logger.error(ErrorUtils.getErrorMessage(e, "显示areacode列表stree异常"));
+		}
+		return null;
+	}
+
+	/**
+	 * 获取区县以上
+	 */
+	@RequestMapping(value = "/findLevel2")
+	@ResponseBody
+	public JSONArray findLevel2() {
+		JSONArray jsonArray = new JSONArray();
+		try {
+			User user = getUserInfo();
+			String areaCode = "";
+			if (null != user && StringUtils.isNotEmpty(user.getAreaCode())) {
+				areaCode = AreaCodeUtils.returnXzqh(user.getAreaCode());
+			}
+			if (StringUtils.isEmpty(areaCode)) {
+				areaCode = "51";
+			}
+			List<AreaCode> areaCodelist = redisCacheUtil.getCacheObject("areaCode_" + user.getUSER_ID());
+			if (null == areaCodelist || areaCodelist.size() <= 0) {
+				areaCodelist = areaCodeService.findLevel2(areaCode);
+				// 放入缓存
+				redisCacheUtil.setCacheObject("areaCode-" + user.getUSER_ID(), areaCodelist);
+			}
+			if (StringUtils.isNotEmpty(areaCode) && areaCode.length() == 2) {
+				// 省
+				return getChildren("0", areaCodelist);
+			} else if (StringUtils.isNotEmpty(areaCode)) {
+				// 市、区、县
+				return getChildren(areaCodelist.get(0).getParentId(), areaCodelist);
+			}
+			// else {
+			// // 区、县
+			// return getChildren(pid, areaCodelist);
+			// }
+
+		} catch (Exception e) {
+			logger.error(ErrorUtils.getErrorMessage(e, "显示areacode列表stree异常"));
+		}
+		return jsonArray;
+	}
+
+	// 组装区划树（区县以上）
+	public JSONArray getChildren(String pid, List<AreaCode> areaCodelist) {
+		JSONArray json = new JSONArray();
+		if (StringUtils.isNotEmpty(pid) && null != areaCodelist && areaCodelist.size() > 0) {
+			for (AreaCode area : areaCodelist) {
+				if (pid.equals(area.getParentId())) {
+					Map<Object, Object> map = new HashMap<Object, Object>();
+					map.put("id", area.getId());
+					map.put("title", area.getName());
+					map.put("hasNext", !"2".equals(area.getLevel()));
+					map.put("areaCode", area.getAreaCode());
+					map.put("level", area.getLevel());
+					map.put("pid", area.getParentId());
+					map.put("children", getChildren(area.getId(), areaCodelist));
+					json.add(map);
+				}
+			}
+		}
+		return json;
+	}
+
+	/**
+	 * 通过ID获取其子级列表
+	 */
+	@RequestMapping(value = "/listSubAreaCodeByParentId")
+	@ResponseBody
+	public JSONArray listSubAreaCodeByParentId(HttpServletRequest req) {
+		JSONArray jsonArray = new JSONArray();
+		String parentId = req.getParameter("parentId");
+		String type = req.getParameter("type");
+		try {
+			// 根据当前登录人单位获取区划
+			User userInfo = getUserInfo();
+			List<AreaCode> areaList = areaCodeService.listSubAreaCodeByParentId(parentId);
+			boolean hasNext = false;
+			for (AreaCode area : areaList) {
+				Map<Object, Object> map = new HashMap<Object, Object>();
+				map.put("id", area.getId());
+				map.put("title", area.getName());
+				map.put("children", "");
+				// 获取缓存数据
+				List<AreaCode> cacheList = redisCacheUtil.getCacheObject(area.getId());
+				if (null != cacheList && cacheList.size() > 0) {
+					// 有缓存
+					hasNext = true;
+				} else {
+					// 数据库查询
+					List<AreaCode> childList = areaCodeService.listSubAreaCodeByParentId(area.getId());
+					if (null != childList && childList.size() > 0) {
+						hasNext = true;
+						// 存入缓存
+						redisCacheUtil.setCacheObject(area.getId(), childList);
+					}
+				}
+				map.put("hasNext", hasNext);
+				map.put("areaCode", area.getAreaCode());
+				map.put("level", area.getLevel());
+				map.put("pid", area.getParentId());
+				map.put("mergerName", area.getMergerName());
+				jsonArray.add(map);
+			}
+			if ("0".equals(type)) {
+				// 不需要过滤用户行政区划
+				return jsonArray;
+			}
+			if ("0".equals(parentId)) {
+				// 单独处理，需要用户过滤权限
+				// parentId = userInfo.getAreaId();
+				AreaCode area = this.areaCodeService.findById(userInfo.getAreaId());
+				JSONArray topJson = new JSONArray();
+				Map<Object, Object> map = new HashMap<Object, Object>();
+				map.put("id", area.getId());
+				map.put("title", area.getName());
+				map.put("children", "");
+				map.put("hasNext", !"4".equals(area.getLevel()));
+				map.put("areaCode", area.getAreaCode());
+				map.put("level", area.getLevel());
+				map.put("pid", area.getParentId());
+				topJson.add(map);
+				return topJson;
+			}
+		} catch (Exception e) {
+			logger.error(ErrorUtils.getErrorMessage(e, "通过ID获取其子级列表异常"));
+		}
+		return jsonArray;
+	}
+
+	/**
+	 * 打开上传EXCEL页面
+	 */
+	@RequestMapping(value = "/goUploadExcel")
+	public ModelAndView goUploadExcel() {
+		ModelAndView mv = this.getModelAndView();
+		PageData pd = getPageData();
+		mv.addObject("pd", pd);
+		mv.setViewName("system/areacode/areacode_upload");
+		return mv;
+	}
+
+	/**
+	 * 导入行政区划数据
+	 */
+	@RequestMapping(value = "/readExcel", method = RequestMethod.POST)
+	@ResponseBody
+	public ModelAndView readExcel(@RequestParam(value = "excelFile", required = false) MultipartFile file, HttpServletRequest request) {
+		ModelAndView mv = getModelAndView();
+		List<PageData> sucPageData = new ArrayList<PageData>();
+		List<PageData> errPageData = new ArrayList<PageData>();
+		List<PageData> listPd = new ArrayList<PageData>();
+		String errMsg = "";
+		if (null != file && !file.isEmpty()) {
+			String filePath = PathUtil.getClasspath() + Const.FILEPATHFILE; // 文件上传路径
+			String fileName = FileUpload.fileUp(file, filePath, "areaInfoExcel"); // 执行上传
+			try {
+				// 正常Excel导入
+				listPd = (List) ObjectExcelRead.readExcel(filePath, fileName, 2, 0, 0, 0);
+				for (int i = 0; i < listPd.size(); i++) {
+					PageData pageData = listPd.get(i);
+					if (StringUtils.isEmpty(pageData.getString("var0")) && StringUtils.isEmpty(pageData.getString("var1")) && StringUtils.isEmpty(pageData.getString("var2"))
+							&& StringUtils.isEmpty(pageData.getString("var3")) && StringUtils.isEmpty(pageData.getString("var4")) && StringUtils.isEmpty(pageData.getString("var5"))) {
+						continue;
+					}
+					PageData pd = new PageData();
+					/**************** 需要校验放在前面,按顺序来 *********************************/
+					// 区划名
+					String name = listPd.get(i).getString("var0");
+					if (StringUtils.isEmpty(name)) {
+						errMsg += "行政区划名称不能为空!";
+					} else {
+						name = name.trim();
+					}
+					pd.put("name", name);
+					// 区划code
+					String area_code = listPd.get(i).getString("var1");
+					if (StringUtils.isEmpty(area_code)) {
+						errMsg += " 行政区划代码不能为空!";
+					} else if (area_code.trim().length() != 12) {
+						errMsg += " 行政区划代码非12位!";
+					} else {
+						area_code = area_code.trim();
+					}
+					pd.put("areaCode", area_code);
+					// 级别
+					String level = listPd.get(i).getString("var2");
+					if (StringUtils.isEmpty(level)) {
+						errMsg += " 行政区划类别不能为空!";
+					} else {
+						level = level.trim();
+					}
+					if ("省".equals(level)) {
+						pd.put("level", 0);
+					} else if ("市/洲".equals(level)) {
+						pd.put("level", 1);
+					} else if ("区县".equals(level)) {
+						pd.put("level", 2);
+					} else if ("乡镇/街道".equals(level)) {
+						pd.put("level", 3);
+					} else {
+						pd.put("level", 4);
+					}
+					pd.put("level_code", level);
+					// 邮编
+					String zipCode = listPd.get(i).getString("var3");
+					if (StringUtils.isEmpty(zipCode)) {
+						errMsg += " 邮编不能为空!";
+					} else {
+						zipCode = zipCode.trim();
+					}
+					pd.put("zipCode", zipCode);
+					// 区号
+					String cityCode = listPd.get(i).getString("var4");
+					if (StringUtils.isEmpty(cityCode)) {
+						errMsg += " 区号不能为空!";
+					} else {
+						cityCode = cityCode.trim();
+					}
+					pd.put("cityCode", cityCode);
+					String parentCode = listPd.get(i).getString("var5");
+					pd.put("parentCode", parentCode);
+					if (StringUtils.isEmpty(parentCode)) {
+						errMsg += " 上级行政区划代码不能为空!";
+					} else if (parentCode.trim().length() != 12) {
+						errMsg += " 上级行政区划代码非12位!";
+					} else {
+						// 查询上级区划信息的ID作为本级的父ID
+						PageData findByCode = this.areaCodeService.findByCode(parentCode);
+						if (null == findByCode) {
+							errMsg += " 系统不存在此上级行政区划信息!";
+							pd.put("parentId", "");
+						} else {
+							pd.put("parentId", findByCode.getString("id"));
+						}
+					}
+					pd.put("pinyin", GetPinyin.getPingYin(name));
+					pd.put("shortName", "");
+					pd.put("mergerName", "");
+					pd.put("lng", "0");
+					pd.put("lat", "0");
+					if (errMsg.length() > 0) {
+						pd.put("errMsg", errMsg);
+						errPageData.add(pd);
+					} else {
+						sucPageData.add(pd);
+					}
+					errMsg = "";
+				}
+				if (sucPageData.size() > 0) {
+					// 新增操作或者更新操作
+					for (PageData pp : sucPageData) {
+						// 通过当前行政区划查询是否有值,有则更新 无则写入
+						PageData oldAreaInfo = areaCodeService.findByCode(pp.getString("areaCode"));
+						if (null != oldAreaInfo && oldAreaInfo.size() > 0) {
+							// 有数据则更新
+							areaCodeService.updateName(pp);
+						} else {
+							pp.put("id", Integer.parseInt(this.areaCodeService.getMaxId().getString("id")) + 1 + "");
+							// 无数据则写入
+							areaCodeService.save(pp);// 保存
+						}
+					}
+				}
+				if (errPageData.size() > 0) {
+					String version = get32UUID();
+					mv.addObject("version", version);
+					redisCacheUtil.setCacheObject(version, errPageData);
+				}
+				mv.addObject("msg", "导入数据完成! 成功:" + sucPageData.size() + "条;失败:" + errPageData.size() + "条!");
+			} catch (Exception e) {
+				sucPageData.clear();
+				errPageData.clear();
+				mv.addObject("msg", "导入失败,请检查数据合法性!");
+				logger.error(ErrorUtils.getErrorMessage(e, "导入行政区划Excel数据异常!"));
+			}
+		} else {
+			mv.addObject("msg", "导入失败!导入文件不能为空!");
+		}
+		mv.addObject("sucPageData", sucPageData);
+		mv.addObject("errPageData", errPageData);
+		mv.setViewName("system/areacode/areacode_uploadResult");
+		return mv;
+	}
+
+	/**
+	 * 导出行政区划错误数据
+	 */
+	@RequestMapping(value = "/exportAreaCode")
+	public ModelAndView exportAreaCode() {
+		ModelAndView mv = this.getModelAndView();
+		PageData pd = getPageData();
+		String version = pd.getString("version");
+		try {
+			Map<String, Object> dataMap = new HashMap<String, Object>();
+			List<String> titles = new ArrayList<String>();
+			titles.add("行政区划");
+			titles.add("行政区划代码(12位)");
+			titles.add("行政区划类别");
+			titles.add("邮编");
+			titles.add("区号");
+			titles.add("上级行政区划代码（12位）");
+			String[] arr_level = { "省", "市/洲", "区县", "乡镇/街道", "村/社区" };
+			dataMap.put("titles", titles);
+			List<PageData> userList = redisCacheUtil.getCacheObject(version);
+			List<PageData> varList = new ArrayList<PageData>();
+			for (int i = 0; i < userList.size(); i++) {
+				PageData vpd = new PageData();
+				vpd.put("var1", userList.get(i).get("name") + "");
+				vpd.put("var2", userList.get(i).get("areaCode") + "");
+				vpd.put("var3", userList.get(i).get("level_code") + "");
+				vpd.put("var3_arr", arr_level);
+				vpd.put("var4", userList.get(i).get("zipCode") + "");
+				vpd.put("var5", userList.get(i).get("cityCode") + "");
+				vpd.put("var6", userList.get(i).get("parentCode") + "");
+				varList.add(vpd);
+			}
+			dataMap.put("varList", varList);
+			ObjectExcelView erv = new ObjectExcelView("AreaCodeErrorData"); // 执行excel操作
+			mv = new ModelAndView(erv, dataMap);
+		} catch (Exception e) {
+			logger.error(ErrorUtils.getErrorMessage(e, "系统异常,导出失败!"));
+		}
+		return mv;
+	}
+
+	// 迁移数据 只能同级 修改
+
+	@RequestMapping(value = "/list")
+	public ModelAndView list(Page page) throws Exception {
+		ModelAndView mv = this.getModelAndView();
+		PageData pd = new PageData();
+		try {
+			pd = this.getPageData();
+			List<PageData> areaList_z = null;
+			String keywords = pd.getString("keywords"); // 关键词检索条件
+			if (null != keywords && !"".equals(keywords)) {
+				mv.addObject("keywords", keywords);
+				pd.put("keywords", keywords.trim());
+				page.setPd(pd);
+				areaList_z = areaCodeService.getAreaByName(page); // 列出所有的角色
+			}
+
+			mv.addObject("pd", pd);
+			mv.addObject("page", page);
+			mv.addObject("areaList_z", areaList_z);
+			mv.setViewName("system/area/area_list");
+
+		} catch (Exception e) {
+			logger.error(e.toString(), e);
+		}
+		return mv;
+	}
+
+	/**
+	 * 去新增用户页面
+	 */
+	@RequestMapping(value = "/goAdd")
+	public ModelAndView goAddU() {
+		ModelAndView mv = this.getModelAndView();
+		PageData pd = getPageData();
+		try {
+			mv.addObject("msg", "save");
+			mv.addObject("type", "0");
+			mv.addObject("pd", pd);
+			mv.setViewName("system/area/area_edit");
+		} catch (Exception e) {
+			logger.error(ErrorUtils.getErrorMessage(e, "打开区域新增页面异常!"));
+		}
+		return mv;
+	}
+
+	/**
+	 * 保存用户
+	 */
+	@RequestMapping(value = "/save")
+	@ResponseBody
+	public Object save() {
+		Map<String, String> map = new HashMap<String, String>();
+		PageData pd = getPageData();
+		String msg = "";
+		try {
+
+			// 拼音查重
+			String pinyin = pd.getString("pinyin");
+			List<PageData> pinyinPd = areaCodeService.getAreaByPinYin(pinyin);
+			if (pinyinPd == null || pinyinPd.size() <= 0) {
+				// 获取上级信息
+				AreaCode a = areaCodeService.findById(pd.getString("parent_id"));
+				int id = Integer.parseInt(areaCodeService.getMaxId().getString("id"));
+				pd.put("cityCode", a.getCityCode());
+				pd.put("mergerName", pd.getString("mergerName") + "-" + pd.getString("shortName"));
+				pd.put("lng", "0");
+				pd.put("lat", "0");
+				pd.put("id", id + 1);
+				pd.put("parentId", a.getId());
+				pd.put("zipCode", a.getZipCode());
+				pd.put("areaCode", areaCodeService.getAreaCode(a.getAreaCode()));
+				areaCodeService.save(pd);
+
+				redisCacheUtil.delete(a.getId());
+				AreaCode area = areaCodeService.findById(pd.get("id") + "");
+				area.setChangeType("1");
+				area.setTargetAreaCode(a.getAreaCode());
+				area.setOldAreaCode(pd.getString("areaCode"));
+
+				pd.put("area", area);
+				msg = "success";
+			} else {
+				// 拼音重复
+				msg = "false";
+			}
+
+		} catch (Exception e) {
+			msg = "error";
+			logger.error(ErrorUtils.getErrorMessage(e, "保存用户异常!"));
+		}
+		map.put("result", msg);
+		return AppUtil.returnObject(new PageData(), map);
+	}
+
+	/**
+	 * 去新增用户页面
+	 */
+	@RequestMapping(value = "/toEdit")
+	public ModelAndView goEdit() {
+		ModelAndView mv = this.getModelAndView();
+		PageData pd = getPageData();
+		try {
+			AreaCode areaCode = areaCodeService.findById(pd.getString("id"));
+			mv.addObject("msg", "edit");
+			mv.addObject("type", "1");
+			mv.addObject("pd", pd);
+			mv.addObject("areaCode", areaCode);
+			mv.setViewName("system/area/area_edit");
+		} catch (Exception e) {
+			logger.error(ErrorUtils.getErrorMessage(e, "打开区域新增页面异常!"));
+		}
+		return mv;
+	}
+
+	/**
+	 * 去迁入页面
+	 */
+	@RequestMapping(value = "/goMove")
+	public ModelAndView goMove() {
+		ModelAndView mv = this.getModelAndView();
+		PageData pd = getPageData();
+		try {
+			mv.addObject("pd", pd);
+			mv.setViewName("system/area/area_move");
+		} catch (Exception e) {
+			logger.error(ErrorUtils.getErrorMessage(e, "打开区域新增页面异常!"));
+		}
+		return mv;
+	}
+
+}

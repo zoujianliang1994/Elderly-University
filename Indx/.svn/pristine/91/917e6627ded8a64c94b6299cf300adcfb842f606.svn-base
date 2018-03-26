@@ -1,0 +1,84 @@
+package com.zhimu.service.manager.system.section;
+
+import java.util.List;
+
+import com.zhimu.commons.utils.PageData;
+import com.zhimu.dao.entity.system.Page;
+import com.zhimu.dao.entity.system.Section;
+
+/**
+ * 部门内设机构
+ */
+public interface SectionManager {
+
+	/**
+	 * 列表
+	 */
+	public List<PageData> list(Page page) throws Exception;
+
+	/**
+	 * 通过id获取数据
+	 */
+	public PageData findById(PageData pd) throws Exception;
+
+	/**
+	 * 新增
+	 */
+	public void save(PageData pd) throws Exception;
+
+	/**
+	 * 删除
+	 */
+	public void delete(PageData pd) throws Exception;
+
+	/**
+	 * 修改
+	 */
+	public void edit(PageData pd) throws Exception;
+
+	/**
+	 * 更新机构区划代码
+	 * 
+	 * @param pd
+	 * @throws Exception
+	 */
+	public void updateByAreaCode(PageData pd) throws Exception;
+
+	/**
+	 * 查询所有的内设机构
+	 */
+	public List<Section> listAllSection(String param) throws Exception;
+
+	/**
+	 * 根据部门获取内设机构
+	 */
+	public List<Section> listSectionByDep(PageData pd) throws Exception;
+
+	/**
+	 * 通过区划查询
+	 * 
+	 * @param areaCode
+	 * @return
+	 * @throws Exception
+	 */
+	public List<Section> findByAreaCode(String areaCode) throws Exception;
+
+	/**
+	 * 通过区划代码和区划名称查询
+	 * 
+	 * @param pd
+	 * @return
+	 * @throws Exception
+	 */
+	public List<Section> findByAreaCodeName(PageData pd) throws Exception;
+
+	/**
+	 * 通过level查询外部单位
+	 * 
+	 * @param areaCode
+	 * @return
+	 * @throws Exception
+	 */
+	public List<Section> findByAreaCodeAndType(String areaCode) throws Exception;
+
+}

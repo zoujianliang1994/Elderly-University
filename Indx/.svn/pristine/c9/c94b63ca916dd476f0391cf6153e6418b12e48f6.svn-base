@@ -1,0 +1,45 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="studentLessonMapper">
+
+    <!-- 分页列表 -->
+    <select id="dataList" parameterType="pd" resultType="pd">
+         SELECT b.week,
+                b.period,
+                a.name kc_name,
+                b.start_time,
+                b.end_time,
+                c.name shcool_name,
+                d.classroom_name,
+                f.name teacher_name
+           FROM edu_grades a,
+                edu_schedule_details b,
+                edu_school c,
+                edu_classroom d,
+                edu_teacher_normal e,
+                edu_teacher f
+          WHERE a.id = b.grades_id
+            AND a.school_id = c.id
+            AND b.classroom_id = d.id
+            AND b.id = e.schedule_detail_id
+            AND f.id = e.teacher_id
+            AND a.id
+            IN (SELECT c_id FROM edu_student WHERE user_id = #{student_id})
+          <if test="keywords != null and keywords != ''">
+            AND ( a.name LIKE ('%'+#{keywords}+'%') )
+          </if>
+          <if test="school_id != null and school_id != ''">
+            AND a.school_id = #{school_id}
+          </if>
+          <if test="week != null and week != ''">
+            AND b.week = #{week}
+          </if>
+          <if test="period != null and period != ''">
+            AND b.period = #{period}
+          </if>
+          ORDER BY b.week,
+                   b.period,
+                   b.start_time
+    </select>
+
+</mapper>

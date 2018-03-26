@@ -1,0 +1,158 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="TeacherWagesMapper">
+
+    <!--表名 -->
+    <sql id="tableName">
+		edu_teacher_wages
+	</sql>
+
+    <!-- 字段 -->
+    <sql id="Field">
+		id,
+        teacher_id,
+        name,
+        idcard,
+        gw_type,
+        dy_month,
+        yf_wages,
+        kf_wages,
+        tz_wages,
+        sf_wages,
+        tz_bz,
+        yjsk,
+        qqks,
+        school_id
+	</sql>
+
+    <!-- 字段值 -->
+    <sql id="FieldValue">
+		#{id},
+        #{teacher_id},
+        #{name},
+        #{idcard},
+        #{gw_type},
+        #{dy_month},
+        #{yf_wages},
+        #{kf_wages},
+        #{tz_wages},
+        #{sf_wages},
+        #{tz_bz},
+        #{yjsk},
+        #{qqks},
+        #{school_id}
+	</sql>
+
+    <!-- 新增-->
+    <insert id="addData" parameterType="pd">
+        insert into <include refid="tableName"/> ( <include refid="Field"/> ) values (<include refid="FieldValue"/>)
+    </insert>
+
+    <!-- 删除-->
+    <delete id="deleteData" parameterType="pd">
+        delete from <include refid="tableName"/> where id = #{id}
+    </delete>
+
+    <!-- 修改 -->
+    <update id="editData" parameterType="pd">
+        update <include refid="tableName"/>
+           set tz_wages = #{tz_wages},
+               sf_wages = #{sf_wages},
+                  tz_bz = #{tz_bz}
+         where id = #{id}
+    </update>
+
+    <!-- 通过ID获取数据 -->
+    <select id="findDataById" parameterType="pd" resultType="pd">
+        SELECT a.*
+          FROM edu_teacher_wages a
+         WHERE 1 = 1
+           AND a.id = #{id}
+         order by a.dy_month desc
+    </select>
+
+    <!-- 分页列表 -->
+    <select id="datalistPage" parameterType="page" resultType="pd">
+        SELECT a.*
+          FROM edu_teacher_wages a
+         WHERE 1 = 1
+           and a.school_id in
+         <foreach item="item" index="index" collection="pd.userSchoolIds" open="(" separator="," close=")">
+            '${item}'
+         </foreach>
+         <if test="pd.keywords != null and pd.keywords != ''"><!-- 关键词检索 -->
+           and ( a.name LIKE ('%'+#{pd.keywords}+'%') or
+                 a.id_card LIKE ('%'+#{pd.keywords}+'%')
+               )
+         </if>
+         order by a.dy_month desc
+    </select>
+
+    <!-- 普通列表 -->
+    <select id="selectList" parameterType="pd" resultType="pd">
+        SELECT a.*
+          FROM edu_teacher_wages a
+         WHERE 1 = 1
+         order by a.dy_month desc
+    </select>
+
+    <!-- 查询老师周一到周五的排课情况-->
+    <select id="selectQkList" parameterType="pd" resultType="pd">
+        SELECT b.id schedule_detail_id,
+               b.grades_id grades_id,
+               b.week,
+               b.start_time,
+               b.end_time,
+               a.name kc_name,
+               a.teacher_wages wages
+          FROM edu_grades a,
+               edu_schedule_details b
+         WHERE a.id = b.grades_id
+           AND a.teacher_id = #{teacher_id}
+           AND b.week = #{week}
+         ORDER BY b.week
+    </select>
+
+    <!--批量写入老师正常当月排课明细 -->
+    <insert id="addQkBatch" parameterType="java.util.List">
+         insert into edu_teacher_normal (
+                     id,
+                     teacher_id,
+                     grades_id,
+                     schedule_detail_id,
+                     qk_time,
+                     week,
+                     kc_name,
+                     wages,
+                     dy_month,
+                     qj_zt)
+              values <foreach collection="list" item="item" index="index" separator="," >(
+                     #{item.id},
+                     #{item.teacher_id},
+                     #{item.grades_id},
+                     #{item.schedule_detail_id},
+                     #{item.qk_time},
+                     #{item.week},
+                     #{item.kc_name},
+                     #{item.wages},
+                     #{item.dy_month},
+                     #{item.qj_zt})
+                     </foreach>
+    </insert>
+
+    <!--查询老师当月排课情况 -->
+    <select id="selectPkList" parameterType="pd" resultType="pd">
+        SELECT a.*
+          FROM edu_teacher_normal a
+         WHERE a.teacher_id = #{teacher_id}
+           AND a.dy_month = #{dy_month}
+         <if test="zc != null and zc != ''">
+           AND a.qj_zt in (2,3)
+         </if>
+        <if test="qj != null and qj != ''">
+           AND a.qj_zt in (0,1)
+        </if>
+         order by a.qk_time desc
+    </select>
+
+</mapper>

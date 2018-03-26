@@ -1,0 +1,388 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="UserMapper">
+
+    <resultMap type="User" id="userAndRoleResultMap">
+        <id column="USER_ID" property="USER_ID"/>
+        <result column="USERNAME" property="USERNAME"/>
+        <result column="PASSWORD" property="PASSWORD"/>
+        <result column="NAME" property="NAME"/>
+        <result column="LAST_LOGIN" property="LAST_LOGIN"/>
+        <result column="IP" property="IP"/>
+        <result column="STATUS" property="STATUS"/>
+        <result column="SKIN" property="SKIN"/>
+        <result column="ROLE_ID" property="ROLE_ID"/>
+        <result column="ROLENAME" property="ROLENAME"/>
+        <result column="IS_PARTY" property="IS_PARTY"/>
+        <result column="RD_DATE" property="RD_DATE"/>
+        <result column="TYPE" property="TYPE"/>
+        <result column="PICTURES_PATH" property="PICTURES_PATH"/>
+        <result column="SCHOOL_ID" property="schoolId"/>
+        <result column="SCHOOL_NAME" property="schoolName"/>
+        <association property="role" column="ROLE_ID" javaType="Role">
+            <id column="ROLE_ID" property="ROLE_ID"/>
+            <result column="ROLE_NAME" property="ROLE_NAME"/>
+            <result column="ROLE_RIGHTS" property="RIGHTS"/>
+        </association>
+    </resultMap>
+    <resultMap type="User" id="userResultMap">
+        <id column="USER_ID" property="USER_ID"/>
+        <result column="USERNAME" property="USERNAME"/>
+        <result column="PASSWORD" property="PASSWORD"/>
+        <result column="NAME" property="NAME"/>
+        <result column="LAST_LOGIN" property="LAST_LOGIN"/>
+        <result column="IP" property="IP"/>
+        <result column="STATUS" property="STATUS"/>
+        <result column="ROLE_ID" property="ROLE_ID"/>
+        <result column="SKIN" property="SKIN"/>
+        <result column="IS_ONLINE" property="IS_ONLINE"/>
+        <result column="ROLENAME" property="ROLENAME"/>
+        <result column="IS_PARTY" property="IS_PARTY"/>
+        <result column="RD_DATE" property="RD_DATE"/>
+        <result column="TYPE" property="TYPE"/>
+         <result column="SCHOOL_ID" property="schoolId"/>
+        <result column="SCHOOL_NAME" property="schoolName"/>
+    </resultMap>
+
+    <resultMap type="com.zhimu.dao.entity.system.DepartRole" id="resultRole">
+        <id column="role_id" property="id"/>
+        <result column="role_name" property="name"/>
+        <result column="department_id" property="department_id"/>
+    </resultMap>
+
+
+    <resultMap type="com.zhimu.dao.entity.system.Role" id="resultRolePermisson">
+    </resultMap>
+
+    <!--表名 -->
+    <sql id="tableName">
+		SYS_USER
+	</sql>
+
+    <sql id="roleTableName">
+		SYS_ROLE
+	</sql>
+
+    <!-- 字段 -->
+    <sql id="Field">
+		USER_ID,
+        USERNAME,
+        PASSWORD,
+        NAME,
+        SEX,
+        CS_DATE,
+        IDCARD,
+        ZZMM,
+        XL,
+        ZW,
+        SBCARD,
+        ROLE_ID,
+        ROLENAME,
+        STATUS,
+        TYPE,
+        PHONE,
+        BZ,
+        SCHOOL_ID,
+        SCHOOL_NAME
+	</sql>
+
+    <!-- 字段值 -->
+    <sql id="FieldValue">
+		#{USER_ID},
+        #{USERNAME},
+        #{PASSWORD},
+        #{NAME},
+        #{SEX},
+        #{CS_DATE},
+        #{IDCARD},
+        #{ZZMM},
+        #{XL},
+        #{ZW},
+        #{SBCARD},
+        #{ROLE_ID},
+        #{ROLENAME},
+        #{STATUS},
+        #{TYPE},
+        #{PHONE},
+        #{BZ},
+        #{SCHOOL_ID},
+        #{SCHOOL_NAME}
+	</sql>
+
+    <!-- 用户列表 -->
+    <select id="userlistPage" parameterType="page" resultType="pd">
+         select u.USER_ID,
+	            u.USERNAME,
+                u.PASSWORD,
+                u.NAME,
+                u.SEX,
+                u.CS_DATE,
+                u.IDCARD,
+                u.ZZMM,
+                u.XL,
+                u.ZW,
+                u.SBCARD,
+                u.ROLE_ID,
+                u.ROLENAME,
+                u.STATUS,
+                u.TYPE,
+                u.IS_PARTY,
+                u.SCHOOL_ID,
+       			u.SCHOOL_NAME
+           from sys_user u
+          where 1 = 1
+            and u.USER_ID NOT IN ('admin','superAdmin')
+         <if test="pd.keywords!= null and pd.keywords != ''"><!-- 关键词检索 -->
+            and ( u.NAME like ('%'+#{pd.keywords}+'%') or
+                  u.ZZMM like ('%'+#{pd.keywords}+'%') or
+                  u.USERNAME like ('%'+#{pd.keywords}+'%')
+                )
+         </if>
+         <if test="pd.type!= null and pd.type != ''"><!-- 关键词检索 -->
+            and u.TYPE=#{pd.type}
+         </if>
+         <if test="pd.userId!='admin'"><!-- 关键词检索 -->
+             and u.SCHOOL_ID like ('%'+#{pd.schoolId}+'%')
+         </if>
+         <if test="pd.status!=null and pd.status !=''">
+            and u.STATUS=#{pd.status}
+         </if>
+          order by u.NAME
+    </select>
+
+    <!-- 新增用户 -->
+    <insert id="saveU" parameterType="pd">
+        insert into <include refid="tableName"></include> (<include refid="Field"></include>)
+             values (<include refid="FieldValue"></include> )
+    </insert>
+
+    <!-- 修改 -->
+    <update id="editU" parameterType="pd">
+        update <include refid="tableName"></include>
+           set USERNAME = #{USERNAME},
+                   NAME = #{NAME},
+                    SEX = #{SEX},
+                CS_DATE = #{CS_DATE},
+                 IDCARD = #{IDCARD},
+                   ZZMM = #{ZZMM},
+                     XL = #{XL},
+                     ZW = #{ZW},
+                 SBCARD = #{SBCARD},
+                ROLE_ID = #{ROLE_ID},
+               ROLENAME = #{ROLENAME},
+                  PHONE = #{PHONE},
+		             BZ = #{BZ},
+		             SCHOOL_ID=#{SCHOOL_ID},
+       				 SCHOOL_NAME=#{SCHOOL_NAME}
+           <if test="PASSWORD != null and PASSWORD != ''">
+              ,PASSWORD = #{PASSWORD}
+           </if>
+          where USER_ID = #{USER_ID}
+    </update>
+     <!-- 修改用户学校信息 -->
+    <update id="editUserSchool" parameterType="pd">
+        update <include refid="tableName"></include>
+           set 
+             SCHOOL_ID=#{SCHOOL_ID},
+     		 SCHOOL_NAME=#{SCHOOL_NAME}
+          where USER_ID = #{USER_ID}
+    </update>
+    
+
+    <!-- 删除用户 -->
+    <delete id="deleteU" parameterType="pd" flushCache="false">
+        delete from <include refid="tableName"></include>
+         where USER_ID = #{USER_ID}
+    </delete>
+
+    <!--修改用户状态 -->
+    <update id="updateStatus" parameterType="pd">
+        update <include refid="tableName"></include>
+           set STATUS = #{STATUS}
+         where USER_ID = #{USER_ID}
+    </update>
+
+    <!-- 判断用户名和密码 -->
+    <select id="getUserInfo" parameterType="pd" resultType="pd">
+         select u.USER_ID,
+                u.USERNAME,
+                u.LAST_LOGIN,
+                u.NAME,
+                u.IP,
+                u.EMAIL,
+                u.NUMBER,
+                u.PHONE,
+                u.TYPE,
+                u.SCHOOL_ID,
+                u.SCHOOL_NAME
+           from <include refid="tableName"></include> u
+          where 1=1
+          <if test="USERNAME!=null and PASSWORD!=null">
+            and USERNAME = #{USERNAME} and PASSWORD=#{PASSWORD}
+          </if>
+          <if test="USER_ID!=null and USER_ID>0">
+            and USER_ID = #{USER_ID}
+          </if>
+    </select>
+
+    <!-- 更新登录时间 -->
+    <update id="updateLastLogin" parameterType="pd">
+        update <include refid="tableName"></include>
+           set LAST_LOGIN = #{LAST_LOGIN}
+         where USER_ID = #{USER_ID}
+    </update>
+    
+    <!-- 通过用户ID获取用户信息和角色信息 -->
+    <select id="getUserAndRoleById" parameterType="String" resultMap="userAndRoleResultMap">
+         select u.USER_ID,
+                u.USERNAME,
+                u.NAME,
+                u.PASSWORD,
+                u.SKIN,
+                u.ROLE_ID,
+                u.ROLENAME,
+                u.IS_PARTY,
+                u.RD_DATE,
+                u.PICTURES_PATH
+           from <include refid="tableName"></include> u
+          where u.STATUS=0
+            and u.USER_ID=#{USER_ID}
+    </select>
+
+    <!-- 查询用户对应所有角色的权限 -->
+    <select id="findByAllRolePermisson" resultMap="resultRolePermisson">
+        SELECT DISTINCT
+               ROLE_ID,
+               ROLE_NAME,
+               RIGHTS
+          from SYS_ROLE
+         where ROLE_ID in
+         <foreach collection="array" item="item" open="(" close=")" index="i" separator=",">
+            #{item,jdbcType=VARCHAR}
+         </foreach>
+         ORDER BY ROLE_NAME DESC
+    </select>
+
+
+    <!-- 通过USERNAME获取数据 -->
+    <select id="findByUsername" parameterType="pd" resultType="pd">
+        select <include refid="Field"></include>
+          from <include refid="tableName"></include>
+         where USERNAME = #{USERNAME}
+    </select>
+
+    <!-- 存入IP -->
+    <update id="saveIP" parameterType="pd">
+        update <include refid="tableName"></include>
+           set IP = #{IP}
+         where USERNAME = #{USERNAME}
+    </update>
+
+    <!-- 列出某角色下的所有用户 -->
+    <select id="listAllUserByRoldId" parameterType="pd" resultType="pd">
+        select USER_ID
+          from <include refid="tableName"></include>
+         where ROLE_ID LIKE ('%'+#{ROLE_ID}+'%')
+    </select>
+     <!-- 列出某学校下的所有用户 -->
+    <select id="listAllUserBySid" parameterType="pd" resultType="pd">
+        select USER_ID,NAME,USERNAME,SCHOOL_NAME,SCHOOL_ID
+          from <include refid="tableName"></include>
+         where SCHOOL_ID LIKE ('%'+#{SCHOOL_ID}+'%')
+    </select>
+
+    <!-- 通过邮箱获取数据 -->
+    <select id="findByUE" parameterType="pd" resultType="pd">
+        select <include refid="Field"></include>
+          from <include refid="tableName"></include>
+         where EMAIL = #{EMAIL}
+        <if test="USERNAME != null and USERNAME != ''">
+           and USERNAME != #{USERNAME}
+        </if>
+    </select>
+
+    <!-- 通过编号获取数据 -->
+    <select id="findByUN" parameterType="pd" resultType="pd">
+        select <include refid="Field"></include>
+          from <include refid="tableName"></include>
+         where NUMBER = #{NUMBER}
+        <if test="USERNAME != null and USERNAME != ''">
+           and USERNAME != #{USERNAME}
+        </if>
+    </select>
+
+    <!-- 通过user_id获取数据 -->
+    <select id="findById" parameterType="pd" resultType="pd">
+        select <include refid="Field"></include>
+          from <include refid="tableName"></include>
+         where USER_ID = #{USER_ID}
+    </select>
+
+    <!-- 批量删除用户 -->
+    <delete id="deleteAllU" parameterType="String">
+        delete from <include refid="tableName"></include>
+         where USER_ID in
+        <foreach item="item" index="index" collection="array" open="(" separator="," close=")">
+            #{item}
+        </foreach>
+    </delete>
+
+    <!-- 用户列表(全部) -->
+    <select id="listAllUser" parameterType="pd" resultType="pd">
+        select <include refid="Field"></include>
+          from <include refid="tableName"></include> u
+         where u.USERNAME != 'admin'
+         <if test="keywords!= null and keywords != ''"><!-- 关键词检索 -->
+           and ( u.USERNAME LIKE ('%'+#{keywords}+'%') or
+	             u.EMAIL LIKE ('%'+#{keywords}+'%') or
+	             u.NUMBER LIKE ('%'+#{keywords}+'%') or
+	             u.NAME LIKE ('%'+#{keywords}+'%') or
+	             u.PHONE LIKE ('%'+#{keywords}+'%') 
+                )
+         </if>
+         <if test="ROLE_ID != null and ROLE_ID != ''"><!-- 角色检索 -->
+           and u.ROLE_ID LIKE ('%'+ #{ROLE_ID} +'%')
+         </if>
+         <if test="lastLoginStart!=null and lastLoginStart!=''"><!-- 登录时间检索 -->
+           and u.LAST_LOGIN &gt;= #{lastLoginStart}
+         </if>
+         <if test="lastLoginEnd!=null and lastLoginEnd!=''"><!-- 登录时间检索 -->
+           and u.LAST_LOGIN &lt;= #{lastLoginEnd}
+         </if>
+         order by u.LAST_LOGIN desc
+    </select>
+
+    <!-- 获取总数 -->
+    <select id="getUserCount" parameterType="String" resultType="pd">
+        select count(USER_ID) userCount
+          from <include refid="tableName"></include>
+    </select>
+
+    <!-- 根据用户角色查询用户列表 -->
+    <select id="listUsersByRoleId" parameterType="pd" resultMap="userResultMap">
+        select <include refid="Field"></include>
+          from <include refid="tableName"></include> u
+         where ','+u.ROLE_ID+',' like '%,'+#{ROLE_ID}+',%'
+           and u.USERNAME != 'admin'
+         order by u.LAST_LOGIN desc
+    </select>
+
+    <update id="updateOnline" parameterType="pd">
+        update <include refid="tableName"></include>
+           set IS_ONLINE = #{IS_ONLINE}
+         where USER_ID = #{USER_ID}
+    </update>
+
+    <!-- 通过登录用户ID获取用户所在机构行政区划 -->
+    <select id="getAreaCodeByUserId" parameterType="String" resultType="pd">
+       SELECT d.*
+		 FROM sys_user u
+		WHERE  u.USER_ID=#{userId}
+    </select>
+
+    <!--修改用户密码-->
+    <update id="updatePassWord" parameterType="pd">
+        UPDATE SYS_USER SET PASSWORD = #{NEW_PWD} WHERE USER_ID = #{USER_ID} AND USERNAME = #{USERNAME}
+    </update>
+    
+</mapper>

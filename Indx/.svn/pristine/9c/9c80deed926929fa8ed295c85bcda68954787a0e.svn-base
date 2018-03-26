@@ -1,0 +1,105 @@
+html {
+    font-family: "微软雅黑";
+    color: #000;
+    font-size: 13px
+}
+
+a {
+    color: #000
+}
+
+div {
+    box-sizing: border-box;
+}
+
+.disnone {
+    display: none!important
+}
+
+.textHidden {
+    white-space: nowrap;
+    text-overflow: ellipsis;
+    overflow: hidden;
+}
+
+.h100 {
+    height: 100%
+}
+
+.wh100 {
+    width: 100%;
+    height: 100%
+}
+
+.fr {
+    float: right;
+}
+
+.fl {
+    float: left;
+}
+
+.icon {
+    display: inline-block
+}
+
+.center {
+    text-align: center
+}
+.overhidden{
+    overflow: hidden;
+}
+.marT-10 {
+    margin-top: 10px
+}
+.marT-20{
+    margin-top: 20px
+}
+.marL-20 {
+    margin-left: 20px
+}
+.padB-20{
+   padding-bottom: 20px
+}
+.clth {
+    clear: both
+}
+/*avalon*/
+.ms-controller{
+    visibility: hidden
+}
+
+/*定义滚动条宽高及背景，宽高分别对应横竖滚动条的尺寸*/
+div::-webkit-scrollbar,html::-webkit-scrollbar{
+    width: 6px;
+    height: 16px;
+}
+/*定义滚动条的轨道，内阴影及圆角*/
+div::-webkit-scrollbar-track,html::-webkit-scrollbar-track{
+    border-radius: 10px;
+    background-color: rgba(0,0,0,.02);;
+}
+/*定义滑块，内阴影及圆角*/
+div::-webkit-scrollbar-thumb,html::-webkit-scrollbar-thumb{
+    /*width: 10px;*/
+    height: 20px;
+    border-radius: 10px;
+    -webkit-box-shadow: inset 0 0 6px rgba(0,0,0,.1);
+    background-color:rgba(0,0,0,.1) ;
+}
+ul::-webkit-scrollbar,html::-webkit-scrollbar{
+    width: 6px;
+    height: 16px;
+}
+ul::-webkit-scrollbar-track,html::-webkit-scrollbar-track{
+    border-radius: 10px;
+    background-color: rgba(0,0,0,.02);;
+}
+/*定义滑块，内阴影及圆角*/
+ul::-webkit-scrollbar-thumb,html::-webkit-scrollbar-thumb {
+    /*width: 10px;*/
+    height: 20px;
+    border-radius: 10px;
+    -webkit-box-shadow: inset 0 0 6px rgba(0, 0, 0, .1);
+    background-color: rgba(0, 0, 0, .1);
+}

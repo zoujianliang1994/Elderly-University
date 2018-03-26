@@ -1,0 +1,180 @@
+package com.zhimu.controller.manager.edu.student;
+
+import java.text.DateFormat;
+import java.text.SimpleDateFormat;
+import java.util.Date;
+import java.util.HashMap;
+import java.util.List;
+import java.util.Map;
+
+import javax.annotation.Resource;
+
+import org.springframework.beans.propertyeditors.CustomDateEditor;
+import org.springframework.stereotype.Controller;
+import org.springframework.web.bind.WebDataBinder;
+import org.springframework.web.bind.annotation.InitBinder;
+import org.springframework.web.bind.annotation.RequestMapping;
+import org.springframework.web.bind.annotation.ResponseBody;
+import org.springframework.web.servlet.ModelAndView;
+
+import com.zhimu.commons.utils.AppUtil;
+import com.zhimu.commons.utils.ErrorUtils;
+import com.zhimu.commons.utils.PageData;
+import com.zhimu.controller.manager.base.BaseController;
+import com.zhimu.dao.entity.system.Page;
+import com.zhimu.service.manager.edu.student.StudentService;
+import com.zhimu.service.manager.system.user.impl.UserService;
+
+/**
+ * 说明：学员
+ */
+@Controller
+@RequestMapping(value = "/student")
+public class StudentController extends BaseController {
+
+	@Resource(name = "studentService")
+	private StudentService studentService;
+	@Resource(name = "userService")
+	private UserService userService;
+
+	/**
+	 * 学员列表
+	 * 
+	 * @param page
+	 * @throws Exception
+	 */
+	@RequestMapping(value = "/list")
+	public ModelAndView list(Page page) throws Exception {
+		ModelAndView mv = this.getModelAndView();
+		PageData pd = new PageData();
+		pd = this.getPageData();
+		String keywords = pd.getString("keywords"); // 检索条件
+		if (null != keywords && !"".equals(keywords)) {
+			pd.put("keywords", keywords.trim());
+		}
+		page.setPd(pd);
+		List<PageData> varList = studentService.list(page); // 列表
+		mv.setViewName("edu/school/school_list");
+		mv.addObject("varList", varList);
+		return mv;
+	}
+
+	/**
+	 * 去新增页面
+	 * 
+	 * @param
+	 * @throws Exception
+	 */
+	@RequestMapping(value = "/goAdd")
+	public ModelAndView goAdd() throws Exception {
+		ModelAndView mv = this.getModelAndView();
+		PageData pd = new PageData();
+		pd = this.getPageData();
+		mv.addObject("currentPage", pd.get("currentPage"));
+		mv.addObject("msg", "save");
+		mv.setViewName("edu/school/school_edit");
+		return mv;
+	}
+
+	/**
+	 * 去完善资料页面
+	 * 
+	 * @param
+	 * @throws Exception
+	 */
+	@RequestMapping(value = "/goDataFinish")
+	public ModelAndView goDataFinish() {
+		ModelAndView mv = this.getModelAndView();
+		PageData pd = new PageData();
+		pd = this.getPageData();
+		String isgo = pd.getString("isgo");
+		try {
+			pd = this.studentService.findByUser(getUserInfo().getUSER_ID());
+			pd.put("isgo", "true".equals(isgo) ? true : false);
+		} catch (Exception e) {
+			logger.error(ErrorUtils.getErrorMessage(e, "查询学员资料异常!"));
+			e.printStackTrace();
+		}
+		mv.addObject("currentPage", pd.get("currentPage"));
+		mv.addObject("msg", "edit");
+		mv.addObject("pd", pd);
+		mv.setViewName("edu/student/student_info_fill");
+		return mv;
+	}
+
+	/**
+	 * 去修改页面
+	 * 
+	 * @param
+	 * @throws Exception
+	 */
+	@RequestMapping(value = "/goEdit")
+	public ModelAndView goEdit() {
+		ModelAndView mv = this.getModelAndView();
+		PageData pd = new PageData();
+		pd = this.getPageData();
+		String type = pd.getString("type");
+		String currentPage = pd.getString("currentPage");
+		try {
+			pd = studentService.findById(pd);
+		} catch (Exception e) {
+			logger.error(ErrorUtils.getErrorMessage(e, "去学员修改页面异常!"));
+			e.printStackTrace();
+		} // 根据ID读取
+		pd.put("type", type);
+		mv.addObject("pd", pd); // 放入视图容器
+		mv.addObject("currentPage", currentPage);
+		mv.setViewName("edu/student/student_data_edit");
+		mv.addObject("msg", "edit");
+		return mv;
+	}
+
+	/**
+	 * 保存学员详细信息
+	 * 
+	 * @param
+	 */
+	@RequestMapping(value = "/edit")
+	@ResponseBody
+	public Object edit() {
+		Map<String, String> map = new HashMap<String, String>();
+		String msg = "success";
+		PageData pd = new PageData();
+		pd = this.getPageData();
+		try {
+			studentService.edit(pd);
+		} catch (Exception e) {
+			msg = "error";
+			logger.error(ErrorUtils.getErrorMessage(e, "保存学员详细异常!"));
+			e.printStackTrace();
+		}
+		map.put("msg", msg);
+		return AppUtil.returnObject(new PageData(), map);
+	}
+
+	/**
+	 * 删除学员信息
+	 */
+	@RequestMapping(value = "/delete")
+	@ResponseBody
+	public Object delete() {
+		Map<String, String> map = new HashMap<String, String>();
+		PageData pd = getPageData();
+		String resultInfo = "";
+		try {
+			studentService.delete(pd);
+			resultInfo = "success";
+		} catch (Exception e) {
+			resultInfo = "error";
+			logger.error(ErrorUtils.getErrorMessage(e, "删除学员异常!"));
+		}
+		map.put("result", resultInfo);
+		return AppUtil.returnObject(new PageData(), map);
+	}
+
+	@InitBinder
+	public void initBinder(WebDataBinder binder) {
+		DateFormat format = new SimpleDateFormat("yyyy-MM-dd");
+		binder.registerCustomEditor(Date.class, new CustomDateEditor(format, true));
+	}
+}

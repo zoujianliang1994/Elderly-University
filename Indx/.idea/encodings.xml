@@ -1,0 +1,10 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<project version="4">
+  <component name="Encoding">
+    <file url="file://$PROJECT_DIR$/lndx" charset="UTF-8" />
+    <file url="file://$PROJECT_DIR$/lndx-commons" charset="UTF-8" />
+    <file url="file://$PROJECT_DIR$/lndx-dao" charset="UTF-8" />
+    <file url="file://$PROJECT_DIR$/lndx-parent-project" charset="UTF-8" />
+    <file url="file://$PROJECT_DIR$/lndx-service" charset="UTF-8" />
+  </component>
+</project>

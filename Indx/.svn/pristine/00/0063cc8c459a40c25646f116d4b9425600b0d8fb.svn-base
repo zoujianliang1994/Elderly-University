@@ -1,0 +1,117 @@
+html,
+body,
+form {
+  height: 100%;
+}
+.loginbody {
+  position: relative;
+  height: 100%;
+  overflow: hidden;
+  font-size: 18px;
+  /*background: #037dd2;*/
+}
+.loginbody .earthbg {
+  /*opacity: 0.1;*/
+  width: 100%;
+  height: 100%;
+}
+.loginbody .mapbg {
+  position: absolute;
+  width: 659px;
+  height: 649px;
+  /*background: url(../images/sichuan.png);*/
+  background-size: auto auto;
+}
+.loginbody .loginBox {
+  position: absolute;
+  width: 430px;
+  height: 430px;
+  z-index: 99999;
+}
+.loginbody .loginBox1 {
+
+  height: 225px;
+
+}
+.loginbody .loginBox .input-group {
+  color: #fff;
+  width: 31rem;
+  margin-bottom: 45px;
+  border: 1px solid #fff;
+  /*border-radius: 4px;*/
+  box-sizing: border-box;
+  height: 4rem;
+  line-height: 4rem;
+  background: #fff;
+  /*opacity: 0.6;*/
+  overflow: hidden;
+}
+.loginbody .loginBox .input-group .icon {
+  color: #cccccc;
+  width: 45px;
+  height: 45px;
+  text-align: center;
+  font-size: 24px;
+}
+.loginbody .loginBox .input-group .title {
+  width: 65px;
+}
+.loginbody .loginBox .input-group .login-input {
+  border: 0;
+  height: 43px;
+  line-height: 43px;
+  text-indent: 10px;
+  width: 308px;
+  font-size: 14px;
+  background: transparent;
+  font-family: PingFangSC-Medium;
+  font-size: 2rem;
+  font-weight: normal;
+  font-stretch: normal;
+  line-height: 0rem;
+  letter-spacing: 0rem;
+  color: #333333;
+}
+.loginbody .loginBox .input-group .login-input::-moz-placeholder {
+  color: #fff;
+}
+.loginbody .loginBox .input-group .login-input:-ms-input-placeholder {
+  color: #fff;
+}
+.loginbody .loginBox .input-group .login-input::-webkit-input-placeholder {
+  color: #fff;
+}
+.loginbody .loginBox .input-group .login-input:-webkit-autofill {
+  -webkit-box-shadow: 0 0 0px 1000px #0b3273 inset !important;
+  -webkit-text-fill-color: #fff !important;
+}
+.loginbody .loginBox .login-btn {
+  width: 250px;
+  height: 45px;
+  font-size: 18px;
+  margin: 0 90px;
+  background: #3879f7;
+  text-align: center;
+  line-height: 45px;
+  color: #fff;
+  /*border-radius: 5px;*/
+  cursor: pointer;
+}
+.loginbody .loginBox .login-btn:hover {
+  /*opacity: 0.8;*/
+}
+.title-student{
+  text-align: center;
+  padding: 40px 10px;
+  color: #fff;
+  font-size: 28px;
+}
+.username,.password{
+  float: left;
+  font-size: 14px;
+  display: block;
+  color: #666;
+  width: 60px;
+  text-align: center;
+  padding-left: 20px;
+}

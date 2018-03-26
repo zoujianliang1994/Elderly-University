@@ -1,0 +1,323 @@
+<%@ page language="java" contentType="text/html; charset=UTF-8"
+         pageEncoding="UTF-8"%>
+<%
+    String path = request.getContextPath();
+    String basePath = request.getScheme() + "://" + request.getServerName() + ":" + request.getServerPort() + path + "/";
+%>
+
+<!DOCTYPE html PUBLIC "-//W3C//DTD HTML 4.01 Transitional//EN" "http://www.w3.org/TR/html4/loose.dtd">
+<html>
+<head>
+    <meta http-equiv="Content-Type" content="text/html; charset=UTF-8">
+    <title>学校资质注册</title>
+    <%@ include file="../../../system/index/headcss.jsp"%>
+</head>
+<body class="sign-school-page" style="overflow: hidden;">
+<div class="tableBox " style="height: 100%;">
+
+    <!-- table -->
+    <div class="school-info-form" >
+        <div class="school-info-form-left">
+            <img src="<%=basePath%>static/source/public/images/sign-content.png" />
+        </div>
+        <div class="school-info-form-right">
+            <div class="school-info-form-right-wirte">
+                <p>信息注册</p>
+                <form action="${msg}.do" class="layui-form" id="editForm" enctype="multipart/form-data" lay-filter="editForm" method="post" style="text-align: center;">
+                    <input type="hidden" name="website">
+                    <input type="hidden" name="s_id">
+                    <input type="hidden" name="create_id">
+                    <input type="hidden" name="options">
+                    <input type="hidden" name="rType" value="${pd.rType}">
+                    
+                    <div class="layui-form-item" style="padding-bottom: 4px;border-bottom: 1px solid #dce3eb;">
+                        <div class="layui-form-item">
+                            <label class="form-label"><i class="require">*</i>学校名称<span class="colon">：</span></label>
+                            <div class="layui-input-block" style="width: 100%;">
+                                <input type="text" id="school-name" required lay-verify="required" name="name"
+                                       autocomplete="off" maxlength="200"
+                                       class="layui-input layui-input-color">
+                            </div>
+                        </div>
+                        <div class="layui-form-item">
+                            <label class="form-label"><i class="require">*</i>学校地址<span class="colon">：</span></label>
+                            <div class="layui-input-block" style="width: 100%;">
+                                <input type="text" id="school-local"  required lay-verify="required" name="address"
+                                       autocomplete="off" maxlength="200"
+                                       class="layui-input layui-input-color">
+                            </div>
+                        </div>
+                        <div class="layui-form-item">
+                            <div class="form-item-inline1">
+                                <label class="form-label"><i class="require">*</i>联系电话<span class="colon">：</span></label>
+                                <div class="layui-input-block"  >
+                                    <input type="text" id="phone" required lay-verify="required" name="tel"
+                                           autocomplete="off" maxlength="200"
+                                           class="layui-input layui-input-color">
+                                </div>
+                            </div>
+                            <div class="form-item-inline">
+                                <label class="form-label"><i class="require">*</i>学员总人数<span class="colon">：</span></label>
+                                <div class="layui-input-block" >
+                                    <input type="text" id="student-num" required lay-verify="required" name="stu_total"
+                                           autocomplete="off" maxlength="200"
+                                           class="layui-input layui-input-color">
+                                </div>
+                            </div>
+
+                        </div>
+                        <div class="layui-form-item">
+                            <div class="form-item-inline1">
+                                <label class="form-label"><i class="require">*</i>联系人姓名<span class="colon">：</span></label>
+                                <div class="layui-input-block" >
+                                    <input type="text" id="linkman-name"   required lay-verify="required" placeholder="" name="contanct_name"
+                                           autocomplete="off" maxlength="200"
+                                           class="layui-input layui-input-color">
+                                </div>
+                            </div>
+                            <div class="form-item-inline">
+                                <label class="form-label"><i class="require">*</i>联系人电话<span class="colon">：</span></label>
+                                <div class="layui-input-block" >
+                                    <input type="text" id="linkman-phone"   required lay-verify="required" name="contanct_phone"
+                                           autocomplete="off" maxlength="200"
+                                           class="layui-input layui-input-color">
+                                </div>
+                            </div>
+
+                        </div>
+                        <div class="layui-form-item">
+                            <div class="form-item-inline1">
+                                <label class="form-label"><i class="require">*</i>联系人邮箱<span class="colon">：</span></label>
+                                <div class="layui-input-block">
+                                    <input type="text" id="linkman-email"  required lay-verify="required" name="email"
+                                           autocomplete="off" maxlength="200"
+                                           class="layui-input layui-input-color">
+                                </div>
+                            </div>
+
+                            <div class="form-item-inline">
+                                <label class="form-label"><i class="require">*</i>机构性质<span class="colon">：</span></label>
+                                <div class="layui-input-block"   >
+                                    <html:select id="jg-nature" name="s_type" classs="layui-input-inline" style=" lay-filter='select1'">
+                                        <html:options collection="Institutional_nature" defaultValue="${pd.s_type}"></html:options>
+                                    </html:select>
+                                </div>
+                            </div>
+                        </div>
+
+
+                        <div class="layui-form-item">
+                            <div class="form-item-inline1">
+                                <div class="form-small-inline1">
+                                    <label class="form-label"><i class="require">*</i>是否存在分校<span class="colon">：</span></label>
+                                    <div class="layui-input-block is-subordinate" style="width:8rem;">
+                                        <html:select id="is-subordinate" name="has_child" classs="layui-input-inline" style=" lay-filter='select1'">
+                                            <html:options collection="sf" defaultValue="${pd.has_child}"></html:options>
+                                        </html:select>
+                                    </div>
+                                </div>
+                                <div class="form-small-inline">
+                                    <label class="form-label">分校个数<span class="colon">：</span></label>
+                                    <div class="layui-input-block" style="width: 7rem;">
+                                        <input type="text"  required lay-verify="required" name="child_total"
+                                               autocomplete="off" maxlength="200"
+                                               class="layui-input layui-input-color">
+                                    </div>
+                                </div>
+                            </div>
+                            <div class="form-item-inline">
+                                <div class="form-small-inline1">
+                                    <label class="form-label"><i class="require">*</i>是否存在教学点<span class="colon">：</span></label>
+                                    <div class="layui-input-block is-teaching" style="width: 8rem;">
+                                        <html:select id="is-teaching" name="has_point" classs="layui-input-inline" style=" lay-filter='select1'">
+                                            <html:options collection="sf" defaultValue="${pd.has_point}"></html:options>
+                                        </html:select>
+                                    </div>
+                                </div>
+                                <div class="form-small-inline">
+                                    <label class="form-label">教学点个数<span class="colon">：</span></label>
+                                    <div class="layui-input-block" style="width: 7rem;">
+                                        <input type="text"   required lay-verify="required" name="point_total"
+                                               autocomplete="off" maxlength="200"
+                                               class="layui-input layui-input-color">
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+
+                        <div class="layui-form-item">
+                            <div class="form-item-inline1">
+                                <label class="form-label"><i class="require">*</i>税务登记号<span class="colon">：</span></label>
+                                <div class="layui-input-block" >
+                                    <input type="text"  id="register"  required lay-verify="required" name="tax_code"
+                                           autocomplete="off" maxlength="200"
+                                           class="layui-input layui-input-color">
+                                </div>
+                            </div>
+                            <div class="form-item-inline">
+                                <label class="form-label"><i class="require">*</i>是否民政部注册<span class="colon">：</span></label>
+                                <div class="layui-input-block is-register" style="text-align: left;">
+                                    <html:select id="is-register" name="has_register" classs="layui-input-inline" style=" lay-filter='select1'">
+                                        <html:options collection="sf" defaultValue="${pd.has_register}"></html:options>
+                                    </html:select>
+                                </div>
+                            </div>
+                        </div>
+
+                        <div class="layui-form-item">
+                                <label class="layui-form-label">上传营业执照</label>
+                                <input readonly="readonly" type="hidden" name="photo_url" id="photo_url" value="${pd.photo_url}"/>
+                                <div class="" style=" position:absolute;text-align: center;left: 8rem;top: 6px;">
+                                    <div style="height: 2rem;width: 8rem;float: left;color: #3879f7;border: solid 1px #3879f7;line-height: 2rem;" >
+                                        选择文件
+                                    </div>
+                                    <div style="float: left;color: #ccc;padding-left: 1rem;line-height: 2rem">
+                                        未选择文件
+                                    </div>
+                                </div>
+                                <input type="file" name="schoolFile" class="" id="schoolFile" style="position: absolute;left: 8rem;top: 6px;height: 2rem;width: 8rem;cursor: pointer;opacity: 0">
+
+                        </div>
+
+                    </div>
+
+                </form>
+                <div class="btnbox" id="btnDiv" >
+                    <button id="sure" class="layui-btn layui-btn-primary layui-btn-small" style="width: 8rem;height: 3rem;" >提交</button>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+
+<%@ include file="../../../system/index/foot.jsp" %>
+<script type="text/javascript">
+
+    $("#sure").on("click", function () {
+        if ($("#school-name").val() == "") {
+            layer.tips('学校名不能为空', $("#school-name"), {
+                tips: [3, '#D16E6C'],
+                time: 4000
+            });
+            $("#school-name").focus();
+            return false;
+        }
+        if ($("#location").val() == "") {
+            layer.tips('学校地址不能为空', $("#school-local"), {
+                tips: [3, '#D16E6C'],
+                time: 4000
+            });
+            $("#school-local").focus();
+            return false;
+        }
+        if ($("#phone").val() == "") {
+            layer.tips('联系电话不能为空', $("#phone"), {
+                tips: [3, '#D16E6C'],
+                time: 4000
+            });
+            $("#phone").focus();
+            return false;
+        }
+
+        if ($("#linkman-name").val()==""){
+            layer.tips('联系人姓名不能为空', $("#linkman-name"), {
+                tips: [3, '#D16E6C'],
+                time: 4000
+            });
+            $("#linkman-name").focus();
+            return false;
+        }
+        if ($("#linkman-phone").val() == "") {
+            layer.tips('联系人电话号码不能为空', $("#linkman-phone"), {
+                tips: [3, '#D16E6C'],
+                time: 4000
+            });
+            $("#linkman-phone").focus();
+            return false;
+        }
+        if ($("#linkman-email").val() == "") {
+            layer.tips('联系人邮箱不能为空', $("#linkman-email"), {
+                tips: [3, '#D16E6C'],
+                time: 4000
+            });
+            $("#linkman-email").focus();
+            return false;
+        }
+
+        if (!$.isEmail($("#linkman-email").val())) {
+                layer.tips('邮箱格式不对', $("#linkman-email"), {
+                    tips: [3, '#D16E6C'],
+                    time: 4000
+                });
+                $("#linkman-email").focus();
+                return false;
+        };
+        if ($("#student-num").val() == "") {
+            layer.tips('学员总数不能为空', $("#student-num"), {
+                tips: [3, '#D16E6C'],
+                time: 4000
+            });
+            $("#student-num").focus();
+            return false;
+        }
+        if ($("#jg-nature").val() == "") {
+            layer.tips('机构性质不能为空', $(".jg-nature"), {
+                tips: [3, '#D16E6C'],
+                time: 4000
+            });
+            $("#jg-nature").focus();
+            return false;
+        }
+        if ($("#register").val() == "") {
+            layer.tips('税务登记号不能为空', $("#register"), {
+                tips: [3, '#D16E6C'],
+                time: 4000
+            });
+            $("#register").focus();
+            return false;
+        }
+        if ($("#is-subordinate").val() == "") {
+            layer.tips('分校不能为空', $(".is-subordinate"), {
+                tips: [3, '#D16E6C'],
+                time: 4000
+            });
+            $("#is-subordinate").focus();
+            return false;
+        }
+        if ($("#is-teaching").val() == "") {
+            layer.tips('教学点不能为空', $(".is-teaching"), {
+                tips: [3, '#D16E6C'],
+                time: 4000
+            });
+            $("#is-teaching").focus();
+            return false;
+        }
+        if ($("#is-register").val() == "") {
+            layer.tips('民政部注册不能为空', $(".is-register"), {
+                tips: [3, '#D16E6C'],
+                time: 4000
+            });
+            $("#is-register").focus();
+            return false;
+        }
+        parent.layer.load(1);
+        $("#editForm").ajaxSubmit({
+            type: 'post',
+            dataType: "html",
+            success: function (data) {
+            	parent.layer.closeAll("loading");
+                var jso = JSON.parse(data);
+                if ("success" == jso.msg) {
+                  layer.msg("信息提交成功，请保持手机通畅，平台审核人员将再24个小时内联系到预留联系人电话进行线下审核，审核成功后将再10小时内将登录账号与密码发送到预留邮箱。",{icon: 6,time:4000})
+                } else {
+                    layer.msg('系统繁忙，请稍后重试!', {icon: 5});
+                }
+            }
+        });
+        return false; // 阻止表单自动提交事件
+    });
+
+</script>
+</body>
+</html>

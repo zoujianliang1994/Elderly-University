@@ -1,0 +1,51 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="AgreeMentMapper">
+	
+	<!--表名 -->
+	<sql id="tableName">
+		edu_agreement
+	</sql>
+	
+	<!-- 字段 -->
+	<sql id="Field">
+		id,
+		title,
+		content,
+		s_id,
+		edit_date,
+		editor_id
+	</sql>
+	
+	<!-- 字段值 -->
+	<sql id="FieldValue">
+		#{id},
+		#{title},
+		#{content},
+		#{s_id},
+		#{edit_date},
+		#{editor_id}
+	</sql>
+	
+	<!-- 新增-->
+	<insert id="addData" parameterType="pd">
+		insert into <include refid="tableName"/> ( <include refid="Field"/> ) values ( <include refid="FieldValue"/>)
+	</insert>
+	
+	<!-- 修改 -->
+	<update id="editData" parameterType="pd">
+		update <include refid="tableName"></include>
+		   set     title = #{title},
+				   content = #{content},
+				   edit_date = #{edit_date},
+				   editor_id = #{editor_id}
+		 where id = #{id}
+	</update>
+	
+	<!-- 通过学校ID获取数据 -->
+	<select id="findDataBySid" parameterType="pd" resultType="pd">
+		select *
+		  from <include refid="tableName"/>
+		 where s_id = #{s_id}
+	</select>
+</mapper>

@@ -1,0 +1,75 @@
+﻿<%@ page language="java" contentType="text/html; charset=UTF-8" pageEncoding="UTF-8" %>
+<%
+    String path = request.getContextPath();
+    String basePath = request.getScheme() + "://" + request.getServerName() + ":" + request.getServerPort() + path + "/";
+%>
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <title>学员档案管理</title>
+    <%@ include file="../../system/index/headcss.jsp" %>
+</head>
+<body>
+
+
+<div class="menu-list">
+
+    <div class="layui-col-xs layui-col-sm layui-col-md layui-col-lg tableBox operationBox">
+
+        <form action="list.do" method="post" name="Form" id="Form">
+
+            <div class="searchBox fl ">
+                <input id="keywords" name="keywords" type="text" value="${pd.keywords}" placeholder="姓名、身份证号" class="layui-input fl search">
+
+                <div class="fl srarchBtn" onclick="gsearch()">
+                    <i class="layui-icon">&#xe615;</i>
+                    <span>搜索</span>
+                </div>
+            </div>
+        </form>
+        <div class="operationBox">
+
+        </div>
+
+
+    </div>
+
+</div>
+
+<%@ include file="../../system/index/foot.jsp" %>
+<script type="text/javascript">
+
+    layui.use('laypage', function () {
+        var laypage = layui.laypage;
+        var layer = layui.layer;
+
+        //执行一个laypage实例
+        laypage.render({
+            elem: 'laypage',
+            count: ${page.totalResult},
+            curr: ${page.currentPage},
+            layout: ['prev', 'page', 'next', 'count', 'skip'],
+            jump: function (obj, first) {
+                if (!first) {
+                    window.location.href = "<%=basePath%>studentInfo/list.do?&currentPage=" + obj.curr + '&keywords=' + '${pd.keywords}';
+                }
+            }
+        });
+    });
+
+    $("#keywords").keydown(function (e) {
+        var ev = e || window.event;
+        if (ev.keyCode == "13") {
+            gsearch();
+        }
+    });
+
+    //检索
+    function gsearch() {
+        $("#Form").submit();
+    }
+
+
+</script>
+</body>
+</html>

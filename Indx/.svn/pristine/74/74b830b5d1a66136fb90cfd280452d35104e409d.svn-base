@@ -1,0 +1,177 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="StudentEnrollMapper">
+	
+	<!--表名 -->
+	<sql id="tableName">
+		edu_grades_student_enroll
+	</sql>
+	
+	<!-- 字段 -->
+	<sql id="Field">
+		id,
+		g_name,
+		g_id,
+		school_name,
+		school_id,
+		teacher_name,
+		teacher_id,
+		classroom_name,
+		course_time,
+		is_all,
+		money,
+		money_status,
+		user_id,
+		student_id,
+		create_time,
+		child_school_id,
+		child_school_name,
+		checkin_type,
+		orderNo
+	</sql>
+	
+	<!-- 字段值 -->
+	<sql id="FieldValue">
+		#{id},
+		#{g_name},
+		#{g_id},
+		#{school_name},
+		#{school_id},
+		#{teacher_name},
+		#{teacher_id},
+		#{classroom_name},
+		#{course_time},
+		#{is_all},
+		#{money},
+		#{money_status},
+		#{user_id},
+		#{student_id},
+		#{create_time},
+		#{child_school_id},
+		#{child_school_name},
+		#{checkin_type},
+		#{orderNo}
+	</sql>
+	
+	<!-- 新增-->
+	<insert id="save" parameterType="pd">
+		insert into 
+	<include refid="tableName"></include>
+		(
+	<include refid="Field"></include>
+		) values (
+	<include refid="FieldValue"></include>
+		)
+	</insert>
+	
+	
+	<!-- 删除-->
+	<delete id="delete" parameterType="pd">
+		delete from
+		<include refid="tableName"></include>
+		where 
+			id = #{id}
+	</delete>
+	
+	<!-- 修改 -->
+	<update id="edit" parameterType="pd">
+		update
+		<include refid="tableName"></include>
+		set 
+			money_status = #{money_status}
+		where 
+			id = #{id}
+	</update>
+	
+	<!-- 修改订单缴费状态 -->
+	<update id="editMoneyStatus" parameterType="pd">
+		update
+		<include refid="tableName"></include>
+		set 
+			money_status = #{money_status}
+		where 
+			orderNo = #{orderNo}
+	</update>
+	
+	<!-- 通过用户ID获取数据 -->
+	<select id="findByUserId" parameterType="pd" resultType="pd">
+		select 
+		<include refid="Field"></include>
+		from 
+		<include refid="tableName"></include>
+		where 
+			user_id = #{user_id}
+			<if test="type != null and type != ''"><!-- 关键词检索 -->
+				and money_status = #{type}
+			</if>
+	</select>
+	
+	<!-- 通过学生ID获取报名选课数据 -->
+	<select id="findByStuId" parameterType="pd" resultType="pd">
+		select 
+		<include refid="Field"></include>
+		from 
+		<include refid="tableName"></include>
+		where 
+			student_id = #{id}
+			<if test="money_status != null and money_status != ''"><!-- 关键词检索 -->
+				and money_status = #{money_status}
+			</if>
+	</select>
+	
+	<!-- 学员报名列表 -->
+	<select id="datalistPage" parameterType="page" resultType="pd">
+	    SELECT
+			g.id,
+			d.s_num,
+			g.xm,
+			g.sfz,
+			d.checkin_type,
+			m.id m_id,
+			d.create_time,
+			m.name
+		FROM
+			edu_student g
+		JOIN(
+			SELECT
+				e.student_id s_id,
+				e.create_time,
+				e.checkin_type checkin_type,
+				s.semester_id,
+				COUNT(1) s_num
+			FROM
+				edu_grades_student_enroll e,
+				edu_student s
+			WHERE
+				s.id = e.student_id
+			GROUP BY
+				e.student_id,e.create_time,e.checkin_type,s.semester_id
+		) d ON d.s_id = g.id
+		join edu_semester m 
+		on d.semester_id=m.id
+		where 1=1 
+		and 
+			<foreach item="item" index="index" collection="pd.school_id" open="(" separator="or" close=")">
+				g.s_id  LIKE ('%'+'${item}'+'%')
+			</foreach>
+	    <if test="pd.keywords != null and pd.keywords != ''"><!-- 关键词检索 -->
+			and
+				(
+				 g.xm LIKE ('%'+#{pd.keywords}+'%')
+				 or
+				 g.sfz LIKE ('%'+#{pd.keywords}+'%')
+				 )
+		</if>
+		 <if test="pd.checkin_type != null and pd.checkin_type != ''"><!-- 关键词检索 -->
+			and d.checkin_type =#{pd.checkin_type}
+		</if>
+		<if test="pd.semester_id != null and pd.semester_id != ''"><!-- 关键词检索 -->
+			and m.id =#{pd.semester_id}
+		</if>
+	    
+		order by d.create_time
+	</select>
+	
+	
+	<!--  -->
+</mapper>

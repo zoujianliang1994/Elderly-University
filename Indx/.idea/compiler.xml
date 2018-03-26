@@ -1,0 +1,23 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<project version="4">
+  <component name="CompilerConfiguration">
+    <annotationProcessing>
+      <profile name="Maven default annotation processors profile" enabled="true">
+        <sourceOutputDir name="target/generated-sources/annotations" />
+        <sourceTestOutputDir name="target/generated-test-sources/test-annotations" />
+        <outputRelativeToContentRoot value="true" />
+        <module name="lndx-commons" />
+        <module name="lndx-dao" />
+        <module name="lndx-managementCenter" />
+        <module name="lndx-service" />
+      </profile>
+    </annotationProcessing>
+    <bytecodeTargetLevel>
+      <module name="lndx-commons" target="1.7" />
+      <module name="lndx-dao" target="1.7" />
+      <module name="lndx-managementCenter" target="1.7" />
+      <module name="lndx-parent-project" target="1.5" />
+      <module name="lndx-service" target="1.7" />
+    </bytecodeTargetLevel>
+  </component>
+</project>

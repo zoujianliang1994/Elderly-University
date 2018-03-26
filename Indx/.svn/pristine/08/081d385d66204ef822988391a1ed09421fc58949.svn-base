@@ -1,0 +1,34 @@
+package com.zhimu.service.manager.edu.teacher;
+
+
+import com.zhimu.commons.utils.PageData;
+import com.zhimu.dao.entity.system.Page;
+
+import java.util.List;
+
+public interface TeacherManager {
+
+  List<PageData> teacherListPage(Page pd) throws Exception;
+
+  List<PageData> teacherList(PageData pd) throws Exception;
+
+  PageData findDataById(PageData pd) throws Exception;
+
+  PageData findByUser(String userId) throws Exception;
+
+  void addData(PageData pd) throws Exception;
+
+  void editData(PageData pd) throws Exception;
+
+  void updateData(PageData pd) throws Exception;
+
+  void deleteData(PageData pd) throws Exception;
+
+  /**
+   * 根据学校id查询所有的教师id
+   */
+  List<String> findBySId(String[] sIds) throws Exception;
+
+  List<PageData> findBySchools(PageData pd) throws Exception;
+
+}

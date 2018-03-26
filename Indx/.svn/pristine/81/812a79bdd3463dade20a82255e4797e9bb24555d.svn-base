@@ -1,0 +1,61 @@
+package com.zhimu.dao.entity;
+
+import java.sql.Timestamp;
+
+import com.zhimu.commons.utils.IDUtil;
+
+public class BaseEntity {
+	
+	String id;
+	private Timestamp createTime; //创建时间
+	private Timestamp updateTime;//修改时间
+	private String createBy;//创建人
+	private String updateBy;//创建时间
+
+	public BaseEntity() {
+		super();
+		this.id=IDUtil.getID();
+	}
+
+	public String getId() {
+		return id;
+	}
+
+	public void setId(String id) {
+		this.id = id;
+	}
+
+	public Timestamp getCreateTime() {
+		return createTime;
+	}
+
+	public void setCreateTime(Timestamp createTime) {
+		this.createTime = createTime;
+	}
+
+	public Timestamp getUpdateTime() {
+		return updateTime;
+	}
+
+	public void setUpdateTime(Timestamp updateTime) {
+		this.updateTime = updateTime;
+	}
+
+	public String getCreateBy() {
+		return createBy;
+	}
+
+	public void setCreateBy(String createBy) {
+		this.createBy = createBy;
+	}
+
+	public String getUpdateBy() {
+		return updateBy;
+	}
+
+	public void setUpdateBy(String updateBy) {
+		this.updateBy = updateBy;
+	}
+	
+
+}

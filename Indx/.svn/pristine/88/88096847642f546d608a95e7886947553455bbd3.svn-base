@@ -1,0 +1,81 @@
+.sTree{
+  position:relative;
+  .input{
+    color:#666;
+    text-overflow: ellipsis;
+  }
+  .lev0{
+    position: absolute;
+    left: 0;
+    top: 42px;
+    padding: 5px 0;
+    z-index: 999;
+    width: 100%;
+    border: 1px solid #d2d2d2;
+    max-height: 300px;
+    overflow-y: auto;
+    background-color: #fff;
+    border-radius: 2px;
+    box-shadow: 0 2px 4px rgba(0,0,0,.12);
+    box-sizing: border-box;
+    min-width: 260px;
+    display:none;
+  }
+  .treeItem{
+    color:#666;
+    padding: 0 33px;
+    line-height: 32px;
+    background:#fff;
+    //white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    position:relative;
+    cursor: pointer;
+    .item-switch{
+      position:absolute;
+      left:10px;
+      top:0;
+    }
+    .le{
+      margin-right:5px;
+    }
+    .item-label{
+      position:absolute;
+      right: 10px;
+      top: 8px;
+      position: absolute;
+      width: 15px;
+      height: 15px;
+      border-radius: 1px;
+      box-sizing:border-box;
+      border: 1px solid #DAE2EA;
+      .icon-gou{
+        display:none;
+        color:#108ee9;
+        position:absolute;
+        top: -12px;
+        left: -2px;
+      }
+    }
+    .item-switch-icon{
+      color:#999;
+      font-size:12px;
+
+    }
+  }
+  .active{
+    .item-label{
+      border: 1px solid #108ee9;
+      .icon-gou{
+        display: block;
+      }
+    }
+    .title{
+      color:#108ee9;
+      width:80%;
+    }
+  }
+  .treeItem:hover{
+    background:#f2f2f2;
+  }
+}

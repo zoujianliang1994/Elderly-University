@@ -1,0 +1,21 @@
+package com.zhimu.service.manager.edu.financial;
+
+
+import com.zhimu.commons.utils.PageData;
+import com.zhimu.dao.entity.system.Page;
+
+import java.util.List;
+
+public interface TuitionManager {
+
+  List<PageData> tuitionListPage(Page pd) throws Exception;
+
+  List<PageData> selectListAllSemester(PageData pd) throws Exception;
+
+  List<PageData> selectListSemester(String schoolId) throws Exception;
+
+  List<PageData> selectTuitionList(PageData pd) throws Exception;
+
+  List<PageData> selectOtherName(PageData pd) throws Exception;
+
+}

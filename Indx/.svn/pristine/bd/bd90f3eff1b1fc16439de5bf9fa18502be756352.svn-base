@@ -1,0 +1,138 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="TeachPlanMapper">
+
+    <!--表名 -->
+    <sql id="tableName">
+		edu_teach_plan
+	</sql>
+
+    <!-- 字段 -->
+    <sql id="Field">
+		id,
+        grade_id,
+        teacher_id,
+        xq_id,
+        ks,
+        mz_ks,
+        xk_zs,
+        wk_yj,
+        file_url,
+        bz,
+        sh_type,
+        sh_yj,
+        school_id
+	</sql>
+
+    <!-- 字段值 -->
+    <sql id="FieldValue">
+		#{id},
+        #{grade_id},
+        #{teacher_id},
+        #{xq_id},
+        #{ks},
+        #{mz_ks},
+        #{xk_zs},
+        #{wk_yj},
+        #{file_url},
+        #{bz},
+        #{sh_type},
+        #{sh_yj},
+        #{school_id}
+	</sql>
+
+    <!-- 新增-->
+    <insert id="addData" parameterType="pd">
+        insert into <include refid="tableName"/> ( <include refid="Field"/> ) values (<include refid="FieldValue"/>)
+    </insert>
+
+    <!-- 删除-->
+    <delete id="deleteData" parameterType="pd">
+        delete from
+        <include refid="tableName"/>
+        where id = #{id}
+    </delete>
+
+    <!-- 修改 -->
+    <update id="editData" parameterType="pd">
+        update <include refid="tableName"/>
+           set   grade_id = #{grade_id},
+               teacher_id = #{teacher_id},
+                    xq_id = #{xq_id},
+                       ks = #{ks},
+                    mz_ks = #{mz_ks},
+                    xk_zs = #{xk_zs},
+                    wk_yj = #{wk_yj},
+                 file_url = #{file_url},
+                       bz = #{bz},
+                  sh_type = #{sh_type},
+                    sh_yj = #{sh_yj},
+                school_id = #{school_id}
+        where id = #{id}
+    </update>
+
+    <!-- 通过ID获取数据 -->
+    <select id="findDataById" parameterType="pd" resultType="pd">
+        SELECT a.*,
+               b.name grade_name,
+               b.class_time kc,
+               c.name teacher_name,
+               d.name xq_name
+          FROM edu_teach_plan a,
+               edu_grades b,
+               edu_teacher c,
+               edu_semester d
+         WHERE a.grade_id = b.id
+           AND a.teacher_id = c.id
+           AND a.xq_id = d.id
+           AND a.id = #{id}
+    </select>
+
+    <!-- 分页列表 -->
+    <select id="datalistPage" parameterType="page" resultType="pd">
+        SELECT a.*,
+               b.name grade_name,
+               b.class_time kc,
+               c.name teacher_name,
+               d.name xq_name
+          FROM edu_teach_plan a,
+               edu_grades b,
+               edu_teacher c,
+               edu_semester d
+         WHERE a.grade_id = b.id
+           AND a.teacher_id = c.id
+           AND a.xq_id = d.id
+           and a.school_id in
+         <foreach item="item" index="index" collection="pd.userSchoolIds" open="(" separator="," close=")">
+            '${item}'
+         </foreach>
+         <if test="pd.keywords != null and pd.keywords != ''"><!-- 关键词检索 -->
+           and (  b.name LIKE ('%'+#{pd.keywords}+'%') or
+                  c.name LIKE ('%'+#{pd.keywords}+'%') OR
+                  d.name LIKE ('%'+#{pd.keywords}+'%')
+               )
+         </if>
+         order by b.name
+    </select>
+
+    <!-- 普通列表 -->
+    <select id="selectList" parameterType="pd" resultType="pd">
+        SELECT a.*,
+               b.name grade_name,
+               b.class_time kc,
+               c.name teacher_name,
+               d.name xq_name
+          FROM edu_teach_plan a,
+               edu_grades b,
+               edu_teacher c,
+               edu_semester d
+         WHERE a.grade_id = b.id
+           AND a.teacher_id = c.id
+           AND a.xq_id = d.id
+         <if test="school_id != null and school_id != ''">
+           and a.school_id = #{school_id}
+         </if>
+         order by b.name
+    </select>
+
+</mapper>

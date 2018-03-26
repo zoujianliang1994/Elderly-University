@@ -1,0 +1,279 @@
+package com.zhimu.service.manager.system.role.impl;
+
+import java.util.ArrayList;
+import java.util.HashMap;
+import java.util.LinkedHashSet;
+import java.util.List;
+import java.util.Map;
+import java.util.Set;
+
+import javax.annotation.Resource;
+
+import org.slf4j.LoggerFactory;
+import org.springframework.stereotype.Service;
+
+import com.zhimu.commons.utils.DateUtil;
+import com.zhimu.commons.utils.PageData;
+import com.zhimu.dao.DaoSupport;
+import com.zhimu.dao.entity.system.Page;
+import com.zhimu.dao.entity.system.Role;
+import com.zhimu.dao.entity.system.RolePermission;
+import com.zhimu.service.manager.system.role.RoleManager;
+
+/**
+ * 角色
+ * 
+ */
+@Service("roleService")
+public class RoleService implements RoleManager {
+
+	protected org.slf4j.Logger logger = LoggerFactory.getLogger(this.getClass());
+
+	@Resource(name = "daoSupport")
+	private DaoSupport dao;
+
+	/**
+	 * 列出此组下级角色
+	 * 
+	 * @param pd
+	 * @return
+	 * @throws Exception
+	 */
+	@Override
+	@SuppressWarnings("unchecked")
+	public List<Role> listAllRolesByPId(PageData pd) throws Exception {
+		return (List<Role>) dao.findForList("RoleMapper.listAllRolesByPId", pd);
+	}
+
+	/**
+	 * 通过id查找
+	 * 
+	 * @param pd
+	 * @return
+	 * @throws Exception
+	 */
+	@Override
+	public PageData findObjectById(PageData pd) throws Exception {
+		return (PageData) dao.findForObject("RoleMapper.findObjectById", pd);
+	}
+
+	/**
+	 * 添加
+	 * 
+	 * @param pd
+	 * @throws Exception
+	 */
+	@Override
+	public void add(PageData pd) throws Exception {
+		dao.save("RoleMapper.insert", pd);
+	}
+
+	/**
+	 * 保存修改
+	 * 
+	 * @param pd
+	 * @throws Exception
+	 */
+	@Override
+	public void edit(PageData pd) throws Exception {
+		dao.update("RoleMapper.edit", pd);
+	}
+
+	/**
+	 * 删除角色
+	 * 
+	 * @param ROLE_ID
+	 * @throws Exception
+	 */
+	@Override
+	public void deleteRoleById(String ROLE_ID) throws Exception {
+		dao.delete("RoleMapper.deleteRoleById", ROLE_ID);
+	}
+
+	/**
+	 * 给当前角色附加菜单权限
+	 * 
+	 * @param role
+	 * @throws Exception
+	 */
+	@Override
+	public void updateRoleRights(Role role) throws Exception {
+
+		logger.debug("修改权限：" + DateUtil.getTime() + " 权限名：" + role.getROLE_NAME() + " 权限值：" + role.getRIGHTS());
+		dao.update("RoleMapper.updateRoleRights", role);
+	}
+
+	/**
+	 * 通过id查找
+	 * 
+	 * @param roleId
+	 * @return
+	 * @throws Exception
+	 */
+	@Override
+	public Role getRoleById(String ROLE_ID) throws Exception {
+		return (Role) dao.findForObject("RoleMapper.getRoleById", ROLE_ID);
+	}
+
+	/**
+	 * 给全部子角色加菜单权限
+	 * 
+	 * @param pd
+	 * @throws Exception
+	 */
+	@Override
+	public void setAllRights(PageData pd) throws Exception {
+		dao.update("RoleMapper.setAllRights", pd);
+	}
+
+	/**
+	 * 权限(增删改查)
+	 * 
+	 * @param msg
+	 *            区分增删改查
+	 * @param pd
+	 * @throws Exception
+	 */
+	@Override
+	public void saveB4Button(String msg, PageData pd) throws Exception {
+		dao.update("RoleMapper." + msg, pd);
+	}
+
+	/**
+	 * 查询角色菜单细化菜单权限
+	 */
+	@SuppressWarnings("unchecked")
+	@Override
+	public Map<String, String> selectRolePermission(String role_id, String menu_id) throws Exception {
+		Map<String, String> map = new HashMap<String, String>();
+		map.put("role_id", role_id);
+		String[] role_ids = role_id.split(",");
+		Set<RolePermission> tmpSet = new LinkedHashSet<RolePermission>();
+		for (int i = 0; i < role_ids.length; i++) {
+			map.clear();
+			map.put("role_id", role_ids[i]);
+			map.put("menu_id", menu_id);
+			tmpSet.addAll((List<RolePermission>) dao.findForList("RoleMapper.selectRolePermission", map));
+		}
+		Map<String, RolePermission> tmpMap = new HashMap<String, RolePermission>();
+		Set<RolePermission> rolePermissionSet = new LinkedHashSet<RolePermission>();
+		for (RolePermission p : tmpSet) {
+			if (tmpMap.get(p.getPermission_id()) == null) {
+				tmpMap.put(p.getPermission_id(), p);
+			} else {
+				rolePermissionSet.add(p);
+			}
+		}
+		tmpSet.removeAll(rolePermissionSet);
+		List<RolePermission> list = new ArrayList<RolePermission>();
+		list.addAll(tmpSet);
+		map.clear();
+		if (list.size() == 0) {
+			map.put("add", "0");
+			map.put("del", "0");
+			map.put("edit", "0");
+			map.put("cha", "0");
+		} else {
+			for (RolePermission rp : list) {
+				String sign = rp.getSign();
+				if (sign.contains("add")) {
+					map.put("add", "1");
+				} else if (sign.contains("del")) {
+					map.put("del", "1");
+				} else if (sign.contains("update")) {
+					map.put("edit", "1");
+				} else if (sign.contains("select")) {
+					map.put("cha", "1");
+				} else {
+					// ..
+				}
+			}
+		}
+		return map;
+	}
+
+	/**
+	 * 新增角色菜单细化菜单权限
+	 */
+	@Override
+	public void insertRolePermission(List<RolePermission> rolePermissionList) throws Exception {
+		dao.save("RoleMapper.insertRolePermission", rolePermissionList);
+	}
+
+	/**
+	 * 修改角色菜单细化菜单权限
+	 */
+	@Override
+	public void iupdateRolePermission(String role_id) throws Exception {
+		dao.update("RoleMapper.updateRolePermission", role_id);
+	}
+
+	/**
+	 * 删除角色菜单细化菜单权限
+	 */
+	@Override
+	public void deleteRolePermission(Map<String, String> map) throws Exception {
+		dao.delete("RoleMapper.deleteRolePermission", map);
+	}
+
+	/**
+	 * 获取所有系统管理员的id
+	 */
+	@SuppressWarnings("unchecked")
+	@Override
+	public List<String> findSysRoleId(String id) throws Exception {
+		return (List<String>) dao.findForList("RoleMapper.findSysRoleId", id);
+	}
+
+	/**
+	 * 分页的角色列表
+	 * 
+	 * @param page
+	 * @return
+	 * @throws Exception
+	 */
+	@Override
+	@SuppressWarnings("unchecked")
+	public List<PageData> listRoles(Page page) throws Exception {
+		return (List<PageData>) dao.findForList("RoleMapper.rolelistPage", page);
+	}
+
+	/**
+	 * 获取所用用户
+	 * 
+	 * @param role_id
+	 * @return
+	 */
+	@Override
+	public List<Map> getRoleUser(String role_id) throws Exception {
+		return (List<Map>) dao.findForList("RoleMapper.getRoleUser", role_id);
+	}
+
+	/**
+	 * 清除用户权限
+	 * 
+	 * @param map
+	 * @throws Exception
+	 */
+	@Override
+	public void clearUserRole(Map<String, Object> map) throws Exception {
+		dao.update("RoleMapper.clearUserRole", map);
+	}
+
+	/**
+	 * 新增用户权限
+	 * 
+	 * @param map
+	 * @throws Exception
+	 */
+	@Override
+	public void addUserRole(Map<String, Object> map) throws Exception {
+		dao.update("RoleMapper.addUserRole", map);
+	}
+
+	@Override
+	public List<Role> listAllRolesByPIdLevel(PageData pd) throws Exception {
+		return (List<Role>) dao.findForList("RoleMapper.listAllRolesByPIdLevel", pd);
+	}
+
+}

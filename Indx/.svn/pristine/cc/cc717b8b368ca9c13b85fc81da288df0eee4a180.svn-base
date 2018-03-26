@@ -1,0 +1,187 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" 
+	"http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="MenuMapper">
+
+	<resultMap type="Menu" id="menuResultMap">
+		<id column="MENU_ID" property="MENU_ID"/>
+		<result column="MENU_NAME" property="MENU_NAME"/>
+		<result column="MENU_URL" property="MENU_URL"/>
+		<result column="PARENT_ID" property="PARENT_ID"/>
+		<result column="MENU_ORDER" property="MENU_ORDER"/>
+		<result column="MENU_ICON" property="MENU_ICON"/>
+		<result column="MENU_TYPE" property="MENU_TYPE"/>
+	</resultMap>
+	
+	<!-- ztree -->
+	<resultMap type="Menu" id="menuZtreeResultMap">
+	<id column="MENU_ID" property="MENU_ID"/>
+	<result column="MENU_NAME" property="MENU_NAME"/>
+	<result column="MENU_URL" property="MENU_URL"/>
+	<result column="PARENT_ID" property="PARENT_ID"/>
+	<result column="MENU_ORDER" property="MENU_ORDER"/>
+	<result column="MENU_ICON" property="MENU_ICON"/>
+	<result column="MENU_TYPE" property="MENU_TYPE"/>
+	<result column="target" property="target"></result>
+	</resultMap>
+	
+	<!--表名 -->
+	<sql id="tableName">
+		SYS_MENU
+	</sql>
+	
+	<!-- 字段 -->
+	<sql id="Field">
+		MENU_ID,
+ 		MENU_NAME,
+ 		MENU_URL,
+ 		PARENT_ID,
+ 		MENU_ICON,
+ 		MENU_ORDER,
+ 		MENU_STATE,
+ 		MENU_TYPE
+	</sql>
+	
+	<!-- 字段值 -->
+	<sql id="FieldValue">
+		#{MENU_ID},
+ 		#{MENU_NAME},
+ 		#{MENU_URL},
+ 		#{PARENT_ID},
+ 		#{MENU_ICON},
+ 		#{MENU_ORDER},
+ 		#{MENU_STATE},
+ 		#{MENU_TYPE}
+	</sql>
+	
+	<!--通过ID获取其子一级菜单 -->
+	<select id="listSubMenuByParentId" parameterType="String" resultMap="menuResultMap">
+		select  
+			<include refid="Field"></include>
+		from 
+			<include refid="tableName"></include>
+		where PARENT_ID = #{parentId} order by MENU_ORDER 
+	</select>
+	
+	<!--通过菜单ID获取数据 -->
+	<select id="getMenuById" parameterType="pd" resultType="pd">
+		select  
+			<include refid="Field"></include>
+		 from 
+			<include refid="tableName"></include>
+		 where MENU_ID=#{MENU_ID}
+	</select>
+	
+	<!--新增 -->
+	<insert id="insertMenu" parameterType="Menu">
+		insert into 
+			<include refid="tableName"></include> 
+		(
+			<include refid="Field"></include>
+		) values (
+			<include refid="FieldValue"></include>
+		)
+	</insert>
+	
+	<!--更新菜单权限-->
+	<insert id="updatePermissions" parameterType="pd">
+		insert into 
+			sys_menu_permission 
+		(
+			id,menu_id,permission_id
+		) values (
+			#{id},#{menuId},#{permissionId}
+		)
+	</insert>
+	
+	<!--删除菜单权限-->
+	<delete id="deleteAllPermissions" parameterType="String">
+		delete from 
+		sys_menu_permission 
+		where MENU_ID=#{MENU_ID} 
+	</delete>
+	
+	<!--取最大ID-->
+	<select id="findMaxId" parameterType="pd" resultType="pd">
+		select MAX(MENU_ID) MID from 
+		<include refid="tableName"></include>
+	</select>
+	
+	<!--取所有ID-->
+	<select id="findAllId" parameterType="pd" resultType="String">
+		select MENU_ID from 
+		<include refid="tableName"></include>
+	</select>
+	
+	<!--删除菜单-->
+	<delete id="deleteMenuById" parameterType="String">
+		delete from 
+		<include refid="tableName"></include> 
+		where MENU_ID=#{MENU_ID} 
+	</delete>
+	
+	<!--编辑 -->
+	<update id="updateMenu" parameterType="Menu">
+		update 
+		<include refid="tableName"></include> 
+		set 
+			MENU_NAME =#{MENU_NAME},
+			MENU_URL  =#{MENU_URL} ,
+			MENU_ORDER=#{MENU_ORDER},
+			MENU_STATE=#{MENU_STATE},
+			MENU_TYPE =#{MENU_TYPE},
+			MENU_ICON =#{MENU_ICON}
+		where
+			MENU_ID=#{MENU_ID}
+	</update>
+
+	<!--保存菜单图标  -->
+	<update id="editicon" parameterType="Menu">
+		update 
+		<include refid="tableName"></include> 
+		set 
+			MENU_ICON=#{MENU_ICON}
+		where
+			MENU_ID=#{MENU_ID}
+	</update>
+	
+	<!-- 查询角色权限菜单下级列表 -->
+	<select id="getListTwoSubMenuQx" parameterType="java.util.Map" resultMap="menuZtreeResultMap">
+		   SELECT DISTINCT '1' AS 'MENU_TYPE',
+				 '' AS 'subMenu',
+				 'role_menu_' + b.id AS 'menu_id',
+				 'menu-icon fa fa-leaf black' AS "MENU_ICON",
+				 '' AS 'parentMenu',
+				 a.menu_id AS 'PARENT_ID',
+				 'endFrame' AS 'target',
+				 ISNULL(c.is_select,'0') AS 'MENU_STATE',
+				 b.name AS 'MENU_NAME',
+				 b.id AS 'MENU_ORDER'
+			FROM sys_menu_permission a,
+				 sys_permissions b LEFT OUTER JOIN sys_role_permission c ON b.id = c.permission_id
+		     AND c.role_id = #{ROLE_ID}
+		   WHERE a.permission_id = b.id
+			 AND b.is_del = '1'
+			 AND a.menu_id = #{MENU_ID}
+		   ORDER BY b.name
+	</select>
+	
+	<!-- 查询权限菜单 -->
+	<select id="getMenuByPermissMenu" parameterType="String" resultMap="menuZtreeResultMap">
+		  SELECT DISTINCT '1' AS 'MENU_TYPE',
+				'' AS 'subMenu',
+				a.id AS 'menu_id',
+				'' AS 'parentMenu',
+				'' AS 'PARENT_ID',
+				'treeFrame' AS 'target',
+				CASE WHEN (#{MENU_ID}=b.menu_id) THEN 'noCheck' ELSE 'check' END AS 'MENU_STATE',
+				a.name AS 'MENU_NAME',
+				a.id AS 'MENU_ORDER',
+				a.createTime
+		   FROM sys_permissions a LEFT  JOIN sys_menu_permission b on a.id = b.permission_id
+		  WHERE a.is_del = '1'
+          ORDER BY a.name,a.createTime DESC
+	</select>	
+	
+	<!-- fh313596790qq(青苔) -->
+</mapper>

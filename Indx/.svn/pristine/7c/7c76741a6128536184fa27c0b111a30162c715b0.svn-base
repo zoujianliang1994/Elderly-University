@@ -1,0 +1,163 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="SchoolAptitudeMapper">
+	
+	<!--表名 -->
+	<sql id="tableName">
+		edu_school_aptitude
+	</sql>
+	
+	<!-- 字段 -->
+	<sql id="Field">
+		id,
+		name,
+		address,
+		website,
+		tel,
+		contanct_name,
+		contanct_phone,
+		email,
+		stu_total,
+		s_type,
+		child_total,
+		has_child,
+		point_total,
+		has_point,
+		tax_code,
+		has_register,
+		photo,
+		s_id,
+		create_date,
+		create_id,
+		options,
+		status
+	</sql>
+	
+	<!-- 字段值 -->
+	<sql id="FieldValue">
+		#{id},
+		#{name},
+		#{address},
+		#{website},
+		#{tel},
+		#{contanct_name},
+		#{contanct_phone},
+		#{email},
+		#{stu_total},
+		#{s_type},
+		#{child_total},
+		#{has_child},
+		#{point_total},
+		#{has_point},
+		#{tax_code},
+		#{has_register},
+		#{photo},
+		#{s_id},
+		#{create_date},
+		#{create_id},
+		#{options},
+		#{status}
+	</sql>
+	
+	<!-- 新增-->
+	<insert id="save" parameterType="com.zhimu.dao.entity.school.SchoolAptitude">
+		insert into 
+	<include refid="tableName"></include>
+		(
+	<include refid="Field"></include>
+		) values (
+	<include refid="FieldValue"></include>
+		)
+	</insert>
+	
+	<!-- 删除-->
+	<delete id="delete" parameterType="pd">
+		delete from
+		<include refid="tableName"></include>
+		where 
+			id = #{id}
+	</delete>
+	
+	<!-- 修改 -->
+	<update id="edit" parameterType="pd">
+		update
+		<include refid="tableName"></include>
+		set 
+			name = #{name},
+			address = #{address},
+			website = #{website},
+			tel = #{tel},
+			contanct_name = #{contanct_name},
+			contanct_phone=#{contanct_phone},
+			email=#{email},
+			stu_total=#{stu_total},
+			s_type=#{s_type},
+			child_total=#{child_total},
+			has_child=#{has_child},
+			point_total=#{point_total},
+			has_point=#{has_point},
+			tax_code=#{tax_code},
+			has_register=#{has_register}
+		where 
+			id = #{id}
+	</update>
+	
+	
+	<!-- 更新审核结果 -->
+	<update id="editStatus" parameterType="pd">
+		update
+		<include refid="tableName"></include>
+		set 
+			status=#{status},
+			options=#{options}
+		where 
+			id = #{id}
+	</update>
+	
+	<!-- 通过ID获取数据 -->
+	<select id="findById" parameterType="pd" resultType="pd">
+		select 
+		<include refid="Field"></include>
+		from 
+		<include refid="tableName"></include>
+		where 
+			id = #{id}
+	</select>
+	
+	
+	<!-- 通过创建人ID获取学校数据 -->
+	<select id="findByCid" parameterType="pd" resultType="pd">
+		select 
+		<include refid="Field"></include>
+		from 
+		<include refid="tableName"></include>
+		where 
+			create_id = #{createId}
+	</select>
+	
+	
+	<!-- 列表 -->
+	<select id="datalistPage" parameterType="page" resultType="pd">
+		select
+		<include refid="Field"></include>
+		from 
+		<include refid="tableName"></include>
+		where
+			1=1
+			<if test="pd.username != 'admin'"><!-- 如果不是管理员，就看创建人所创建的学校资质 -->
+				and create_id = #{pd.createId}
+			</if>
+			<if test="pd.keywords != null and pd.keywords != ''"><!-- 关键词检索 -->
+				and
+					(
+					 name LIKE ('%'+#{pd.keywords}+'%')
+					 or 
+					 address LIKE ('%'+#{pd.keywords}+'%')
+					 or
+					 contanct_name LIKE ('%'+#{pd.keywords}+'%')
+					)
+			</if>
+		order by create_date
+	</select>
+	<!--  -->
+</mapper>

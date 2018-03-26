@@ -1,0 +1,153 @@
+.report_edit_head {
+  -webkit-user-select: none;
+  user-select: none;
+}
+.report_edit_head .redspan {
+  color: #FF5722;
+  font-size: 12px;
+}
+.report_edit_head .selectBox {
+  width: 400px;
+  padding: 10px;
+  height: 500px;
+}
+.report_edit_head .selectBox .typeSelectBox {
+  height: 100%;
+  border: 1px solid #ddd;
+  border-radius: 2px;
+  padding: 10px;
+}
+.report_edit_head input {
+  font-size: 13px;
+}
+.report_edit_head .agearea {
+  height: 115px;
+  overflow: auto;
+}
+.report_edit_head .agearea .li {
+  position: relative;
+  display: inline-block;
+  padding: 0 20px 0 ;
+  height: 30px;
+  color: #333;
+  text-align: center;
+  border: 1px solid #ddd;
+  background: #fff;
+  cursor: pointer;
+  margin: 10px;
+  line-height: 30px;
+}
+.report_edit_head .agearea .li:hover {
+  border: 1px solid #108ee9;
+}
+.report_edit_head .agearea .li .remove {
+  position: absolute;
+  font-size: 12px;
+  right: 5px;
+  color: #999;
+}
+.report_edit_head .agearea .active {
+  background: #fff;
+  border: 1px solid #108ee9;
+}
+.report_edit_head .agearea .active .remove {
+  color: #fff;
+}
+.report_edit_head .layui-table {
+  cursor: pointer;
+}
+.report_edit_head .layui-table .active {
+  background: #FFF;
+}
+.report_edit_head .layui-table th {
+  position: relative;
+}
+.report_edit_head .layui-table .remove {
+  position: absolute;
+  right: 0;
+  top: 0;
+  border-radius: 0 0 0 100%;
+  display: block;
+  text-indent: 8px;
+  cursor: pointer;
+  width: 20px;
+  font-size: 12px;
+  border: 1px solid #ddd;
+}
+.report_edit_head .layui-table .remove:hover {
+  background: #FF5722;
+  border: 1px solid #FF5722;
+  color: #fff;
+  font-size: 12px;
+}
+.report_edit_head .h2 {
+  font-size: 14px;
+  color: #000;
+}
+.report_edit_head .containerBox {
+  padding: 10px;
+  border: 1px solid #ddd;
+}
+.report_edit_head .containerBox .layui-form-label {
+  text-align: left!important;
+  color: #666;
+  font-size: 13px;
+}
+.report_edit_head .containerBox .layui-col-xs11 {
+  font-size: 13px;
+}
+.report_edit_head .containerBox ul {
+  max-height: 200px;
+  overflow: auto;
+}
+.report_edit_head .containerBox .item {
+  display: inline-block;
+  padding: 0 20px;
+  height: 30px;
+  color: #333;
+  text-align: center;
+  background: #f2f2f2;
+  cursor: pointer;
+  margin: 10px;
+  line-height: 30px;
+}
+.report_edit_head .containerBox .li-item {
+  display: inline-block;
+  line-height: 30px;
+  padding: 0 10px;
+  height: 30px;
+  color: #108ee9;
+  text-align: center;
+  background: #fff;
+  cursor: pointer;
+  margin: 10px;
+  box-sizing: border-box;
+  border-bottom: 1px solid #fff;
+  font-size: 13px;
+  border: 1px solid #108ee9;
+}
+.report_edit_head .containerBox .li-item:hover {
+  color: #fff;
+  background: #108ee9;
+}
+.report_edit_head .containerBox .active {
+  background: #108ee9;
+  color: #fff;
+}
+.report_edit_head .containerBox .remove:hover {
+  color: #FF5722;
+  cursor: pointer;
+}
+.report_edit_head .containerBox .active2 {
+  color: #fff;
+  background: #108ee9;
+}
+.report_edit_head .containerBox .item:hover {
+  background: #108ee9;
+  color: #fff;
+}
+.report_edit_head .containerBox .insert {
+  position: absolute;
+  right: -80px;
+  top: 0;
+}

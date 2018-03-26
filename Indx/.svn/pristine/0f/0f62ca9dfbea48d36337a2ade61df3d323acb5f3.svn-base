@@ -1,0 +1,449 @@
+<%@ page language="java" contentType="text/html; charset=UTF-8" pageEncoding="UTF-8" %>
+<%
+    String path = request.getContextPath();
+    String basePath = request.getScheme() + "://" + request.getServerName() + ":" + request.getServerPort() + path + "/";
+%>
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <title>教师编辑</title>
+    <%@ include file="../../system/index/headcss.jsp" %>
+    <link rel="stylesheet" type="text/css" href="<%=basePath %>static/source/public/css/list.css">
+</head>
+<style>
+
+    .img {
+        width: 100%;
+        height: 100%
+    }
+
+</style>
+<body>
+
+<div class="edit_menu" class="disnone">
+
+    <%--<form action="${msg}.do" class="layui-form" name="editForm" id="editForm" enctype="multipart/form-data">--%>
+        <%--<input type="hidden" value="${pd.id}" name="id" id="id"/>--%>
+        <%--<input type="hidden" value="${pd.school_id}" name="school_id" id="school_id"/>--%>
+
+        <%--<div class="layui-form-item">--%>
+            <%--<div class="layui-row">--%>
+
+                <%--<div class="form-item-inline">--%>
+                    <%--<label class="form-label"><span class="red-star">*</span>姓名</label>--%>
+                    <%--<div class="layui-input-block">--%>
+                        <%--<input id="name" name="name" value="${pd.name }" type="text" class="layui-input layui-input-color" placeholder="请输入姓名">--%>
+                    <%--</div>--%>
+                <%--</div>--%>
+
+                <%--<div class="form-item-inline">--%>
+                    <%--<label class="form-label"><span class="red-star">*</span>身份证号</label>--%>
+                    <%--<div class="layui-input-block">--%>
+                        <%--<input type="hidden" value="${pd.idcard}" name="old_idcard" id="old_idcard"/>--%>
+                        <%--<input id="idcard" name="idcard" value="${pd.idcard }" type="text" class="layui-input layui-input-color"--%>
+                               <%--placeholder="请输入身份证号">--%>
+                    <%--</div>--%>
+                <%--</div>--%>
+
+            <%--</div>--%>
+        <%--</div>--%>
+
+        <%--<div class="layui-form-item">--%>
+            <%--<div class="layui-row">--%>
+
+                <%--<div class="form-item-inline">--%>
+                    <%--<label class="form-label">民族</label>--%>
+                    <%--<div class="layui-input-block">--%>
+                        <%--<html:select id="mz" name="mz" classs="layui-input-inline">--%>
+                            <%--<html:options collection="Person_mz" defaultValue="${pd.mz}"></html:options>--%>
+                        <%--</html:select>--%>
+                    <%--</div>--%>
+                <%--</div>--%>
+
+                <%--<div class="form-item-inline">--%>
+                    <%--<label class="form-label">性别</label>--%>
+                    <%--<div class="layui-input-block">--%>
+                        <%--<input id="r0" type="radio" name="xb" value="2" title="男" <c:if test="${pd.xb == 2 }">checked</c:if>>--%>
+                        <%--<input id="r1" type="radio" name="xb" value="1" title="女" <c:if test="${pd.xb == 1 }">checked</c:if>>--%>
+                    <%--</div>--%>
+                <%--</div>--%>
+
+            <%--</div>--%>
+        <%--</div>--%>
+
+        <%--<div class="layui-form-item">--%>
+            <%--<div class="layui-row">--%>
+
+                <%--<div class="form-item-inline">--%>
+                    <%--<label class="form-label">学历</label>--%>
+                    <%--<div class="layui-input-block">--%>
+                        <%--<html:select id="xl" name="xl" classs="layui-input-inline">--%>
+                            <%--<html:options collection="Educational" defaultValue="${pd.xl}"></html:options>--%>
+                        <%--</html:select>--%>
+                    <%--</div>--%>
+                <%--</div>--%>
+
+                <%--<div class="form-item-inline">--%>
+                    <%--<label class="form-label">学位</label>--%>
+                    <%--<div class="layui-input-block">--%>
+                        <%--<html:select id="xw" name="xw" classs="layui-input-inline">--%>
+                            <%--<html:options collection="Degree" defaultValue="${pd.xw}"></html:options>--%>
+                        <%--</html:select>--%>
+                    <%--</div>--%>
+                <%--</div>--%>
+
+            <%--</div>--%>
+        <%--</div>--%>
+
+
+        <%--<div class="layui-form-item">--%>
+            <%--<div class="layui-row">--%>
+
+                <%--<div class="form-item-inline">--%>
+                    <%--<label class="form-label">专业</label>--%>
+                    <%--<div class="layui-input-block">--%>
+                        <%--<input id="zy" name="zy" value="${pd.zy }" type="text" class="layui-input layui-input-color" placeholder="请输入专业">--%>
+                    <%--</div>--%>
+                <%--</div>--%>
+
+                <%--<div class="form-item-inline">--%>
+                    <%--<label class="form-label">手机号码</label>--%>
+                    <%--<div class="layui-input-block">--%>
+                        <%--<input id="tel" name="tel" value="${pd.tel }" type="text" class="layui-input layui-input-color" placeholder="请输入手机号码">--%>
+                    <%--</div>--%>
+                <%--</div>--%>
+
+            <%--</div>--%>
+        <%--</div>--%>
+
+        <%--<div class="layui-form-item">--%>
+            <%--<div class="layui-row">--%>
+
+                <%--<div class="form-item-inline">--%>
+                    <%--<label class="form-label"><span class="red-star">*</span>岗位性质</label>--%>
+                    <%--<div class="layui-input-block gw_type">--%>
+                        <%--<html:select id="gw_type" name="gw_type" classs="layui-input-inline" style=" lay-filter='select1'">--%>
+                            <%--<html:options collection="GWTYPE" defaultValue="${pd.gw_type}"></html:options>--%>
+                        <%--</html:select>--%>
+                    <%--</div>--%>
+                <%--</div>--%>
+
+                <%--<c:if test="${pd.gw_type != '2'}">--%>
+                    <%--<div class="form-item-inline" id="xzdyDiv">--%>
+                        <%--<label class="form-label">薪资待遇(元/月)</label>--%>
+                        <%--<div class="layui-input-block">--%>
+                            <%--<input id="gz" name="gz" value="${pd.gz }" type="number" class="layui-input layui-input-color" placeholder="请输入薪资待遇">--%>
+                        <%--</div>--%>
+                    <%--</div>--%>
+                <%--</c:if>--%>
+                <%--<div class="form-item-inline">--%>
+                    <%--<label class="form-label">家庭住址</label>--%>
+                    <%--<div class="layui-input-block">--%>
+                        <%--<input id="addr" name="addr" value="${pd.addr }" type="text" class="layui-input layui-input-color" placeholder="请输入家庭地址">--%>
+                    <%--</div>--%>
+                <%--</div>--%>
+
+            <%--</div>--%>
+        <%--</div>--%>
+
+        <%--<div class="layui-form-item">--%>
+            <%--<div class="layui-row">--%>
+
+                    <%--<c:if test="${pd.type != '1' && pd.photo_url != null && pd.photo_url != ''}">--%>
+                        <%--<div class="form-item-inline" style="    display: block;float: left;">--%>
+                            <%--<label class="form-label">旧照片</label>--%>
+                            <%--<div class="layui-input-block img-block">--%>
+                                <%--<img class="img" src="<%=basePath %>uploadFiles/file/${pd.photo_url}"/>--%>
+                            <%--</div>--%>
+                        <%--</div>--%>
+                    <%--</c:if>--%>
+                <%--<div class="form-item-inline" style="position: relative;width: 18rem;display: block;float: left;">--%>
+
+                    <%--<label class="form-label">照片</label>--%>
+                    <%--<input readonly="readonly" type="hidden" name="photo_url" id="photo_url" value="${pd.photo_url}"/>--%>
+                    <%--<c:if test="${pd.type != '1'}">--%>
+                        <%--<div class="layui-input-block">--%>
+                            <%--<div class="text-tip" style=" position:absolute;text-align: center;top: 6px;width: 16rem;">--%>
+                                <%--<div class="file-btn">--%>
+                                    <%--选择文件--%>
+                                <%--</div>--%>
+                                <%--<div class="file-text">--%>
+                                    <%--未选择文件--%>
+                                <%--</div>--%>
+                            <%--</div>--%>
+                            <%--<input type="file" name="file1" id="file1"--%>
+                                   <%--style="position: absolute;top: 6px;height: 2rem;width: 8rem;cursor: pointer;opacity: 0">--%>
+                        <%--</div>--%>
+                    <%--</c:if>--%>
+                    <%--<c:if test="${pd.type == '1'}">--%>
+                        <%--<div class="layui-input-block img-block">--%>
+                            <%--<c:if test="${pd.photo_url != null && pd.photo_url != ''}">--%>
+                                <%--<img class="img" src="<%=basePath %>uploadFiles/file/${pd.photo_url}"/>--%>
+                            <%--</c:if>--%>
+                        <%--</div>--%>
+                    <%--</c:if>--%>
+                <%--</div>--%>
+            <%--</div>--%>
+        <%--</div>--%>
+
+
+    <%--</form>--%>
+
+    <form action="${msg}.do" class="layui-form" id="editForm" enctype="multipart/form-data" lay-filter="editForm" method="post">
+        <input type="hidden" name="id" id="id" value="">
+        <input type="hidden" name="user_id" id="user_id" value="">
+        <input type="hidden" name="isgo" value="${pd.isgo}">
+        <p class="student-info-title">1. 请填写您的基本资料（以下资料打*号为必填）</p>
+        <div style="width: 120px;height: 150px;float: left;border: 1px solid #ccc;margin-right: 2%;position: relative;">
+
+            <div class="file-text" style="position: absolute;padding: 0;width:100% ;height: 150px;text-align: center;line-height: 150px;">
+                <c:if test="${pd.photo_url == null && pd.photo_url == ''}">
+                    <span>点击上传图片</span>
+                </c:if>
+                <c:if test="${pd.photo_url != null && pd.photo_url != ''}">
+                    <img class="img" src="<%=basePath %>uploadFiles/file/${pd.photo_url}"/>
+                </c:if>
+            </div>
+
+            <input type="file" name="studentFile" class="" id="studentFile" style="position: absolute;left: 0;height: 150px;width: 100%;cursor: pointer;opacity: 0">
+        </div>
+        <div style="float: left;clear:none;width: 80%;margin-bottom: 0" class="layui-form-item">
+            <div class="layui-form-item">
+
+                <div class="layui-inline">
+                    <label class="form-label"><i class="require">*</i>姓名<span class="colon"></span></label>
+                    <div class="layui-input-block" style="width: 10rem;">
+                        <input type="text" id="name" required lay-verify="required" name="xm" value="${pd.name }"
+                               autocomplete="off" maxlength="200"
+                               class="layui-input layui-input-color">
+                    </div>
+                </div>
+
+
+
+
+                <div class="layui-inline">
+                    <label class="form-label">学历<span class="colon"></span></label>
+                    <div class="layui-input-block" style="width: 12rem;">
+                        <html:select id="xl" name="xl" classs="layui-input-inline">
+                            <html:options collection="Educational" defaultValue="${pd.xl}"></html:options>
+                        </html:select>
+                    </div>
+                </div>
+                <div class="layui-inline">
+                    <label class="form-label"><i class="require">*</i>手机号码<span class="colon"></span></label>
+                    <div class="layui-input-block" style="width: 12rem;"  >
+                        <input type="text" id="tel" name="tel" value="${pd.tel }" required lay-verify="required"
+                               autocomplete="off" maxlength="20"
+                               class="layui-input layui-input-color">
+                    </div>
+                </div>
+                <div class="layui-inline">
+                    <label class="form-label"><i class="require">*</i>身份证号<span class="colon"></span></label>
+                    <div class="layui-input-block" style="width:20rem;">
+                        <input type="hidden" value="${pd.idcard}" name="old_idcard" id="old_idcard"/>
+                        <input type="text" id="idcard"  name="sfz"  required lay-verify="required" value="${pd.idcard }"
+                               autocomplete="off" maxlength="18"
+                               class="layui-input layui-input-color">
+                    </div>
+                </div>
+
+
+            </div>
+            <div class="layui-form-item">
+                <div class="layui-inline">
+                    <label class="form-label">学位<span class="colon"></span></label>
+                    <div class="layui-input-block" style="width: 10rem;">
+                        <html:select id="xw" name="xw" classs="layui-input-inline">
+                            <html:options collection="Degree" defaultValue="${pd.xw}"></html:options>
+                        </html:select>
+                    </div>
+                </div>
+                <div class="layui-inline">
+                    <label class="form-label">民族<span class="colon"></span></label>
+                    <div class="layui-input-block" style="width: 12rem;">
+
+                        <html:select id="mz" name="mz" classs="layui-input-inline">
+                            <html:options collection="Person_mz" defaultValue="${pd.mz}"></html:options>
+                        </html:select>
+                    </div>
+                </div>
+                <div class="layui-inline">
+                    <label class="form-label">专业<span class="colon"></span></label>
+                    <div class="layui-input-block" style="width: 12rem;">
+                        <input type="text"    required lay-verify="required"
+                               autocomplete="off" maxlength="20" id="zy" name="zy" value="${pd.zy }"
+                               class="layui-input layui-input-color">
+                    </div>
+                </div>
+                <div class="layui-inline">
+                    <label class="form-label">岗位性质</label>
+                    <div class="layui-input-block gw_type" style="width:20rem;">
+                        <html:select id="gw_type" name="gw_type" classs="layui-input-inline" style=" lay-filter='select1'">
+                            <html:options collection="GWTYPE" defaultValue="${pd.gw_type}"></html:options>
+                        </html:select>
+                    </div>
+                </div>
+
+
+
+
+                <div class="layui-inline">
+                    <label class="form-label">性别<span class="colon"></span></label>
+                    <div class="layui-input-block" style="width: 10rem;">
+                        <html:select name="xb" id="xb" classs="layui-input-inline">
+                            <html:options collection="SEX" defaultValue="${pd.xb}"></html:options>
+                        </html:select>
+                    </div>
+                </div>
+
+                <div class="layui-inline">
+                    <label class="form-label title-max"><span>薪资待遇</span><span>（元/月）</span></label>
+                    <div class="layui-input-block" style="width:20rem;">
+                        <input class="layui-input layui-input-color" type="text" id="gz" name="gz" value="${pd.gz }">
+                    </div>
+                </div>
+            </div>
+
+        </div>
+    </form>
+
+
+
+
+    <div class="layui-form-item my-form" style="padding-bottom: 20px;    padding-left: 120px;margin-left: 2%;">
+        <div class="layui-inline citys" id="selectList">
+            <label class="form-label">当前住址<span class="colon"></span></label>
+            <div class="layui-input-block" style="width: 10rem; margin-right: 34px;float: left;">
+                <select name="province" class="select-linkage layui-input-color"></select>
+            </div>
+            <div class="layui-input-block" style="width: 10rem; margin-right: 34px;float: left;">
+                <select name="city" class="select-linkage layui-input-color"></select>
+            </div>
+            <div class="layui-input-block" style="width: 10rem; margin-right: 34px;float: left;">
+                <select name="area" class="select-linkage layui-input-color"></select>
+            </div>
+
+            <div class="layui-input-block" style="width: 12rem;float: left;">
+                <input type="text"  required lay-verify="required" name="address" id="address" value="${pd.address}"
+                       autocomplete="off" maxlength="100" placeholder="请输入详细地址"
+                       class="layui-input layui-input-color">
+            </div>
+
+        </div>
+    </div>
+
+    <div class="btnbox" id="btnDiv" hidden="true">
+        <button id="sure" class="layui-btn layui-btn-primary layui-btn-small">保存</button>
+        <button id="cancel" class="layui-btn layui-btn-primary layui-btn-small">取消</button>
+    </div>
+
+</div>
+<%@ include file="../../system/index/foot.jsp" %>
+<script>
+    $(function () {
+        if('${pd.province}'==""||'${pd.province}'=="undefined"){
+            $('#selectList').citys({valueType:'name',required: false});
+        }else{
+            $('#selectList').citys({valueType:'name',province:'${pd.province}',city:'${pd.city}',area:'${pd.country}'});
+        }
+
+        $.myUploading("studentFile", 100, 100,2);
+
+        var form = layui.form;
+
+        //身份证blur 年龄 性别
+        $("#idcard").on("blur", function () {
+            var val = $(this).val();
+            if (val.length == 18) {
+                var sex = parseInt(val.substr(16, 1)) % 2 == 0;
+                if (sex) {
+                    $("#r1").attr("checked", true);
+                    $("#r0").attr("checked", false)
+                } else {
+                    $("#r1").attr("checked", false);
+                    $("#r0").attr("checked", true)
+                }
+                form.render('radio');
+            }
+        });
+
+
+        form.on("select(select1)", function (data) {
+            var value = data.value;
+            if (value == '1') {
+                $("#xzdyDiv").show();
+            } else {
+                $("#xzdyDiv").hide();
+            }
+        });
+
+
+        $("#sure").on("click", function () {
+
+            if ($("#name").val() == "") {
+                layer.tips('姓名不能为空!', $("#name"), {
+                    tips: [3, '#D16E6C'],
+                    time: 4000
+                });
+                $("#name").focus();
+                return false;
+            }
+
+            var card = $.trim($("#idcard").val()).toUpperCase();
+            if (card == "") {
+                layer.tips('身份证不能为空', $("#idcard"), {
+                    tips: [3, '#D16E6C'],
+                    time: 4000
+                });
+                $("#idcard").focus();
+                return false;
+            }
+            if (!card || !isCardNo(card) || !checkProvince(card) || !checkBirthday(card) || !checkParity(card)) {
+                layer.tips('请输入正确的身份证号码', $("#idcard"), {
+                    tips: [3, '#D16E6C'],
+                    time: 4000
+                });
+                $("#idcard").focus();
+                return false;
+            }
+
+            if ($("#gw_type").val() == "") {
+                layer.tips('岗位性质不能为空!', $(".gw_type"), {
+                    tips: [3, '#D16E6C'],
+                    time: 4000
+                });
+                $(".gw_type").focus();
+                return false;
+            }
+
+            parent.layer.load(1);
+
+            $("#editForm").ajaxSubmit({
+                type: 'post',
+                dataType: "html",
+                success: function (data) {
+                    var jso = JSON.parse(data);
+                    if ("success" == jso.result) {
+                        parent.layer.edit.location.href = "<%=basePath%>teacher/list.do?currentPage=${pd.currentPage}";
+                        parent.layer.closeAll();
+                    } else if ("fail" == jso.result) {
+                        layer.msg('当前学校存在身份证相同的教师!', {icon: 5});
+                    } else {
+                        layer.msg('系统异常,保存失败!', {icon: 5});
+                    }
+                    parent.layer.closeAll("loading");
+                }
+            });
+        });
+
+        $("#cancel").on("click", function () {
+            parent.layer.closeAll();
+        });
+
+        $.myType('${pd.type}');
+    });
+
+</script>
+</body>
+</html>

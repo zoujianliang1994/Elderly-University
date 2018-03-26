@@ -1,0 +1,156 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="TeachPlanMapper">
+
+    <!--表名 -->
+    <sql id="tableName">
+		edu_teach_plan
+	</sql>
+
+    <!-- 字段 -->
+    <sql id="Field">
+		id,
+        grade_id,
+        teacher_id,
+        xq_id,
+        ks,
+        mz_ks,
+        xk_zs,
+        wk_yj,
+        file_url,
+        bz,
+        sh_type,
+        sh_yj,
+        school_id,
+        jh_name,
+        create_time,
+        file_name,
+        mz_kc
+	</sql>
+
+    <!-- 字段值 -->
+    <sql id="FieldValue">
+		#{id},
+        #{grade_id},
+        #{teacher_id},
+        #{xq_id},
+        #{ks},
+        #{mz_ks},
+        #{xk_zs},
+        #{wk_yj},
+        #{file_url},
+        #{bz},
+        #{sh_type},
+        #{sh_yj},
+        #{school_id},
+        #{jh_name},
+        #{create_time},
+        #{file_name},
+        #{mz_kc}
+	</sql>
+
+    <!-- 新增-->
+    <insert id="addData" parameterType="pd">
+        insert into <include refid="tableName"/> ( <include refid="Field"/> ) values (<include refid="FieldValue"/>)
+    </insert>
+
+    <!-- 删除-->
+    <delete id="deleteData" parameterType="pd">
+        delete from <include refid="tableName"/> where id = #{id}
+    </delete>
+
+    <!-- 修改 -->
+    <update id="editData" parameterType="pd">
+        update <include refid="tableName"/>
+           set   grade_id = #{grade_id},
+                    xq_id = #{xq_id},
+                       ks = #{ks},
+                    mz_ks = #{mz_ks},
+                    xk_zs = #{xk_zs},
+                    wk_yj = #{wk_yj},
+                 file_url = #{file_url},
+                       bz = #{bz},
+                  sh_type = #{sh_type},
+                    sh_yj = #{sh_yj},
+                school_id = #{school_id},
+                  jh_name = #{jh_name},
+                file_name = #{file_name}
+        where id = #{id}
+    </update>
+
+    <!-- 修改审核状态 -->
+    <update id="editShData" parameterType="pd">
+        update <include refid="tableName"/>
+           set sh_type = #{sh_type},
+               sh_yj = #{sh_yj}
+        where id = #{id}
+    </update>
+
+    <!-- 通过ID获取数据 -->
+    <select id="findDataById" parameterType="pd" resultType="pd">
+        SELECT a.*,
+               b.name grade_name,
+               b.class_time kc,
+               c.name teacher_name,
+               d.name xq_name,
+               e.name school_name
+          FROM edu_teach_plan a,
+               edu_grades b,
+               edu_teacher c,
+               edu_semester d,
+               edu_school e
+         WHERE a.grade_id = b.id
+           AND a.teacher_id = c.id
+           AND a.xq_id = d.id
+           AND a.school_id = e.id
+           AND a.id = #{id}
+    </select>
+
+    <!-- 分页列表 -->
+    <select id="datalistPage" parameterType="page" resultType="pd">
+        SELECT a.*,
+               b.name grade_name,
+               b.class_time kc,
+               c.name teacher_name,
+               d.name xq_name,
+               e.name school_name
+          FROM edu_teach_plan a,
+               edu_grades b,
+               edu_teacher c,
+               edu_semester d,
+               edu_school e
+         WHERE a.grade_id = b.id
+           AND a.teacher_id = c.id
+           AND a.xq_id = d.id
+           AND a.school_id = e.id
+           and a.school_id in
+         <foreach item="item" index="index" collection="pd.userSchoolIds" open="(" separator="," close=")">
+            '${item}'
+         </foreach>
+         <if test="pd.keywords != null and pd.keywords != ''"><!-- 关键词检索 -->
+           and (  a.jh_name LIKE ('%'+#{pd.keywords}+'%') or
+                  b.name LIKE ('%'+#{pd.keywords}+'%') OR
+                  c.name LIKE ('%'+#{pd.keywords}+'%') OR
+                  d.name LIKE ('%'+#{pd.keywords}+'%')
+               )
+         </if>
+         <if test="pd.school_id != null and pd.school_id != ''"><!-- 关键词检索 -->
+           and a.school_id = #{pd.school_id}
+         </if>
+         <if test="pd.sh_flag != null and pd.sh_flag != ''"><!-- 关键词检索 -->
+           and a.sh_type in ('1','2')
+         </if>
+         <if test="pd.teacher_id != null and pd.teacher_id != ''"><!-- 关键词检索 -->
+           and a.teacher_id = #{pd.teacher_id}
+         </if>
+         order by a.create_time DESC
+    </select>
+
+    <!-- 通过学校ID获取班级 -->
+    <select id="getSchoolGrades" parameterType="String" resultType="pd">
+        select id,name
+          from edu_grades
+         where school_id = #{schoolId}
+    </select>
+
+</mapper>

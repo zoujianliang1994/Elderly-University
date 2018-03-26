@@ -1,0 +1,155 @@
+<%@ page language="java" contentType="text/html; charset=UTF-8" pageEncoding="UTF-8" %>
+<%
+    String path = request.getContextPath();
+    String basePath = request.getScheme() + "://" + request.getServerName() + ":" + request.getServerPort() + path + "/";
+%>
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <title>发布范围</title>
+    <%@ include file="../../system/index/headcss.jsp" %>
+    <link rel="stylesheet" type="text/css" href="<%=basePath %>static/source/public/css/list.css">
+
+
+</head>
+<body>
+
+<div class="edit_menu">
+    <input type="text" id="test" value="zjl" style="display: none"/>
+    <form action="${msg}.do" class="layui-form" id="editForm" enctype="multipart/form-data" lay-filter="editForm" method="post">
+        <div class="layui-form-item">
+            <label class="layui-form-label" >目标对象</label>
+            <div class="layui-input-block" style="float: left;">
+                <html:select id="type" name="type" classs="layui-input-inline">
+                    <html:options collection="notice_class" defaultValue="${message.type}"></html:options>
+                </html:select>
+            </div>
+        </div>
+        <div class="layui-form-item">
+            <label class="layui-form-label" >对象</label>
+            <div class="layui-input-block" style="float: left;">
+                <input type="text" name="publishObj" id="publishObj" required lay-verify="required"
+                       autocomplete="off"
+                       class="layui-input layui-input-color">
+            </div>
+        </div>
+    </form>
+    <div class="layui-col-sm12">
+        <form action="list.do" method="post" class="layui-form" name="Form" id="Form">
+            <div class="searchBox fl">
+                <input value="${pd.keywords }"  id="keywords" name="keywords"   type="text" placeholder="请输入公告标题" class="layui-input fl search layui-input-color">
+                <div class="fl srarchBtn" onclick="gsearch()">
+                    <i class="layui-icon">&#xe615;</i>
+                    <span>搜索</span>
+                </div>
+            </div>
+        </form>
+        <table class="layui-table center" id="table">
+            <colgroup>
+                <col width="80">
+                <col>
+                <col>
+                <col>
+                <col width="170">
+            </colgroup>
+            <thead>
+            <tr class="table-head-tr">
+                <th>选中</th>
+                <th>序号</th>
+                <th>班级名称</th>
+                <th>对应课程</th>
+            </tr>
+            </thead>
+            <tbody>
+
+            <c:choose>
+                <c:when test="${not empty noticeList}">
+
+                    <shiro:hasPermission name="system:user:select">
+                        <c:forEach items="${noticeList}" var="var" varStatus="vs">
+                            <tr>
+                                <td>
+                                    <input type="checkbox"/>
+                                </td>
+                                <td>${vs.index+1}</td>
+                                <td>${var.TITLE}</td>
+                                <td>${var.CREATE_TIME}</td>
+
+                            </tr>
+                        </c:forEach>
+                    </shiro:hasPermission>
+                    <shiro:lacksPermission name="system:user:select">
+                        <tr>
+                            <td colspan="100" class="center">您无权查看</td>
+                        </tr>
+                    </shiro:lacksPermission>
+                </c:when>
+                <c:otherwise>
+                    <tr class="main_info">
+                        <td colspan="100" class="center">没有相关数据</td>
+                    </tr>
+                </c:otherwise>
+            </c:choose>
+            </tbody>
+        </table>
+        <div class="laypageBox">
+            <div id="laypage" class="fr"></div>
+        </div>
+    </div>
+
+</div>
+<%@ include file="../../system/index/foot.jsp" %>
+<script>
+
+    <%--var first = true;--%>
+    <%--var form = layui.form;--%>
+    <%--layui.use('laypage', function () {--%>
+        <%--var laypage = layui.laypage;--%>
+        <%--var layer = layui.layer;--%>
+
+        <%--var editHtml = $("#editHtml").html();--%>
+        <%--$("#editHtml").remove();--%>
+
+        <%--form.on('select(sectionId)', function (data) {--%>
+            <%--gsearch()--%>
+        <%--});--%>
+
+
+        <%--//执行一个laypage实例--%>
+        <%--laypage.render({--%>
+            <%--elem: 'laypage',--%>
+            <%--count: ${page.totalResult},--%>
+            <%--curr: ${page.currentPage},--%>
+            <%--layout: ['prev', 'page', 'next', 'count', 'skip'],--%>
+            <%--jump: function (obj, first) {--%>
+                <%--if (!first) {--%>
+                    <%--window.location.href = "<%=basePath%>user/listUsers.do?selDepId=${pd.selDepId}&selDepName=${pd.selDepName}&sectionId="+$("#sectionId").val()+"&currentPage=" + obj.curr + '&keywords=' + '${keywords}' + '&xzqh=${areaCode}';--%>
+                <%--}--%>
+            <%--}--%>
+        <%--});--%>
+    <%--});--%>
+    <%--console.log(${pd.json})--%>
+
+    // first = false;
+    $(function(){
+
+        $("dd").on("click",function(){
+            var str=$(this).text()
+            $("#publishObj").val(str);
+        })
+        $("#cancel").on("click", function () {
+            parent.layer.closeAll();
+        });
+        $("#sure").on("click",function () {
+
+        })
+
+
+
+    })
+
+
+
+</script>
+</body>
+</html>

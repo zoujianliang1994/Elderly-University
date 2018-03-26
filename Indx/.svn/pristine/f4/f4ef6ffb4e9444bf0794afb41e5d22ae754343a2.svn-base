@@ -1,0 +1,432 @@
+package com.zhimu.controller.manager.system.menu;
+
+import java.io.PrintWriter;
+import java.math.BigInteger;
+import java.util.ArrayList;
+import java.util.HashMap;
+import java.util.List;
+import java.util.Map;
+
+import javax.annotation.Resource;
+
+import org.springframework.stereotype.Controller;
+import org.springframework.ui.Model;
+import org.springframework.web.bind.annotation.RequestMapping;
+import org.springframework.web.bind.annotation.RequestMethod;
+import org.springframework.web.bind.annotation.RequestParam;
+import org.springframework.web.bind.annotation.ResponseBody;
+import org.springframework.web.servlet.ModelAndView;
+
+import com.zhimu.commons.constant.Const;
+import com.zhimu.commons.utils.AppUtil;
+import com.zhimu.commons.utils.ErrorUtils;
+import com.zhimu.commons.utils.PageData;
+import com.zhimu.commons.utils.RightsHelper;
+import com.zhimu.controller.manager.base.BaseController;
+import com.zhimu.dao.entity.system.Menu;
+import com.zhimu.dao.entity.system.Role;
+import com.zhimu.dao.utils.Jurisdiction;
+import com.zhimu.service.manager.system.menu.MenuManager;
+import com.zhimu.service.manager.system.role.RoleManager;
+
+import net.sf.json.JSONArray;
+
+/**
+ * 类名称：MenuController 菜单处理 创建人：LWC 创建时间：2017年7月14日
+ * 
+ * @version
+ */
+@Controller
+@RequestMapping(value = "/menu")
+public class MenuController extends BaseController {
+	
+	String menuUrl = "menu.do"; // 菜单地址(权限用)
+	@Resource(name = "menuService")
+	private MenuManager menuService;
+	@Resource(name = "roleService")
+	private RoleManager roleService;
+	
+	/**
+	 * 显示菜单列表
+	 * 
+	 * @param model
+	 * @return
+	 */
+	@RequestMapping
+	public ModelAndView list() throws Exception {
+		ModelAndView mv = this.getModelAndView();
+		PageData pd = new PageData();
+		pd = this.getPageData();
+		try {
+			String MENU_ID = (null == pd.get("MENU_ID") || "".equals(pd.get("MENU_ID").toString())) ? "0" : pd.get("MENU_ID").toString();
+			List<Menu> menuList = menuService.listSubMenuByParentId(MENU_ID);
+			mv.addObject("pd", menuService.getMenuById(pd)); // 传入父菜单所有信息
+			mv.addObject("MENU_ID", MENU_ID);
+			mv.addObject("MSG", null == pd.get("MSG") ? "list" : pd.get("MSG").toString()); // MSG=change
+																																											// 则为编辑或删除后跳转过来的
+			mv.addObject("menuList", menuList);
+			mv.addObject("QX", Jurisdiction.getHC()); // 按钮权限
+			JSONArray arr = JSONArray.fromObject(menuService.listAllMenu("0"));
+			String json = arr.toString();
+			json = json.replaceAll("MENU_ID", "id").replaceAll("PARENT_ID", "pId").replaceAll("MENU_NAME", "name").replaceAll("subMenu", "children");
+			mv.addObject("nodes", json);
+			mv.setViewName("system/menu/menu_list");
+		} catch (Exception e) {
+			logger.error(ErrorUtils.getErrorMessage(e, "lwc:显示菜单列表"));
+		}
+		return mv;
+	}
+	
+	/**
+	 * 请求新增菜单页面
+	 * 
+	 * @param model
+	 * @return
+	 */
+	@RequestMapping(value = "/toAdd")
+	public ModelAndView toAdd() throws Exception {
+		ModelAndView mv = this.getModelAndView();
+		try {
+			PageData pd = new PageData();
+			pd = this.getPageData();
+			String MENU_ID = (null == pd.get("MENU_ID") || "".equals(pd.get("MENU_ID").toString())) ? "0" : pd.get("MENU_ID").toString();// 接收传过来的上级菜单ID,如果上级为顶级就取值“0”
+			pd.put("MENU_ID", MENU_ID);
+			mv.addObject("pds", menuService.getMenuById(pd)); // 传入父菜单所有信息
+			mv.addObject("MENU_ID", MENU_ID); // 传入菜单ID，作为子菜单的父菜单ID用
+			mv.addObject("MSG", "add"); // 执行状态 add 为添加
+			mv.setViewName("system/menu/menu_edit");
+		} catch (Exception e) {
+			logger.error(ErrorUtils.getErrorMessage(e, "lwc:请求新增菜单页面"));
+		}
+		return mv;
+	}
+	
+	/**
+	 * 保存菜单信息
+	 * 
+	 * @param menu
+	 * @param model
+	 * @return
+	 */
+	@RequestMapping(value = "/add",method = RequestMethod.POST)
+	@ResponseBody
+	public Object add(Menu menu) throws Exception {
+		Map<String, String> map = new HashMap<String, String>();
+		String errInfo = "";
+		ModelAndView mv = this.getModelAndView();
+		PageData pd = new PageData();
+		pd = this.getPageData();
+		try {
+			menu.setMENU_ID(String.valueOf(Integer.parseInt(menuService.findMaxId(pd).get("MID").toString()) + 1));
+			menu.setMENU_ICON("menu-icon fa fa-leaf black");// 默认菜单图标
+			menuService.saveMenu(menu); // 保存菜单
+			errInfo = "success";
+		} catch (Exception e) {
+			logger.error(ErrorUtils.getErrorMessage(e, "lwc:保存菜单信息"));
+			errInfo = "false";
+		}		
+		// 保存菜单成功后,更新系统管理员角色菜单
+		addSysMenu(menu, mv, pd);
+		map.put("parent_id",menu.getPARENT_ID());
+		map.put("result", errInfo);
+		return  AppUtil.returnObject(new PageData(), map);
+	}
+
+
+	/**
+	 * 
+	 * @param menu
+	 * @param mv
+	 * @param pd
+	 * @throws Exception
+	 */
+	private void addSysMenu(Menu menu, ModelAndView mv, PageData pd) throws Exception {
+		try {
+			// 保存菜单成功后,更新系统管理员角色菜单
+			List<String> ids = menuService.findAllId(pd); // 保存好新菜单后,查询到所有的菜单id
+			String[] result = {};
+			BigInteger rights = RightsHelper.sumRights(ids.toArray(result));// 用菜单ID做权处理
+			Role role = roleService.getRoleById("1"); // 通过id获取系统管理员角色对象
+			role.setRIGHTS(rights.toString());
+			roleService.updateRoleRights(role); // 更新当前角色菜单权限		
+			// 更新所有子角色的菜单权限
+			pd.put("rights", rights.toString());
+			pd.put("ROLE_ID", "1");
+			roleService.setAllRights(pd); // 更新此角色所有子角色的菜单权限
+		} catch (Exception e) {
+			logger.error(ErrorUtils.getErrorMessage(e, "lwc:自动保存菜单给系统管理员"));
+		}
+	}
+	
+
+	
+	/**
+	 * 请求编辑菜单页面
+	 * 
+	 * @param
+	 * @return
+	 */
+	@RequestMapping(value = "/toEdit")
+	public ModelAndView toEdit(String id) throws Exception {
+		ModelAndView mv = this.getModelAndView();
+		PageData pd = new PageData();
+		try {
+			pd = this.getPageData();
+			pd.put("MENU_ID", id); // 接收过来的要修改的ID
+			pd = menuService.getMenuById(pd); // 读取此ID的菜单数据
+			mv.addObject("pd", pd); // 放入视图容器
+			pd.put("MENU_ID", pd.get("PARENT_ID").toString()); // 用作读取父菜单信息
+			mv.addObject("pds", menuService.getMenuById(pd)); // 传入父菜单所有信息
+			mv.addObject("MENU_ID", pd.get("PARENT_ID").toString()); // 传入父菜单ID，作为子菜单的父菜单ID用
+			mv.addObject("MSG", "edit");
+			pd.put("MENU_ID", id); // 复原本菜单ID
+			mv.addObject("QX", Jurisdiction.getHC()); // 按钮权限
+			mv.setViewName("system/menu/menu_edit");
+		} catch (Exception e) {
+			logger.error(ErrorUtils.getErrorMessage(e, "lwc:请求编辑菜单页面"));
+		}
+		return mv;
+	}
+	
+	/**
+	 * 保存编辑
+	 * 
+	 * @param
+	 * @return
+	 */
+	@RequestMapping(value = "/edit",method = RequestMethod.POST)
+	@ResponseBody
+	public Object edit(Menu menu) throws Exception {
+		Map<String, String> map = new HashMap<String, String>();
+		String errInfo = "";
+		try {
+			menuService.edit(menu);
+
+			errInfo = "success";
+		} catch (Exception e) {
+			logger.error(ErrorUtils.getErrorMessage(e, "lwc:保存菜单编辑"));
+			errInfo = "false";
+		}
+		map.put("parent_id",menu.getPARENT_ID());
+		map.put("result", errInfo);
+		return AppUtil.returnObject(new PageData(), map);
+	}
+
+
+	/**
+	 * 删除菜单
+	 *
+	 * @param MENU_ID
+	 * @param out
+	 */
+	@RequestMapping(value = "/delete")
+	@ResponseBody
+	public Object delete(@RequestParam String MENU_ID) throws Exception {
+		Map<String, String> map = new HashMap<String, String>();
+		String errInfo = "";
+		try {
+			if (menuService.listSubMenuByParentId(MENU_ID).size() > 0) {// 判断是否有子菜单，是：不允许删除
+				errInfo = "false";
+			} else {
+				menuService.deleteMenuById(MENU_ID);
+				errInfo = "success";
+			}
+		} catch (Exception e) {
+			logger.error(ErrorUtils.getErrorMessage(e, "lwc:删除菜单"));
+		}
+		map.put("result", errInfo);
+		return AppUtil.returnObject(new PageData(), map);
+	}
+
+	/**
+	 * 请求编辑菜单图标页面
+	 *
+	 * @param
+	 * @return
+	 */
+	@RequestMapping(value = "/toEditicon")
+	public ModelAndView toEditicon(String MENU_ID) throws Exception {
+		ModelAndView mv = this.getModelAndView();
+		PageData pd = new PageData();
+		try {
+			pd = this.getPageData();
+			pd.put("MENU_ID", MENU_ID);
+			mv.addObject("pd", pd);
+			mv.setViewName("system/menu/menu_icon");
+		} catch (Exception e) {
+			logger.error(ErrorUtils.getErrorMessage(e, "lwc:请求编辑菜单图标"));
+		}
+		return mv;
+	}
+
+	/**
+	 * 保存菜单图标
+	 *
+	 * @param
+	 * @return
+	 */
+	@RequestMapping(value = "/editicon")
+	public ModelAndView editicon() throws Exception {
+		ModelAndView mv = this.getModelAndView();
+		PageData pd = new PageData();
+		try {
+			pd = this.getPageData();
+			pd = menuService.editicon(pd);
+			mv.addObject("msg", "success");
+		} catch (Exception e) {
+			logger.error(ErrorUtils.getErrorMessage(e, "lwc:保存菜单图标 "));
+			mv.addObject("msg", "failed");
+		}
+		mv.setViewName("save_result");
+		return mv;
+	}
+	
+	/**
+	 * 显示菜单列表ztree(菜单管理)
+	 * 
+	 * @param model
+	 * @return
+	 */
+	@RequestMapping(value = "/listAllMenu")
+	public ModelAndView listAllMenu(Model model) throws Exception {
+
+
+		ModelAndView mv = this.getModelAndView();
+		PageData pd = new PageData();
+		pd = this.getPageData();
+		try {
+			String MENU_ID = (null == pd.get("MENU_ID") || "".equals(pd.get("MENU_ID").toString())) ? "0" : pd.get("MENU_ID").toString();
+			List<Menu> menuList = menuService.listSubMenuByParentId(MENU_ID);
+			mv.addObject("pd", menuService.getMenuById(pd)); // 传入父菜单所有信息
+			mv.addObject("MENU_ID", MENU_ID);
+			mv.addObject("MSG", null == pd.get("MSG") ? "list" : pd.get("MSG").toString()); // MSG=change
+			// 则为编辑或删除后跳转过来的
+			mv.addObject("menuList", menuList);
+			mv.addObject("QX", Jurisdiction.getHC()); // 按钮权限
+
+            JSONArray arr = JSONArray.fromObject(menuService.listAllMenu("0"));
+            String json = arr.toString();
+            json = json.replaceAll("MENU_ID", "id").replaceAll("PARENT_ID", "pId").replaceAll("MENU_NAME", "name").replaceAll("subMenu", "children");
+            mv.addObject("nodes", json);
+
+			mv.setViewName("system/menu/menu_list");
+		} catch (Exception e) {
+			logger.error(ErrorUtils.getErrorMessage(e, "lwc:显示菜单列表"));
+		}
+		return mv;
+	}
+	
+	/**
+	 * 显示菜单列表ztree(拓展左侧四级菜单)
+	 *
+	 * @param model
+	 * @return
+	 */
+	@RequestMapping(value = "/otherlistMenu")
+	public ModelAndView otherlistMenu(Model model, String MENU_ID) throws Exception {
+		ModelAndView mv = this.getModelAndView();
+		try {
+			PageData pd = new PageData();
+			pd.put("MENU_ID", MENU_ID);
+			String MENU_URL = menuService.getMenuById(pd).getString("MENU_URL");
+			if ("#".equals(MENU_URL.trim()) || "".equals(MENU_URL.trim()) || null == MENU_URL) {
+				MENU_URL = "login_default.do";
+			}
+			String roleRights = Jurisdiction.getSession().getAttribute(Jurisdiction.getUsername() + Const.SESSION_ROLE_RIGHTS).toString(); // 获取本角色菜单权限
+			List<Menu> athmenuList = new ArrayList<Menu>(); // 获取某菜单下所有子菜单
+			athmenuList = returnMenuList(roleRights); // 根据权限分配菜单
+			JSONArray arr = JSONArray.fromObject(athmenuList);
+			String json = arr.toString();
+			json = json.replaceAll("MENU_ID", "id").replaceAll("PARENT_ID", "pId").replaceAll("MENU_NAME", "name").replaceAll("subMenu", "nodes").replaceAll("hasMenu", "checked").replaceAll("MENU_URL", "url").replaceAll("#", "");
+			model.addAttribute("zTreeNodes", json);
+			mv.addObject("MENU_URL", MENU_URL); // 本ID菜单链接
+			mv.setViewName("system/menu/menu_ztree_other");
+		} catch (Exception e) {
+			logger.error(ErrorUtils.getErrorMessage(e, "lwc: 显示菜单列表ztree(拓展左侧四级菜单)"));
+		}
+		return mv;
+	}
+
+	/**
+	 * 显示权限列表(菜单授权权限)
+	 *
+	 * @param model
+	 * @return
+	 */
+	@RequestMapping(value = "/permissionqx")
+	public ModelAndView listAllPermission(Model model, String MENU_ID) throws Exception {
+		ModelAndView mv = this.getModelAndView();
+		try {
+			List<Menu> menuList = menuService.listMenuQx(MENU_ID); // 获取所有菜单
+			for (Menu menu : menuList) {
+				if ("noCheck".equals(menu.getMENU_STATE())) {
+					menu.setHasMenu(true);
+				} else {
+					menu.setHasMenu(false);
+				}
+			}
+			JSONArray arr = JSONArray.fromObject(menuList);
+			String json = arr.toString();
+			json = json.replaceAll("subMenu", "children").replaceAll("MENU_ID", "id").replaceAll("PARENT_ID", "pId").replaceAll("hasMenu", "isChecked").replaceAll("MENU_NAME", "title");
+			model.addAttribute("noots", json);
+			mv.addObject("MENU_ID", MENU_ID);
+			mv.setViewName("system/menu/permissionqx");
+		} catch (Exception e) {
+			logger.error(ErrorUtils.getErrorMessage(e, "lwc: 显示权限列表(菜单授权权限)"));
+		}
+		return mv;
+	}
+	
+	/**
+	 * 修改菜单权限
+	 *
+	 * @param ROLE_ID
+	 * @param menuIds
+	 * @param out
+	 * @throws Exception
+	 */
+	@RequestMapping(value = "/savePermissionqx")
+	public void savePermissionqx(@RequestParam String MENU_ID, @RequestParam String permissionIds, PrintWriter out) throws Exception {
+		PageData pd = new PageData();
+		try {
+			if (null != permissionIds && !"".equals(permissionIds.trim())) {
+				menuService.deleteAllPermissions(MENU_ID); // 删除本菜单的所有权限
+				String[] split = permissionIds.split(",");
+				pd.put("menuId", MENU_ID);
+				// 将选中的所有权限赋给当前菜单
+				for (int i = 0; i < split.length; i++) {
+					pd.put("permissionId", split[i]);
+					pd.put("id", this.get32UUID()); // 主键
+					menuService.updatePermissions(pd); // 更新当前角色菜单权限
+				}
+			} else {
+				menuService.deleteAllPermissions(MENU_ID); // 删除本菜单的所有权限
+			}
+			out.write("success");
+			out.close();
+		} catch (Exception e) {
+			logger.error(ErrorUtils.getErrorMessage(e, "lwc:修改菜单权限"));
+		}
+	}
+	
+	/**
+	 * 根据角色权限获取本权限的菜单列表(递归处理)
+	 * 
+	 * @param menuList：传入的总菜单
+	 * @param roleRights：加密的权限字符串
+	 * @return
+	 */
+	public List<Menu> readMenu(List<Menu> menuList, String roleRights) {
+		for (int i = 0; i < menuList.size(); i++) {
+			menuList.get(i).setHasMenu(RightsHelper.testRights(roleRights, menuList.get(i).getMENU_ID()));
+			if (menuList.get(i).isHasMenu() && "1".equals(menuList.get(i).getMENU_STATE())) { // 判断是否有此菜单权限并且是否隐藏
+				this.readMenu(menuList.get(i).getSubMenu(), roleRights); // 是：继续排查其子菜单
+			} else {
+				menuList.remove(i);
+				i--;
+			}
+		}
+		return menuList;
+	}
+	
+}

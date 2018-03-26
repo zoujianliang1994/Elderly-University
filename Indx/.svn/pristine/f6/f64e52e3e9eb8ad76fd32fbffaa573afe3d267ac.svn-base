@@ -1,0 +1,108 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="ScheduleMapper">
+	
+	<!--表名 -->
+	<sql id="tableName">
+		edu_schedule
+	</sql>
+	
+	<!-- 字段 -->
+	<sql id="Field">
+		id,
+		semester_id,
+		recess_time,
+		siesta_time,
+		create_time,
+		semester_name,
+		school_id
+
+
+	</sql>
+	
+	<!-- 字段值 -->
+	<sql id="FieldValue">
+		#{id},
+		#{semester_id},
+		#{recess_time},
+		#{siesta_time},
+		getdate(),
+		#{semester_name},
+		#{school_id}
+
+	</sql>
+	
+	<!-- 新增-->
+	<insert id="save" parameterType="pd">
+		insert into 
+	<include refid="tableName"></include>
+		(
+	<include refid="Field"></include>
+		) values (
+	<include refid="FieldValue"></include>
+		)
+	</insert>
+
+	<update id="deleteById" parameterType="String">
+		UPDATE <include refid="tableName"></include> set is_del =0 WHERE id = #{id}
+	</update>
+	
+	<!-- 修改 -->
+	<update id="edit" parameterType="pd">
+		update
+		<include refid="tableName"></include>
+		set
+		classroom_name=#{classroom_name},
+		classroom_size=#{classroom_size},
+		classroom_address=#{classroom_address},
+		classroom_type=#{classroom_type},
+		classroom_describe=#{classroom_describe},
+		school_id=#{school_id}
+		where 
+			id = #{id}
+	</update>
+	
+	<!-- 通过ID获取数据 -->
+	<select id="findById" parameterType="pd" resultType="pd">
+		select 
+		<include refid="Field"></include>
+		from 
+		<include refid="tableName"></include>
+		where 
+			id = #{id}
+	</select>
+	
+	<!-- 列表 -->
+	<select id="schedulelistPage" parameterType="page" resultType="pd">
+		select
+		c.id,
+		c.classroom_name,
+		c.classroom_size,
+		c.classroom_address,
+		c.classroom_type,
+		c.classroom_describe,
+		c.creater_user,
+		c.school_id,
+		s.name school_name
+
+		from 
+		edu_classroom as c
+		INNER JOIN edu_school s ON c.school_id = s.id
+		where
+		c.is_del = 1
+		and c.school_id in
+		<foreach item="item" index="index" collection="pd.userSchoolIds" open="(" separator="," close=")">
+			'${item}'
+		</foreach>
+		<if test="pd.keywords != null and pd.keywords != ''"><!-- 关键词检索 -->
+			and
+				(
+				c.classroom_name LIKE ('%'+#{pd.keywords}+'%')
+				 or
+				c.school_name LIKE ('%'+#{pd.keywords}+'%')
+				)
+		</if>
+	</select>
+	
+	<!--  -->
+</mapper>

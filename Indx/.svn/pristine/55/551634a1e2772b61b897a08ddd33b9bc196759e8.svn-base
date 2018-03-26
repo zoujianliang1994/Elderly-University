@@ -1,0 +1,102 @@
+.wrapper .menu2{
+		width:20%;
+		float:left;
+		background:#fff;
+		overflow:auto;
+	}
+	#wrap{
+		overflow:auto;
+	}
+	.navbox{
+		margin-top:10px;
+		height:45px;
+		border-bottom:1px solid #ddd;
+	}
+	.nav{
+		height:45px;
+		line-height:45px;
+		width:20%;
+		text-align:center;
+		cursor: pointer;
+	}
+	.nav a:hover{outline: none}
+	.itemBox{position}
+	/* .treeItem:before{
+		content:'---';
+		position:absolute;
+		left:0;
+		top:0;
+	} */
+	.navitem{
+		display:inline-block;
+		width:49%;
+		color:#666;
+		text-align:center;
+		line-height:45px;
+		float:left;
+	}
+	.nav .active{
+		color:#0083c6;
+		border-bottom:2px solid #0083c6;
+		cursor: pointer;
+		background-color:#fff;
+	}
+	.wrapper .content{
+		width:80%;
+		float:left;
+		color:#333;
+		padding:0 32px;
+		font-weight: 600;
+		border-left:1px solid #ddd;
+		overflow:auto;
+	}
+	.wrapper .treeView{
+		text-align:left
+	}
+	.title1{
+		margin-top:32px;
+		font-size:24px;
+		text-align:center;
+		font-weight:600
+	}
+	.title2{
+		margin-top:32px;
+		text-indent:2em;
+		font-size:18px;
+		text-align:left;
+	}
+	.title3{
+		margin-top:24px;
+		text-indent:2em;
+		font-size:16px;
+		text-align:left;
+	}
+	.text-content{
+		font-weight:500;
+		margin-top:16px;
+		text-align:left;
+		text-indent:2em;
+		font-size:16px;
+		line-height: 32px;
+		color:#666;
+	}
+	.treeView  .lev0{
+		border:1px solid #fff
+	}
+	.fl{float:left}
+	.fr{
+		float:right
+	}
+.selectYear{margin-top:4px;width:200px;position:relative}
+.year-shadow{position:absolute;background:#fff;border-radius:5px;padding:5px 10px;display:none;width: 195px;border: 1px solid #ddd;top: 33px;color:#666;line-height:20px;cursor: pointer;}
+.year-shadow li:{overflow: hidden;text-overflow:ellipsis;white-space: nowrap;}
+.year-shadow li:hover{background:#eaeaea;color:#333}
+.input-group-addon{cursor: pointer;}
+
+.tableBox{width:800px;margin:0 auto;font-size:12px}
+.tableBox .thead th{text-align:center;background:#f3f3f3}
+.tableBox td{white-space:nowrap; text-overflow:ellipsis; -o-text-overflow:ellipsis; overflow: hidden;}
+.tableBox .switch-icon{position:absolute;cursor: pointer;left: -10px;top:10px}
+.tableBox .title{width:180px;text-align:left;text-indent:25px;position:relative}
+.tableBox .probability{width:90px}
+	

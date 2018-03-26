@@ -1,0 +1,39 @@
+<%@ page language="java" contentType="text/html; charset=UTF-8" pageEncoding="UTF-8"%>
+
+<%
+    String path = request.getContextPath();
+    String basePath = request.getScheme() + "://" + request.getServerName() + ":" + request.getServerPort() + path + "/";
+%>
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <base href="<%=basePath%>">
+    <!-- jsp文件头和头部 -->
+    <%@ include file="../../system/index/headcss.jsp"%>
+
+
+</head>
+<body >
+<div class="edit_menu" class="disnone">
+    <div style="text-align: center">
+        <p style="color: #333333;font-size: 20px">2016年7月4日现场缴费地点更换通知</p>
+        <p style="color: #666666;font-size: 12px;padding-top: 10px">2017.12.29   四川老年大学望江校区</p>
+        <div style="color: #666666;font-size: 14px;padding-top: 30px;text-indent: 2em;text-align: left;">因五四路校区网络原因，无法进行现场缴费。若需现场缴费请您于7月4日上午到工业路四楼缴费。给您带来不便，敬请谅解。因五四路校区网络原因。
+            无法进行现场缴费。若需现场缴费请您于7月4日上午到工业路四楼缴费。给您带来不便，敬请谅解。
+            因五四路校区网络原因，无法进行现场缴费。若需现场缴费请您于7月4日上午到工业路四楼缴费。给您带来不便，敬请谅解。因五四路校区网络原因。
+            无法进行现场缴费。若需现场缴费请您于7月4日上午到工业路四楼缴费。给您带来不便，敬请谅解。</div>
+    </div>
+
+</div>
+
+
+<!-- 页面底部js¨ -->
+<%@ include file="../../system/index/foot.jsp"%>
+<!--提示框-->
+<script type="text/javascript">
+
+
+</script>
+</body>
+</html>
+

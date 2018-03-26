@@ -1,0 +1,178 @@
+/**
+ * 学员报名选课
+ * @author wangyong
+ */
+package com.zhimu.service.manager.edu.student;
+
+import java.util.List;
+
+import javax.annotation.Resource;
+
+import net.sf.json.JSONArray;
+import net.sf.json.JSONObject;
+
+import org.apache.commons.lang.StringUtils;
+import org.springframework.stereotype.Service;
+
+import com.zhimu.commons.utils.DateUtil;
+import com.zhimu.commons.utils.PageData;
+import com.zhimu.commons.utils.UuidUtil;
+import com.zhimu.dao.DaoSupport;
+import com.zhimu.dao.entity.system.Page;
+import com.zhimu.service.manager.edu.grades.GradesManager;
+import com.zhimu.service.manager.edu.semester.SemesterService;
+import com.zhimu.service.manager.system.user.impl.UserService;
+
+@Service("enrollService")
+public class EnrollService {
+
+	@Resource(name = "daoSupport")
+	private DaoSupport dao;
+	@Resource(name = "userService")
+	private UserService userService;
+	@Resource(name = "studentService")
+	private StudentService studentService;
+	@Resource(name = "gradesService")
+	private GradesManager gradesService;
+	@Resource(name = "semesterService")
+	private SemesterService semesterService;
+
+	/**
+	 * 列表
+	 * 
+	 * @param page
+	 * @throws Exception
+	 */
+	@SuppressWarnings("unchecked")
+	public List<PageData> list(Page page) throws Exception {
+		return (List<PageData>) dao.findForList("StudentEnrollMapper.datalistPage", page);
+	}
+
+	/**
+	 * 新增
+	 * 
+	 * @param pd
+	 * @throws Exception
+	 */
+	public void save(PageData pd) throws Exception {
+		// 报名方式
+		String checkinType = pd.getString("checkin_type");
+		// 保存选课信息
+		String selData = pd.getString("selData");
+		if (StringUtils.isNotEmpty(selData)) {
+			JSONArray json = JSONArray.fromObject(selData);
+			if (json.size() > 0) {
+				String sIds = "";
+				String sNames = "";
+				String cIds = "";
+				String cNames = "";
+				String lIds = "";
+				// String lNames = "";
+				for (int i = 0; i < json.size(); i++) {
+					JSONObject job = json.getJSONObject(i);
+					pd.put("id", UuidUtil.get32UUID());
+					pd.put("school_name", job.getString("a_name"));
+					pd.put("school_id", job.getString("a_id"));
+					pd.put("child_school_id", job.getString("school_id"));
+					pd.put("child_school_name", job.getString("school_name"));
+					pd.put("g_name", job.getString("g_name"));
+					pd.put("g_id", job.getString("g_id"));
+					pd.put("teacher_name", job.getString("teacher_name"));
+					pd.put("teacher_id", job.getString("teacher_id"));
+					pd.put("classroom_name", job.getString("classroom_name"));
+					pd.put("course_time", job.getString("course_time"));
+					pd.put("money", job.getString("money"));
+					pd.put("money_status", "1");
+					dao.save("StudentEnrollMapper.save", pd);
+					if (sIds.indexOf(job.getString("school_id")) == -1) {
+						sIds += job.getString("school_id") + ",";
+					}
+					if (sNames.indexOf(job.getString("school_name")) == -1) {
+						sNames += job.getString("school_name") + ",";
+					}
+					if (cIds.indexOf(job.getString("g_id")) == -1) {
+						cIds += job.getString("g_id") + ",";
+					}
+					if (cNames.indexOf(job.getString("g_name")) == -1) {
+						cNames += job.getString("g_name") + ",";
+					}
+					if (lIds.indexOf(job.getString("lesson_id")) == -1) {
+						lIds += job.getString("lesson_id") + ",";
+					}
+					// 写入学员班级关联表
+					pd.put("semester_id", job.getString("semester_id"));
+					pd.put("lesson_periods", job.getString("lesson_periods"));
+					this.studentService.saveGrades(pd);
+				}
+				// 写入班级信息到学员表
+				PageData stuPd = studentService.findByUser(pd.getString("user_id"));
+				stuPd.put("s_id", sIds.substring(0, sIds.length() - 1));
+				stuPd.put("s_name", sNames.substring(0, sNames.length() - 1));
+				stuPd.put("c_id", cIds.substring(0, cIds.length() - 1));
+				stuPd.put("c_name", cNames.substring(0, cNames.length() - 1));
+				stuPd.put("l_id", lIds.substring(0, lIds.length() - 1));
+				stuPd.put("l_name", "");
+				// 根据当前报名日期和学校ID查询所在是哪个学期
+				pd.put("regDate", DateUtil.getDay());
+				pd.put("s_id", sIds.split(","));
+				PageData semesterPd = semesterService.findByDateAndSid(pd);
+				String semesterIds = "";
+				if (null == semesterPd || semesterPd.size() <= 0) {
+					throw new RuntimeException("当前时间段暂未查询到学期信息");
+				} else {
+					for (Object key : semesterPd.keySet()) {
+						semesterIds = semesterPd.get(key).toString();
+						break;
+					}
+				}
+				pd.put("id", pd.getString("student_id"));
+				stuPd.put("semester_id", semesterIds.substring(0, semesterIds.length() - 1));
+				this.studentService.editStudentEnroll(stuPd);
+				// 更新账号学校信息
+				PageData userPd = new PageData();
+				userPd.put("SCHOOL_ID", stuPd.getString("s_id"));
+				userPd.put("SCHOOL_NAME", stuPd.getString("s_name"));
+				userPd.put("USER_ID", pd.getString("user_id"));
+				this.userService.editUserSchool(userPd);
+			}
+		}
+		// 线上支付
+		if (StringUtils.isNotEmpty(checkinType) && "1".equals(checkinType)) {
+			// 支付开始
+			// 支付结束
+		}
+	}
+
+	/**
+	 * 删除
+	 * 
+	 * @param pd
+	 * @throws Exception
+	 */
+	public void delete(PageData pd) throws Exception {
+		dao.delete("StudentEnrollMapper.delete", pd);
+	}
+
+	/**
+	 * 修改
+	 * 
+	 * @param pd
+	 * @throws Exception
+	 */
+	public void edit(PageData pd) throws Exception {
+		dao.update("StudentEnrollMapper.edit", pd);
+
+	}
+
+	/**
+	 * 通过id获取数据
+	 * 
+	 * @param pd
+	 * @throws Exception
+	 */
+	@SuppressWarnings("unchecked")
+	public List<PageData> findByUserId(PageData pd) throws Exception {
+		return (List<PageData>) dao.findForList("StudentEnrollMapper.findByUserId", pd);
+	}
+
+}

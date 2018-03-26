@@ -1,0 +1,374 @@
+<%@ page language="java" contentType="text/html; charset=UTF-8" pageEncoding="UTF-8" %>
+<%
+    String path = request.getContextPath();
+    String basePath = request.getScheme() + "://" + request.getServerName() + ":" + request.getServerPort() + path + "/";
+%>
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <title>教师编辑</title>
+    <%@ include file="../../system/index/headcss.jsp" %>
+    <link rel="stylesheet" type="text/css" href="<%=basePath %>static/source/public/css/list.css">
+</head>
+<style>
+
+    .imgfile {
+        position: absolute;
+        opacity: 0;
+        width: 100%;
+        height: 100%;
+        top: 0px;
+        left: 0;
+        filter: Alpha(opacity=0);
+    }
+
+    .img-block {
+        height: 130px;
+    }
+
+    .img {
+        width: 100%;
+        height: 100%
+    }
+
+    .layui-upload-drag {
+        background-size: cover;
+    }
+
+</style>
+<body>
+
+<div class="edit_menu" class="disnone">
+
+    <form action="${msg}.do" class="layui-form" name="editForm" id="editForm" enctype="multipart/form-data">
+        <input type="hidden" value="${pd.id}" name="id" id="id"/>
+        <input type="hidden" value="${pd.school_id}" name="school_id" id="school_id"/>
+
+        <div class="layui-form-item">
+            <div class="layui-row">
+
+                <div class="form-item-inline">
+                    <label class="form-label"><span class="red-star">*</span>姓名:</label>
+                    <div class="layui-input-block">
+                        <input id="name" name="name" value="${pd.name }" type="text" class="layui-input layui-input-color" placeholder="请输入姓名">
+                    </div>
+                </div>
+
+                <div class="form-item-inline">
+                    <label class="form-label"><span class="red-star">*</span>身份证号:</label>
+                    <div class="layui-input-block">
+                        <input type="hidden" value="${pd.idcard}" name="old_idcard" id="old_idcard"/>
+                        <input id="idcard" name="idcard" value="${pd.idcard }" type="text" class="layui-input layui-input-color"
+                               placeholder="请输入身份证号">
+                    </div>
+                </div>
+
+            </div>
+        </div>
+
+        <div class="layui-form-item">
+            <div class="layui-row">
+
+                <div class="form-item-inline">
+                    <label class="form-label">民族:</label>
+                    <div class="layui-input-block">
+                        <html:select id="mz" name="mz" classs="layui-input-inline">
+                            <html:options collection="Person_mz" defaultValue="${pd.mz}"></html:options>
+                        </html:select>
+                    </div>
+                </div>
+
+                <div class="form-item-inline">
+                    <label class="form-label">性别:</label>
+                    <div class="layui-input-block">
+                        <input id="r0" type="radio" name="xb" value="2" title="男" <c:if test="${pd.xb == 2 }">checked</c:if>>
+                        <input id="r1" type="radio" name="xb" value="1" title="女" <c:if test="${pd.xb == 1 }">checked</c:if>>
+                    </div>
+                </div>
+
+            </div>
+        </div>
+
+        <div class="layui-form-item">
+            <div class="layui-row">
+
+                <div class="form-item-inline">
+                    <label class="form-label">学历:</label>
+                    <div class="layui-input-block">
+                        <html:select id="xl" name="xl" classs="layui-input-inline">
+                            <html:options collection="Educational" defaultValue="${pd.xl}"></html:options>
+                        </html:select>
+                    </div>
+                </div>
+
+                <div class="form-item-inline">
+                    <label class="form-label">学位:</label>
+                    <div class="layui-input-block">
+                        <html:select id="xw" name="xw" classs="layui-input-inline">
+                            <html:options collection="Degree" defaultValue="${pd.xw}"></html:options>
+                        </html:select>
+                    </div>
+                </div>
+
+            </div>
+        </div>
+
+
+        <div class="layui-form-item">
+            <div class="layui-row">
+
+                <div class="form-item-inline">
+                    <label class="form-label">专业:</label>
+                    <div class="layui-input-block">
+                        <input id="zy" name="zy" value="${pd.zy }" type="text" class="layui-input layui-input-color" placeholder="请输入专业">
+                    </div>
+                </div>
+
+                <div class="form-item-inline">
+                    <label class="form-label">联系电话:</label>
+                    <div class="layui-input-block">
+                        <input id="tel" name="tel" value="${pd.tel }" type="text" class="layui-input layui-input-color" placeholder="请输入联系电话">
+                    </div>
+                </div>
+
+            </div>
+        </div>
+
+        <div class="layui-form-item">
+            <div class="layui-row">
+
+                <div class="form-item-inline">
+                    <label class="form-label"><span class="red-star">*</span>岗位性质:</label>
+                    <div class="layui-input-block gw_type">
+                        <html:select id="gw_type" name="gw_type" classs="layui-input-inline" style=" lay-filter='select1'">
+                            <html:options collection="GWTYPE" defaultValue="${pd.gw_type}"></html:options>
+                        </html:select>
+                    </div>
+                </div>
+
+                <div class="form-item-inline" id="xzdyDiv">
+                    <label class="form-label">薪资待遇(元/月):</label>
+                    <div class="layui-input-block">
+                        <input id="gz" name="gz" value="${pd.gz }" type="number" class="layui-input layui-input-color" placeholder="请输入薪资待遇">
+                    </div>
+                </div>
+
+            </div>
+        </div>
+
+        <div class="layui-form-item">
+            <div class="layui-row">
+
+                <div class="form-item-inline">
+                    <label class="form-label">照片:</label>
+                    <input readonly="readonly" type="hidden" name="photo_url" id="photo_url" value="${pd.photo_url}"/>
+                    <c:if test="${pd.type != '1'}">
+                        <div class="layui-input-block imgBox1">
+                        </div>
+                    </c:if>
+                    <c:if test="${pd.type == '1'}">
+                        <div class="layui-input-block img-block">
+                            <c:if test="${pd.photo_url != null && pd.photo_url != ''}">
+                                <img class="img" src="<%=basePath %>uploadFiles/file/${pd.photo_url}"/>
+                            </c:if>
+                        </div>
+                    </c:if>
+                </div>
+
+                <div class="form-item-inline">
+                    <label class="form-label">家庭住址:</label>
+                    <div class="layui-input-block">
+                        <input id="addr" name="addr" value="${pd.addr }" type="text" class="layui-input layui-input-color" placeholder="请输入家庭地址">
+                    </div>
+                </div>
+
+            </div>
+        </div>
+
+        <div class="layui-form-item">
+            <div class="layui-row">
+                <c:if test="${pd.type != '1' && pd.photo_url != null && pd.photo_url != ''}">
+                    <div class="form-item-inline">
+                        <label class="form-label">旧照片:</label>
+                        <div class="layui-input-block img-block">
+                            <img class="img" src="<%=basePath %>uploadFiles/file/${pd.photo_url}"/>
+                        </div>
+                    </div>
+                </c:if>
+            </div>
+        </div>
+    </form>
+
+    <div class="btnbox" id="btnDiv" hidden="true">
+        <button id="sure" class="layui-btn layui-btn-primary layui-btn-small">保存</button>
+        <button id="cancel" class="layui-btn layui-btn-primary layui-btn-small">取消</button>
+    </div>
+
+</div>
+<%@ include file="../../system/index/foot.jsp" %>
+<script>
+    $(function () {
+        var form = layui.form;
+
+        var img1 = new ImgBox({
+            el: $('.imgBox1'),
+            name: "file1",
+            tip: "点击上传新照片"
+        });
+
+        //身份证blur 年龄 性别
+        $("#idcard").on("blur", function () {
+            var val = $(this).val();
+            if (val.length == 18) {
+                var sex = parseInt(val.substr(16, 1)) % 2 == 0;
+                if (sex) {
+                    $("#r1").attr("checked", true);
+                    $("#r0").attr("checked", false)
+                } else {
+                    $("#r1").attr("checked", false);
+                    $("#r0").attr("checked", true)
+                }
+                form.render('radio');
+            }
+        });
+
+
+        form.on("select(select1)", function (data) {
+            var value = data.value;
+            if (value == '1') {
+                $("#xzdyDiv").show();
+            } else {
+                $("#xzdyDiv").hide();
+            }
+        });
+
+
+        $("#sure").on("click", function () {
+
+            if ($("#name").val() == "") {
+                layer.tips('姓名不能为空!', $("#name"), {
+                    tips: [3, '#D16E6C'],
+                    time: 4000
+                });
+                $("#name").focus();
+                return false;
+            }
+
+            var card = $.trim($("#idcard").val()).toUpperCase();
+            if (card == "") {
+                layer.tips('身份证不能为空', $("#idcard"), {
+                    tips: [3, '#D16E6C'],
+                    time: 4000
+                });
+                $("#idcard").focus();
+                return false;
+            }
+            if (!card || !isCardNo(card) || !checkProvince(card) || !checkBirthday(card) || !checkParity(card)) {
+                layer.tips('请输入正确的身份证号码', $("#idcard"), {
+                    tips: [3, '#D16E6C'],
+                    time: 4000
+                });
+                $("#idcard").focus();
+                return false;
+            }
+
+            if ($("#gw_type").val() == "") {
+                layer.tips('岗位性质不能为空!', $(".gw_type"), {
+                    tips: [3, '#D16E6C'],
+                    time: 4000
+                });
+                $(".gw_type").focus();
+                return false;
+            }
+
+            parent.layer.load(1);
+
+            $("#editForm").ajaxSubmit({
+                type: 'post',
+                dataType: "html",
+                success: function (data) {
+                    var jso = JSON.parse(data);
+                    if ("success" == jso.result) {
+                        parent.layer.edit.location.href = "<%=basePath%>teacher/list.do?currentPage=${pd.currentPage}";
+                        parent.layer.closeAll();
+                    } else if ("fail" == jso.result) {
+                        layer.msg('当前学校存在身份证相同的教师!', {icon: 5});
+                    } else {
+                        layer.msg('系统异常,保存失败!', {icon: 5});
+                    }
+                    parent.layer.closeAll("loading");
+                }
+            });
+        });
+
+        $("#cancel").on("click", function () {
+            parent.layer.closeAll();
+        });
+
+        type('${pd.type}');
+    });
+
+    function ImgBox(options) {
+        this.init(options)
+    }
+
+    ImgBox.prototype = {
+        w: "326px",
+        h: "151px",
+        init: function (options) {
+            this.$el = options.el;
+            this.rander(options);
+            this.fileChange();
+        },
+        rander: function (options) {
+            var str = '<div class="layui-upload-drag"  style="width:374px">' +
+                '<i class="layui-icon"></i>' +
+                '<p class="name">' + options.tip + '</p>' +
+                '</div>' +
+                '<input type="file" class="imgfile" name=' + options.name + ' >';
+            this.$el.html(str)
+        },
+        test: function (file_name, symbol) {
+            var result = file_name.split(symbol);
+            return result[result.length - 1];
+        },
+        triggerInput: function () {
+            this.$el.find(".layui-upload-drag").click(function () {
+                $(this).next().click();
+            })
+        },
+        fileChange: function () {
+            var $this = this;
+            var $name = this.$el.find(".name");
+            this.$el.find(".imgfile").change(function (e) {
+                var $target = $(e.target);
+                var $imgbox = $target.prev();
+                var $icon = $imgbox.find(".layui-icon");
+                name = $this.test(this.value, ".");
+                if (name == 'jpg' || name == 'png' || name == "jpeg") {
+                    $name.text($this.test(this.value, "\\"));
+                    if (e.target.files) {
+                        $icon.css("opacity", 0);
+                        var file = e.target.files[0];
+                        if (window.FileReader) {
+                            var fr = new FileReader();
+                            fr.onloadend = function (data) {
+                                $imgbox.css({"background": "url(" + data.target.result + ")", "background-size": $this.w + " " + $this.h});
+                            };
+                            fr.readAsDataURL(file);
+                        }
+                    } else {
+                        layer.msg("图片信息可以上传成功<br/>但ie10以下不支持预览功能<br/>若想预览图片请升级ie11或者谷歌浏览器", {shift: 6, icon: 2})
+                    }
+                } else {
+                    layer.msg("请上传正确的图片文件", {shift: 6, icon: 2});
+                    $name.text("请上传正确的图片文件");
+                    $imgbox.css({"background": "#fff",});
+                    $icon.css("opacity", 1);
+                }
+            })
+        }
+    }
+</script>
+</body>
+</html>

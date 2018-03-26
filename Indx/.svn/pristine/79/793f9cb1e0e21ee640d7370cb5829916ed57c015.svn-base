@@ -1,0 +1,199 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="MessageMapper">
+	
+	<resultMap type="com.zhimu.dao.entity.message.Message" id="messageListMap">
+		<id column="id" property="id"/>
+		<result column="URL" property="url"/>
+		<result column="TITLE" property="title"/>
+		<result column="CONTENT" property="content"/>
+		<result column="BUSINESS_ID" property="businessId"/>
+		<result column="USER_ID" property="userId"/>
+		<result column="USER_NAME" property="userName"/>
+		<result column="TYPE" property="type"/>
+		<result column="STATUS" property="status"/>
+		<result column="CREATE_TIME" property="createTime"/>
+		<result column="UPDATE_TIME" property="updateTime"/>
+		<result column="CREATE_BY" property="createBy"/>
+		<result column="UPDATE_BY" property="updateBy"/>
+		<result column="PUBLISH_TIME" property="publishTime"/>
+	</resultMap>
+
+	<resultMap type="com.zhimu.dao.entity.message.Message" id="messageMap">
+		<id column="id" property="id"/>
+		<result column="URL" property="url"/>
+		<result column="TITLE" property="title"/>
+		<result column="CONTENT" property="content"/>
+		<result column="BUSINESS_ID" property="businessId"/>
+		<result column="USER_ID" property="userId"/>
+		<result column="USER_NAME" property="userName"/>
+		<result column="TYPE" property="type"/>
+		<result column="STATUS" property="status"/>
+		<result column="CREATE_TIME" property="createTime"/>
+		<result column="UPDATE_TIME" property="updateTime"/>
+		<result column="CREATE_BY" property="createBy"/>
+		<result column="UPDATE_BY" property="updateBy"/>
+		<result column="PUBLISH_TIME" property="publishTime"/>
+		<result column="FILE_URL" property="fileUrl"/>
+		<result column="PUBLISH_RANGE" property="publishRange"/>
+	</resultMap>
+	<!-- 字段 -->
+	<sql id="Field">
+		ID,	
+		URL,	
+		TITLE,	
+		CONTENT,	
+		BUSINESS_ID,	
+		USER_ID,
+		USER_NAME,
+		TYPE,
+		WORK_TYPE,
+		STATUS,
+		CREATE_TIME,
+		UPDATE_TIME,
+		CREATE_BY,
+		UPDATE_BY,
+		PUBLISH_TIME,
+		FILE_URL,
+		PUBLISH_RANGE
+	</sql>
+	
+	<!-- 新增-->
+	<insert id="save" parameterType="com.zhimu.dao.entity.message.Message">
+		INSERT INTO SYS_MESSAGE(
+			<include refid="Field"></include>
+		) VALUES (
+			#{id},	
+			#{url},	
+			#{title},	
+			#{content,jdbcType=VARCHAR},	
+			#{businessId},	
+			#{userId},
+			#{userName},
+			#{type},
+			#{workType},
+			#{status},
+			#{createTime},
+			#{updateTime},
+			#{createBy},
+			#{updateBy},
+			#{publishTime},
+			#{fileUrl},
+			#{publishRange}
+		)
+	</insert>
+	<!-- 通过ID获取数据 -->
+	<select id="findById" parameterType="String" resultMap="messageMap">
+		SELECT 
+			<include refid="Field"></include>
+		FROM 
+			SYS_MESSAGE
+		WHERE 
+			ID = #{id}
+	</select>
+	<!-- 通过用户ID和状态为0（未读）获取数据 -->
+	<select id="findByUserId" parameterType="pd" resultType="pd">
+		SELECT 
+			<include refid="Field"></include>
+		FROM 
+			SYS_MESSAGE
+		WHERE 
+			USER_ID = #{USER_ID} AND STATUS = '0'
+	</select>
+
+	<!-- 通过用户ID和状态为0（未读）获取数据列表 -->
+	<select id="listPageByUser" parameterType="page" resultType="pd">
+		SELECT
+			<include refid="Field"></include>
+		FROM
+			sys_message
+		WHERE
+			1=1
+			<if test="pd.keywords != null and pd.keywords != ''"><!-- 关键词检索 -->
+				and
+				(
+				TITLE LIKE ('%'+#{pd.keywords}+'%')
+				or
+				CONTENT LIKE ('%'+#{pd.keywords}+'%')
+				)
+			</if>
+			AND
+				CREATE_BY = #{pd.username} AND STATUS = '0'
+			ORDER BY
+				CREATE_TIME
+	</select>
+
+	<!-- 查询个人公告通知列表 -->
+	<select id="allMessagelistPage" parameterType="page" resultType="pd">
+		SELECT
+			<include refid="Field"></include>,[SCHOOL_NAME] = (#{pd.SCHOOL_NAME})
+		FROM
+			sys_message
+		WHERE
+			1=1
+			<if test="pd.keywords != null and pd.keywords != ''"><!-- 关键词检索 -->
+				and
+				(
+				TITLE LIKE ('%'+#{pd.keywords}+'%')
+				or
+				CONTENT LIKE ('%'+#{pd.keywords}+'%')
+				)
+			</if>
+			AND
+				USER_ID = #{pd.USER_ID}
+			ORDER BY
+				PUBLISH_TIME DESC
+	</select>
+
+	<!-- 列表(全部) -->
+	<select id="listAll" resultType="java.util.List">
+		SELECT
+			<include refid="Field"></include>
+		from 
+			SYS_MESSAGE a
+	</select>
+	<!-- 更新消息状态 为已读 （已处理） -->
+	<update id="update" parameterType="pd">
+		update
+			SYS_MESSAGE
+		set 
+			STATUS = 1
+		where 
+			BUSINESS_ID = #{BUSINESS_ID}
+	</update>
+
+	<!--根据id删除消息数据_liangwenchao-->
+	<delete id="delete" parameterType="String">
+		DELETE FROM
+			sys_message
+		WHERE
+			ID = #{id}
+	</delete>
+
+	<!--根据delBybuinessId删除消息数据_liangwenchao-->
+	<delete id="delBybuinessId" parameterType="String">
+		DELETE FROM
+			sys_message
+		WHERE
+			BUSINESS_ID = #{businessId}
+	</delete>
+
+	<!--修改消息数据_liangwenchao-->
+	<update id="updateMess" parameterType="com.zhimu.dao.entity.message.Message">
+		UPDATE
+			sys_message
+		SET
+			TITLE = #{title},
+			CONTENT = #{content},
+			BUSINESS_ID = #{businessId},
+			USER_ID = #{userId},
+			USER_NAME = #{userName},
+			CREATE_TIME = #{createTime},
+			UPDATE_TIME = #{updateTime},
+			UPDATE_BY = #{updateBy},
+			PUBLISH_TIME = #{publishTime}
+		WHERE
+			ID = #{id}
+	</update>
+	
+</mapper>

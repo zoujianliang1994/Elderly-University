@@ -1,0 +1,58 @@
+﻿<%@ page language="java" contentType="text/html; charset=UTF-8" pageEncoding="UTF-8" %>
+<%
+    String path = request.getContextPath();
+    String basePath = request.getScheme() + "://" + request.getServerName() + ":" + request.getServerPort() + path + "/";
+%>
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <title>公告管理</title>
+    <%@ include file="../../system/index/headcss.jsp" %>
+</head>
+<body>
+<div class="tableBox">
+
+    <!-- table -->
+    <div class="layui-col-sm12">
+        <table class="layui-table center" id="table">
+            <c:choose>
+                <c:when test="${not empty messageList}">
+                    <c:forEach items="${messageList}" var="var" varStatus="vs">
+                        <div class="message-list">
+                            <div class="message-list-left"><a onclick="goDetail('${var.ID}','${var.TITLE}','${var.CONTENT}')">${var.TITLE}</a></div>
+                            <div class="message-list-right">
+                                <div class="message-list-right-top">${var.SCHOOL_NAME}</div>
+                                <div class="message-list-right-bottom">${var.PUBLISH_TIME}</div>
+                            </div>
+                        </div>
+                    </c:forEach>
+                </c:when>
+                <c:otherwise>
+                    <tr class="main_info">
+                        <td colspan="100" class="center">没有相关数据</td>
+                    </tr>
+                </c:otherwise>
+            </c:choose>
+        </table>
+
+        <div class="laypageBox">
+            <div id="laypage" class="fr"></div>
+        </div>
+    </div>
+</div>
+
+
+<%@ include file="../../system/index/foot.jsp" %>
+<script type="text/javascript">
+     function goDetail(id,title,content) {
+        parent.parent.layer.edit = window;
+        layer.open({
+            title: title,
+            content: content,
+            area: ["800px", "620px"]
+        });
+    };
+</script>
+
+</body>
+</html>

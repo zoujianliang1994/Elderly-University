@@ -1,0 +1,231 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="SectionMapper">
+
+	<resultMap type="com.zhimu.dao.entity.system.Section" id="sectionResultMap">
+		<id column="SECTION_ID" property="SECTION_ID" />
+		<result column="NAME" property="NAME" />
+	</resultMap>
+
+	<!--表名 -->
+	<sql id="tableName">
+		SYS_SECTION
+	</sql>
+
+	<!-- 字段 -->
+	<sql id="Field">
+		SECTION_ID,
+		DEPARTMENT_ID,
+		NAME,
+		LEVEL,
+		FZR,
+		TEL,
+		RS,
+		ZNMS,
+		DEPARTMENT_NAME,
+		XZJB,
+		TBR,
+		TBDW,
+		TBRQ,
+		DYJDDW,
+		TYPE,
+		ADDRESS,
+		SZQY_CODE,
+		SZQY
+	</sql>
+
+	<!-- 字段值 -->
+	<sql id="FieldValue">
+		#{SECTION_ID},
+		#{DEPARTMENT_ID},
+		#{NAME},
+		#{LEVEL},
+		#{FZR},
+		#{TEL},
+		#{RS},
+		#{ZNMS},
+		#{DEPARTMENT_NAME},
+		#{XZJB},
+		#{TBR},
+		#{TBDW},
+		#{TBRQ},
+		#{DYJDDW},
+		#{TYPE},
+		#{ADDRESS},
+		#{SZQY_CODE},
+		#{SZQY}
+	</sql>
+
+	<!-- 新增 -->
+	<insert id="save" parameterType="pd">
+		insert into
+		<include refid="tableName"></include>
+		(
+		<include refid="Field"></include>
+		) values
+		(
+		<include refid="FieldValue"></include>
+		)
+	</insert>
+
+	<!-- 删除 -->
+	<delete id="delete" parameterType="pd">
+		delete from
+		<include refid="tableName"></include>
+		where SECTION_ID = #{SECTION_ID}
+	</delete>
+
+	<!-- 修改 -->
+	<update id="edit" parameterType="pd">
+		update
+		<include refid="tableName"></include>
+		set DEPARTMENT_ID = #{DEPARTMENT_ID},
+		NAME = #{NAME},
+		LEVEL = #{LEVEL},
+		FZR = #{FZR},
+		TEL = #{TEL},
+		RS= #{RS},
+		ZNMS = #{ZNMS},
+		DEPARTMENT_NAME = #{DEPARTMENT_NAME},
+		XZJB = #{XZJB},
+		ADDRESS = #{ADDRESS},
+		SZQY_CODE = #{SZQY_CODE},
+		SZQY = #{SZQY},
+		DYJDDW=#{DYJDDW}
+		where SECTION_ID = #{SECTION_ID}
+	</update>
+	
+	
+	 <!-- 根据区划修改 -->
+    <update id="updateByAreaCode" parameterType="pd">
+        update <include refid="tableName"></include>
+           set 
+               NAME      = #{NAME},
+               DEPARTMENT_NAME = #{DEPARTMENT_NAME},
+			   SZQY=#{SZQY}
+         where SZQY_CODE = #{SZQY_CODE}
+    </update>
+    
+     <!-- 根据id修改区划代码 -->
+    <update id="updateAreaCodeById" parameterType="pd">
+        update <include refid="tableName"></include>
+           set 
+                SZQY_CODE = #{SZQY_CODE},
+                SZQY = #{SZQY}
+         where SECTION_ID = #{SECTION_ID}
+    </update>
+
+	<!-- 通过ID获取数据 -->
+	<select id="findById" parameterType="pd" resultType="pd">
+		select
+		<include refid="Field"></include>
+		from
+		<include refid="tableName"></include>
+		where SECTION_ID = #{SECTION_ID}
+	</select>
+
+	<!-- 列表 -->
+	<select id="datalistPage" parameterType="page" resultType="pd">
+		SELECT
+		s.SECTION_ID,
+		s.DEPARTMENT_ID,
+		s.NAME,
+		s.LEVEL,
+		s.FZR,
+		s.TEL,
+		s.RS,
+		s.ZNMS,
+		s.DEPARTMENT_NAME,
+		s.XZJB,
+		s.TBR,
+		s.TBDW,
+		s.TBRQ,
+		s.DYJDDW,
+		s.TYPE,
+		s.ADDRESS,
+		s.SZQY_CODE WBDW_CODE,
+		s.SZQY WBDW_SZQY,
+		d.SZQY_CODE
+		FROM
+		SYS_SECTION AS s
+		INNER JOIN sys_department AS d ON d.DEPARTMENT_ID = s.DEPARTMENT_ID
+		where 1=1
+		<if test="pd.SECTION_ID!= null and pd.SECTION_ID != ''"><!-- 检索 -->
+			and s.SECTION_ID = #{pd.SECTION_ID}
+		</if>
+		<if test="pd.DEPARTMENT_ID!= null and pd.DEPARTMENT_ID != ''"><!-- 检索 -->
+			and s.DEPARTMENT_ID = #{pd.DEPARTMENT_ID}
+		</if>
+		<if test="pd.keywords != null and pd.keywords != ''"><!-- 关键词检索 -->
+			and ( s.NAME LIKE ('%'+#{pd.keywords}+'%') or
+			s.DEPARTMENT_NAME LIKE ('%'+#{pd.keywords}+'%')
+			)
+		</if>
+		<if test="pd.type !=null and pd.type != ''">
+            and s.TYPE = #{pd.type}
+        </if>
+		<if test="pd.areaCode!= null and pd.areaCode != ''">
+			and d.SZQY_CODE like (#{pd.areaCode} + '%')
+		</if>
+		order by s.NAME
+	</select>
+
+	<!-- 获取所有的内设机构 -->
+	<select id="listAllSection" parameterType="String" resultMap="sectionResultMap">
+		select
+		<include refid="Field"></include>
+		from
+		<include refid="tableName"></include>
+		where 1=1
+		order by NAME
+	</select>
+
+	<!-- 根据部门获取内设机构 -->
+	<select id="listSectionByDep" parameterType="pd" resultMap="sectionResultMap">
+		select
+		<include refid="Field"></include>
+		from
+		<include refid="tableName"></include>
+		where 1=1
+		<if test="depId!= null and depId != ''"><!-- 检索 -->
+			and DEPARTMENT_ID = #{depId}
+		</if>
+		<if test="type!= null and type != ''"><!-- 机构类型 -->
+			and TYPE = #{type}
+		</if>
+		 <if test="areaName!= null and areaName != ''"><!-- 检索 -->
+			and SZQY like ('%'+#{areaName} + '%')
+		</if>
+		order by NAME
+	</select>
+	
+	  <!-- 通过areaCode查询外部单位 -->
+    <select id="findByAreaCode" parameterType="String" resultMap="sectionResultMap">
+        select <include refid="Field"></include>
+          from <include refid="tableName"></include>
+         where 1=1
+            and SZQY_CODE like (#{areaCode} + '%')
+    </select>
+    
+      <!-- 通过areaCode和areaName查询外部单位 -->
+    <select id="findByAreaCodeName" parameterType="pd" resultMap="sectionResultMap">
+        select <include refid="Field"></include>
+          from <include refid="tableName"></include>
+         where 1=1
+            and SZQY_CODE like (#{areaCode} + '%')
+            <if test="areaName!= null and areaName != ''"><!-- 检索 -->
+			and SZQY like ('%'+#{areaName} + '%')
+		</if>
+    </select>
+    
+     <!-- 通过行政级别查询外部单位 -->
+    <select id="findByAreaCodeAndType" parameterType="String" resultMap="sectionResultMap">
+        select <include refid="Field"></include>
+          from <include refid="tableName"></include>
+         where 1=1
+            and TYPE='2'
+            and XZJB='1'
+			and SZQY_CODE like (#{areaCode} + '%')
+    </select>
+    
+</mapper>

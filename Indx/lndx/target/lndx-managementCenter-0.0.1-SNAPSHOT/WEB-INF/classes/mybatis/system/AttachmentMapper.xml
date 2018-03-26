@@ -1,0 +1,63 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="AttachmentMapper">
+	
+	<resultMap type="com.zhimu.dao.entity.system.Attachment" id="attachmentMap">
+		<id column="id" property="id"/>
+		<result column="BUSINESS_ID" property="businessId"/>
+		<result column="NAME" property="name"/>
+		<result column="FILE_TYPE" property="fileType"/>
+		<result column="PATH" property="path"/>
+		<result column="FILE_IDENTITY" property="fileIdentity"/>
+		<result column="IS_DEL" property="isDel"/>
+		<result column="CREATE_TIME" property="createTime"/>
+		<result column="UPDATE_TIME" property="updateTime"/>
+		<result column="CREATE_BY" property="createBy"/>
+		<result column="UPDATE_BY" property="updateBy"/>
+	</resultMap>
+	
+	<!-- 保存附件信息 -->
+	<insert id="save" parameterType="com.zhimu.dao.entity.system.Attachment">
+		insert into 
+		sys_main_attachment
+		(
+			ID,BUSINESS_ID,NAME,FILE_TYPE,PATH,FILE_IDENTITY,IS_DEL,CREATE_TIME,CREATE_BY
+		) values (
+			#{id},#{businessId},#{name},#{fileType},#{path},#{fileIdentity},#{isDel},#{createTime},#{createBy}
+		)
+	</insert>
+	<!-- 通过ID获取数据 -->
+	<select id="findById" parameterType="com.zhimu.dao.entity.system.Attachment" resultMap="attachmentMap">
+		select 
+			*
+		from 
+			sys_main_attachment
+		where 
+			ID = #{id}
+	</select>
+	<!-- 通过业务数据ID获取数据 -->
+	<select id="findByBusinessId" parameterType="com.zhimu.dao.entity.system.Attachment" resultMap="attachmentMap">
+		select 
+			*
+		from 
+			sys_main_attachment
+		where 
+			BUSINESS_ID = #{businessId}
+	</select>
+	<!-- 通过业务数据ID获取数据 -->
+	<select id="delete" parameterType="com.zhimu.dao.entity.system.Attachment">
+		delete from
+			sys_main_attachment
+		where 
+			ID = #{id}
+	</select>
+	<update id="updateBuinessIdById" parameterType="java.lang.String">
+		update
+			sys_main_attachment
+		set 
+			BUSINESS_ID = #{businessId}
+		where 
+			ID = #{id}
+	</update>
+	
+</mapper>

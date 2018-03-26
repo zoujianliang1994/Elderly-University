@@ -1,0 +1,131 @@
+package com.zhimu.dao.entity.system;
+
+import java.util.List;
+
+/**
+ * 内设机构
+ * 
+ * @author wangyong
+ * 
+ */
+public class Section {
+
+	private String SECTION_ID;
+	private String DEPARTMENT_ID;
+	private String NAME;
+	private String LEVEL;
+	private String FZR;
+	private String TEL;
+	private String RS;
+	private String ZNMS;
+
+	private String target;
+	private Section section;
+	private List<Section> subSection;
+	private boolean hasSection = false;
+	private String treeurl;
+
+	public String getSECTION_ID() {
+		return SECTION_ID;
+	}
+
+	public void setSECTION_ID(String SECTION_ID) {
+		this.SECTION_ID = SECTION_ID;
+	}
+
+	public String getDEPARTMENT_ID() {
+		return DEPARTMENT_ID;
+	}
+
+	public void setDEPARTMENT_ID(String DEPARTMENT_ID) {
+		this.DEPARTMENT_ID = DEPARTMENT_ID;
+	}
+
+	public String getNAME() {
+		return NAME;
+	}
+
+	public void setNAME(String NAME) {
+		this.NAME = NAME;
+	}
+
+	public String getLEVEL() {
+		return LEVEL;
+	}
+
+	public void setLEVEL(String LEVEL) {
+		this.LEVEL = LEVEL;
+	}
+
+	public String getFZR() {
+		return FZR;
+	}
+
+	public void setFZR(String FZR) {
+		this.FZR = FZR;
+	}
+
+	public String getTEL() {
+		return TEL;
+	}
+
+	public void setTEL(String TEL) {
+		this.TEL = TEL;
+	}
+
+	public String getRS() {
+		return RS;
+	}
+
+	public void setRS(String RS) {
+		this.RS = RS;
+	}
+
+	public String getZNMS() {
+		return ZNMS;
+	}
+
+	public void setZNMS(String ZNMS) {
+		this.ZNMS = ZNMS;
+	}
+
+	public String getTarget() {
+		return target;
+	}
+
+	public void setTarget(String target) {
+		this.target = target;
+	}
+
+	public Section getSection() {
+		return section;
+	}
+
+	public void setSection(Section section) {
+		this.section = section;
+	}
+
+	public List<Section> getSubSection() {
+		return subSection;
+	}
+
+	public void setSubSection(List<Section> subSection) {
+		this.subSection = subSection;
+	}
+
+	public boolean isHasSection() {
+		return hasSection;
+	}
+
+	public void setHasSection(boolean hasSection) {
+		this.hasSection = hasSection;
+	}
+
+	public String getTreeurl() {
+		return treeurl;
+	}
+
+	public void setTreeurl(String treeurl) {
+		this.treeurl = treeurl;
+	}
+}

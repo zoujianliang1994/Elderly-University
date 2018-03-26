@@ -1,0 +1,286 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<beans xmlns:p="http://www.springframework.org/schema/p" xmlns="http://www.springframework.org/schema/beans"
+	xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xmlns:context="http://www.springframework.org/schema/context"
+	xmlns:aop="http://www.springframework.org/schema/aop" xmlns:cache="http://www.springframework.org/schema/cache"
+	xmlns:mvc="http://www.springframework.org/schema/mvc" xmlns:jdbc="http://www.springframework.org/schema/jdbc"
+	xmlns:tx="http://www.springframework.org/schema/tx" xmlns:task="http://www.springframework.org/schema/task"
+	xmlns:websocket="http://www.springframework.org/schema/websocket"
+	xsi:schemaLocation="http://www.springframework.org/schema/beans
+			http://www.springframework.org/schema/beans/spring-beans-4.2.xsd
+			http://www.springframework.org/schema/context 
+			http://www.springframework.org/schema/context/spring-context-4.2.xsd
+			http://www.springframework.org/schema/aop 
+			http://www.springframework.org/schema/aop/spring-aop-4.2.xsd
+			http://www.springframework.org/schema/mvc     
+        	http://www.springframework.org/schema/mvc/spring-mvc.xsd   
+			http://www.springframework.org/schema/jdbc
+			http://www.springframework.org/schema/jdbc/spring-jdbc-4.2.xsd
+			http://www.springframework.org/schema/tx 
+			http://www.springframework.org/schema/tx/spring-tx-4.2.xsd
+			http://www.springframework.org/schema/task
+			http://www.springframework.org/schema/task/spring-task-4.2.xsd
+			http://www.springframework.org/schema/websocket 
+			http://www.springframework.org/schema/websocket/spring-websocket.xsd"
+	default-lazy-init="false">
+	<!-- 启动spring的自动扫描类功能 -->
+	<!-- <context:component-scan base-package="com.zhimu"/> -->
+	<!-- 自动扫描组件，这里要把controler下面的 controller去除，他们是在springMvc-servlet.xml中配置的，如果不去除会影响事务管理的。 -->
+	<context:component-scan base-package="com.zhimu">
+		<context:exclude-filter type="annotation"
+			expression="org.springframework.stereotype.Controller" />
+	</context:component-scan>
+
+	<!-- 启动AOP的自动扫描功能 -->
+	<aop:aspectj-autoproxy></aop:aspectj-autoproxy>
+	<!-- 启动Task任务注解 -->
+	<task:annotation-driven executor="taskExecutor"
+		scheduler="scheduler" />
+	<!-- spring自己的缓存管理器配置 -->
+	<bean id="cacheManager" class="org.springframework.cache.support.SimpleCacheManager">
+		<property name="caches">
+			<set>
+				<bean
+					class="org.springframework.cache.concurrent.ConcurrentMapCacheFactoryBean"
+					p:name="default"></bean>
+				<bean
+					class="org.springframework.cache.concurrent.ConcurrentMapCacheFactoryBean"
+					p:name="config"></bean>
+				<bean
+					class="org.springframework.cache.concurrent.ConcurrentMapCacheFactoryBean"
+					p:name="folder"></bean>
+				<bean
+					class="org.springframework.cache.concurrent.ConcurrentMapCacheFactoryBean"
+					p:name="article"></bean>
+				<bean
+					class="org.springframework.cache.concurrent.ConcurrentMapCacheFactoryBean"
+					p:name="media"></bean>
+			</set>
+		</property>
+	</bean>
+	<!-- 配置文件读取 -->
+ 	<bean id="propertyConfigurer" class="com.zhimu.commons.utils.PropertyUtils">
+        <property name="location">
+            <value>/WEB-INF/variable.conifg.properties</value>
+        </property>
+        <property name="fileEncoding" value="utf-8" /> 
+    </bean>
+	<!-- 配置Redis缓存 -->
+	<!-- <bean id="jedisPoolConfig" class="redis.clients.jedis.JedisPoolConfig"> 
+		<property name="maxTotal" value="1000"/> <property name="maxIdle" value="300"/> 
+		<property name="minIdle" value="3"/> <property name="maxWaitMillis" value="30000"/> 
+		<property name="testOnBorrow" value="true"/> <property name="testOnReturn" 
+		value="true"/> <property name="testWhileIdle" value="true"/> </bean> -->
+
+	<!-- <bean id="shardedJedisPool" class="redis.clients.jedis.ShardedJedisPool" 
+		destroy-method="destroy"> <constructor-arg ref="jedisPoolConfig"/> <constructor-arg> 
+		<list> <bean class="redis.clients.jedis.JedisShardInfo"> <constructor-arg 
+		index="0" type="String" value="192.168.3.2"/> <constructor-arg index="1" 
+		type="int" value="6379"/> <property name="password" value="123456"/> </bean> 
+		</list> </constructor-arg> </bean> -->
+	<!--1.配置数据源 -->
+	<!-- Spring自带的jdbc数据库连接 -->
+	<!--加载本地文件配置数据源 <context:property-placeholder location="classpath:db.properties" 
+		/> <bean class="org.springframework.jdbc.datasource.DriverManagerDataSource" 
+		id="dataSource"> <property value="${mysqlDriver}" name="driverClassName"/> 
+		<property value="${url}" name="url"/> <property value="${username}" name="username"/> 
+		<property value="${password}" name="password"/> </bean> -->
+	<!-- <bean class="org.springframework.jdbc.datasource.DriverManagerDataSource" 
+		id="dataSource"> <property value="com.mysql.jdbc.Driver" name="driverClassName"/> 
+		<property value="jdbc:mysql://127.0.0.1:3306/pdk?useUnicode=true&amp;characterEncoding=utf-8&amp;useSSL=false&amp;allowMultiQueries=true" 
+		name="url"/> <property value="adminly" name="username"/> <property value="LYMySQLServer!@#$" 
+		name="password"/> </bean> -->
+	<!--Druid数据库连接配置开始 -->
+	<bean id="stat-filter" class="com.alibaba.druid.filter.stat.StatFilter">
+		<!--慢SQL统计，如果SQL执行时间超过一定时间则记录为慢SQL -->
+		<property name="slowSqlMillis" value="3000" />
+		<!--慢SQL统计日志输出 -->
+		<property name="logSlowSql" value="true" />
+		<!--合并SQL统计 例如select * from table t where t.id =1，会被变为select * from table 
+			t where t.id =？来统计 -->
+		<property name="mergeSql" value="true" />
+	</bean>
+
+	<bean id="wall-config" class="com.alibaba.druid.wall.WallConfig">
+		<property name="multiStatementAllow" value="true" />
+	</bean>
+
+	<bean id="wall-filter" class="com.alibaba.druid.wall.WallFilter">
+		<property name="config" ref="wall-config" />
+		<property name="dbType" value="sqlserver" />
+	</bean>
+	<bean id="logFilter" class="com.alibaba.druid.filter.logging.Slf4jLogFilter">
+		<property name="statementExecutableSqlLogEnable" value="false" />
+	</bean>
+	<bean id="dataSource" class="com.alibaba.druid.pool.DruidDataSource"
+		init-method="init" destroy-method="close">
+		<!-- 基本属性 url、user、password 192.168.151.138 -->
+		<!-- <property name="driverClassName" value="com.mysql.jdbc.Driver"/> -->
+		<!-- <property name="url" value="jdbc:mysql://localhost:8066/test?useUnicode=true&amp;characterEncoding=utf-8&amp;useSSL=false&amp;allowMultiQueries=true" 
+			/> <property name="username" value="root" /> <property name="password" value="liangyuan" 
+			/> -->
+		<property name="url"
+			value="jdbc:sqlserver://192.168.3.109:1433;DatabaseName=lndx_beta" />
+		<property name="username" value="sa" />
+		<property name="password" value="llw_510" />
+
+		<!-- 配置初始化大小、最小、最大 -->
+		<property name="initialSize" value="5" />
+		<property name="minIdle" value="5" />
+		<property name="maxActive" value="100" />
+
+		<!-- 配置获取连接等待超时的时间 -->
+		<property name="maxWait" value="60000" />
+
+		<!-- 配置间隔多久才进行一次检测，检测需要关闭的空闲连接，单位是毫秒 -->
+		<property name="timeBetweenEvictionRunsMillis" value="60000" />
+
+		<!-- 配置一个连接在池中最小生存的时间，单位是毫秒 -->
+		<property name="minEvictableIdleTimeMillis" value="300000" />
+
+		<property name="validationQuery" value="SELECT 1" />
+		<property name="testWhileIdle" value="true" />
+		<property name="testOnBorrow" value="false" />
+		<property name="testOnReturn" value="false" />
+
+		<!-- 打开PSCache，并且指定每个连接上PSCache的大小 -->
+		<property name="poolPreparedStatements" value="true" />
+		<property name="maxPoolPreparedStatementPerConnectionSize"
+			value="20" />
+
+		<!-- 关闭长时间不使用的连接 -->
+		<property name="removeAbandoned" value="true" /> <!-- 打开removeAbandoned功能 -->
+		<property name="removeAbandonedTimeout" value="1200" /> <!-- 1200秒，也就是20分钟 -->
+		<property name="logAbandoned" value="true" /> <!-- 关闭abanded连接时输出错误日志 -->
+
+		<!-- 配置监控统计拦截的filters -->
+		<property name="proxyFilters">
+			<list>
+				<ref bean="stat-filter" />
+				<ref bean="wall-filter" />
+				<ref bean="logFilter" />
+			</list>
+		</property>
+		<!-- 数据库监控，及日志配置 多个配置用,分割 -->
+		<!-- <property name="filters" value="wall" /> -->
+		<!-- 合并统计多个数据源 -->
+		<!-- <property name="useGloalDataSourceStat" value="true" /> -->
+	</bean>
+	<!--Druid数据库连接配置结束 -->
+
+
+	<!-- <bean id="flyway" class="org.flywaydb.core.Flyway" init-method="migrate"> 
+		<property name="dataSource" ref="dataSource" /> <property name="table" value="alie_schema_version" 
+		/> <property name="locations" value="classpath:dbmigration" /> <property 
+		name="baselineOnMigrate" value="true" /> </bean> -->
+	<!-- 2. mybatis的SqlSession的工厂: SqlSessionFactoryBean dataSource / typeAliasesPackage。 
+		typeAliasesPackage 配置别名， mapperLocations 配置xml的路径，不配置xml要和接口在同一个目录下 ** 代表所有目录 -->
+	<bean class="org.mybatis.spring.SqlSessionFactoryBean" id="sqlSessionFactory"><!-- depends-on="flyway" -->
+		<property name="dataSource" ref="dataSource" />
+		<property name="configLocation" value="/WEB-INF/mybatis-config.xml"></property>
+		<property name="mapperLocations" value="classpath:/mybatis/**/*.xml"></property>
+		<property value="com.zhimu.dao.entity" name="typeAliasesPackage" />
+		<!-- <property name="configLocation" value="/WEB-INF/mybatisConfigure.xml" 
+			/> -->
+	</bean>
+	<bean id="sqlSessionTemplate" class="org.mybatis.spring.SqlSessionTemplate">
+		<constructor-arg ref="sqlSessionFactory" />
+	</bean>
+
+	<!-- 3. mybatis自动扫描加载Sql映射文件 : MapperScannerConfigurer sqlSessionFactory 
+		/ basePackage。 basePackage 配置接口类的最外层包路径 -->
+	<!-- <bean class="org.mybatis.spring.mapper.MapperScannerConfigurer" > <property 
+		value="com.zhimu.dao.mybatis" name="basePackage"/> <property name="sqlSessionFactory" 
+		ref="sqlSessionFactory"/> </bean> -->
+
+	<!-- 事务配置开始 -->
+
+	<!-- 4. 事务管理 : DataSourceTransactionManager -->
+	<bean
+		class="org.springframework.jdbc.datasource.DataSourceTransactionManager"
+		id="manager">
+		<property name="dataSource" ref="dataSource" />
+	</bean>
+	<!-- 5. 使用声明式事务 -->
+	<tx:annotation-driven transaction-manager="manager"
+		proxy-target-class="true" />
+	<tx:advice id="txAdvice" transaction-manager="manager">
+		<tx:attributes>
+			<tx:method name="save*" propagation="REQUIRED" />
+			<tx:method name="add*" propagation="REQUIRED" />
+			<tx:method name="create*" propagation="REQUIRED" />
+			<tx:method name="insert*" propagation="REQUIRED" />
+			<tx:method name="update*" propagation="REQUIRED" />
+			<tx:method name="edit*" propagation="REQUIRED" />
+			<tx:method name="merge*" propagation="REQUIRED" />
+			<tx:method name="del*" propagation="REQUIRED" />
+			<tx:method name="remove*" propagation="REQUIRED" />
+			<tx:method name="move*" propagation="REQUIRED" />
+			<tx:method name="put*" propagation="REQUIRED" />
+			<tx:method name="get*" propagation="SUPPORTS" read-only="true" />
+			<tx:method name="count*" propagation="SUPPORTS" read-only="true" />
+			<tx:method name="find*" propagation="SUPPORTS" read-only="true" />
+			<tx:method name="list*" propagation="SUPPORTS" read-only="true" />
+			<tx:method name="*" propagation="SUPPORTS" read-only="true" />
+		</tx:attributes>
+	</tx:advice>
+	<!-- 统一事务配置 -->
+	<aop:config>
+		<aop:pointcut id="comServiceMethods"
+			expression="execution(* com.zhimu.service.manager.*..*(..))" />
+		<aop:advisor advice-ref="txAdvice" pointcut-ref="comServiceMethods" />
+	</aop:config>
+
+	<!-- 事务配置完成 -->
+
+	<!-- 文件上传和下载bean 配置 -->
+	<bean id="multipartResolver"
+		class="org.springframework.web.multipart.commons.CommonsMultipartResolver">
+		<property name="defaultEncoding" value="UTF-8" /><!--是请求的编码格式，默认为iso-8859-1 -->
+		<!-- <property name="maxUploadSize" value="102400"/>是上传文件的大小，单位为字节 -->
+		<!-- <property name="maxInMemorySize" value="40960"/> 分配的内存大小，单位为字节 -->
+		<!--<property name="uploadTempDir" value="fileUpload/temp"/> 为上传文件的临时路径 -->
+	</bean>
+
+	<!-- SpringMVC在超出上传文件限制时，会抛出org.springframework.web.multipart.MaxUploadSizeExceededException -->
+	<!-- 该异常是SpringMVC在检查上传的文件信息时抛出来的，而且此时还没有进入到Controller方法中 -->
+	<bean id="exceptionResolver"
+		class="org.springframework.web.servlet.handler.SimpleMappingExceptionResolver">
+		<property name="exceptionMappings">
+			<props>
+				<!-- 遇到MaxUploadSizeExceededException异常时，自动跳转到/WEB-INF/jsp/error_fileupload.jsp页面 -->
+				<prop
+					key="org.springframework.web.multipart.MaxUploadSizeExceededException">error_fileupload</prop>
+			</props>
+		</property>
+	</bean>
+
+	<!-- 线程池 -->
+	<bean id="taskExecutor"
+		class="org.springframework.scheduling.concurrent.ThreadPoolTaskExecutor">
+		<!-- 线程池维护线程的最少数量 -->
+		<property name="corePoolSize" value="5" />
+		<!-- 线程池维护线程的最大数量 -->
+		<property name="maxPoolSize" value="10" />
+		<!-- 线程池维护线程所允许的空闲时间 -->
+		<property name="keepAliveSeconds" value="30000" />
+		<!-- 线程池所使用的缓冲队列 -->
+		<property name="queueCapacity" value="200" />
+		<!-- 任务完成线程关闭true 代表关闭false 代表开启 -->
+		<property name="waitForTasksToCompleteOnShutdown" value="true" />
+	</bean>
+
+	<!-- 线程池最好配置上要不然spring后台会报错但是程序会正常运行，我这种代码要求高的人 怎么会让他出现报错呢！ -->
+	<!-- 配置执行任务的线程池官网推荐5-10 -->
+	<task:executor id="executor" pool-size="5" />
+
+	<!-- 配置调度任务的线程池 最后还是交给executor线程去执行 -->
+	<task:scheduler id="scheduler" pool-size="10" />
+
+	<!-- 导入task配置 -->
+	<import resource="springTaskConfigure.xml" />
+	<!-- 导入shiro配置 -->
+	<import resource="shiroConfigure.xml" />
+	<!-- 导入redis配置 -->
+	<import resource="Spring-redis.xml" />  
+
+</beans>

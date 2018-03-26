@@ -1,0 +1,416 @@
+package com.zhimu.controller.manager.system.role;
+
+import java.io.PrintWriter;
+import java.math.BigInteger;
+import java.util.ArrayList;
+import java.util.HashMap;
+import java.util.List;
+import java.util.Map;
+
+import javax.annotation.Resource;
+
+import net.sf.json.JSONArray;
+
+import org.apache.commons.lang.ArrayUtils;
+import org.springframework.stereotype.Controller;
+import org.springframework.ui.Model;
+import org.springframework.web.bind.annotation.RequestMapping;
+import org.springframework.web.bind.annotation.RequestParam;
+import org.springframework.web.bind.annotation.ResponseBody;
+import org.springframework.web.servlet.ModelAndView;
+
+import com.zhimu.commons.utils.AppUtil;
+import com.zhimu.commons.utils.DateUtil;
+import com.zhimu.commons.utils.PageData;
+import com.zhimu.commons.utils.RightsHelper;
+import com.zhimu.commons.utils.Tools;
+import com.zhimu.controller.manager.base.BaseController;
+import com.zhimu.dao.entity.system.Menu;
+import com.zhimu.dao.entity.system.Page;
+import com.zhimu.dao.entity.system.Role;
+import com.zhimu.dao.entity.system.RolePermission;
+import com.zhimu.service.manager.system.menu.MenuManager;
+import com.zhimu.service.manager.system.role.RoleManager;
+import com.zhimu.service.manager.system.user.UserManager;
+
+/**
+ * 类名称：RoleController 角色权限管理 创建人：ytz 修改时间：2017年7月3日
+ * 
+ * @version
+ */
+@Controller
+@RequestMapping(value = "/role")
+public class RoleController extends BaseController {
+	String menuUrl = "role.do";
+	@Resource(name = "menuService")
+	private MenuManager menuService;
+	@Resource(name = "roleService")
+	private RoleManager roleService;
+	@Resource(name = "userService")
+	private UserManager userService;
+
+	/**
+	 * 进入角色列表首页
+	 * 
+	 * @param
+	 * @return
+	 * @throws Exception
+	 */
+
+	@RequestMapping(value = "/list")
+	public ModelAndView list(Page page) throws Exception {
+		ModelAndView mv = this.getModelAndView();
+		PageData pd = new PageData();
+		try {
+			pd = this.getPageData();
+			pd.put("PARENT_ID", "1");
+
+			String keywords = pd.getString("keywords"); // 关键词检索条件
+			if (null != keywords && !"".equals(keywords)) {
+				mv.addObject("keywords", keywords);
+				pd.put("keywords", keywords.trim());
+			}
+			page.setPd(pd);
+			List<PageData> roleList_z = roleService.listRoles(page); // 列出所有的角色
+			mv.addObject("pd", pd);
+			mv.addObject("page", page);
+			mv.addObject("roleList_z", roleList_z);
+			mv.setViewName("system/role/role_list");
+		} catch (Exception e) {
+			logger.error(e.toString(), e);
+		}
+		return mv;
+	}
+
+	/**
+	 * 去新增页面
+	 * 
+	 * @param
+	 * @return
+	 */
+	@RequestMapping(value = "/toAdd")
+	public ModelAndView toAdd() throws Exception {
+		ModelAndView mv = this.getModelAndView();
+		PageData pd = new PageData();
+		try {
+			pd = this.getPageData();
+			mv.addObject("msg", "add");
+			mv.setViewName("system/role/role_edit");
+			mv.addObject("pd", pd);
+		} catch (Exception e) {
+			logger.error(e.toString(), e);
+		}
+		return mv;
+	}
+
+	/**
+	 * 请求编辑
+	 * 
+	 * @param ROLE_ID
+	 * @return
+	 * @throws Exception
+	 */
+	@RequestMapping(value = "/toEdit")
+	public ModelAndView toEdit(String ROLE_ID) throws Exception {
+		ModelAndView mv = this.getModelAndView();
+		PageData pd = new PageData();
+		try {
+			pd = this.getPageData();
+			pd.put("ROLE_ID", ROLE_ID);
+			String currentPage = pd.getString("currentPage");
+			pd = roleService.findObjectById(pd);
+			pd.put("currentPage", currentPage);
+			mv.addObject("msg", "edit");
+			mv.addObject("pd", pd);
+			mv.setViewName("system/role/role_edit");
+		} catch (Exception e) {
+			logger.error(e.toString(), e);
+		}
+		return mv;
+	}
+
+	/**
+	 * 保存修改
+	 * 
+	 * @return
+	 * @throws Exception
+	 */
+	@RequestMapping(value = "/edit")
+	@ResponseBody
+	public Object edit() throws Exception {
+		PageData pd = new PageData();
+		String msg = "";
+		try {
+			pd = this.getPageData();
+			roleService.edit(pd);
+			msg = "success";
+		} catch (Exception e) {
+			logger.error(e.toString(), e);
+			msg = "failed";
+		}
+		Map<String, String> map = new HashMap<String, String>();
+		map.put("msg", msg);
+		return AppUtil.returnObject(new PageData(), map);
+	}
+
+	/**
+	 * 保存新增角色
+	 * 
+	 * @return
+	 * @throws Exception
+	 */
+	@RequestMapping(value = "/add")
+	@ResponseBody
+	public Object add() throws Exception {
+		PageData pd = new PageData();
+		String msg = "";
+		try {
+			pd = this.getPageData();
+			pd.put("RIGHTS", ""); // 菜单权限
+			pd.put("PARENT_ID", "1");
+			pd.put("ROLE_ID", this.get32UUID()); // 主键
+			pd.put("ADD_QX", "0"); // 初始新增权限为否
+			pd.put("DEL_QX", "0"); // 删除权限
+			pd.put("EDIT_QX", "0"); // 修改权限
+			pd.put("CHA_QX", "0"); // 查看权限
+			roleService.add(pd);
+			msg = "success";
+		} catch (Exception e) {
+			logger.error(e.toString(), e);
+			msg = "error";
+		}
+		Map<String, String> map = new HashMap<String, String>();
+		map.put("msg", msg);
+		return AppUtil.returnObject(new PageData(), map);
+	}
+
+	/**
+	 * 删除角色
+	 * 
+	 * @param ROLE_ID
+	 * @return
+	 * @throws Exception
+	 */
+	@RequestMapping(value = "/delete")
+	@ResponseBody
+	public Object deleteRole(@RequestParam String ROLE_ID) throws Exception {
+		Map<String, String> map = new HashMap<String, String>();
+		PageData pd = new PageData();
+		String errInfo = "";
+		try {
+			pd.put("ROLE_ID", ROLE_ID);
+			List<Role> roleList_z = roleService.listAllRolesByPId(pd); // 列出此部门的所有下级
+			if (roleList_z.size() > 0) {
+				errInfo = "false"; // 下级有数据时，删除失败
+			} else {
+				List<PageData> userlist = userService.listAllUserByRoldId(pd); // 此角色下的用户
+				if (userlist.size() > 0) { // 此角色已被使用就不能删除
+					errInfo = "false2";
+				} else {
+					map.put("ROLE_ID", ROLE_ID);
+					roleService.deleteRolePermission(map);// 执行删除角色细化的权限
+					roleService.deleteRoleById(ROLE_ID); // 执行删除
+					errInfo = "success";
+				}
+			}
+		} catch (Exception e) {
+			logger.error(e.toString(), e);
+		}
+		map.clear();
+		map.put("result", errInfo);
+		return AppUtil.returnObject(new PageData(), map);
+	}
+
+	/**
+	 * 保存角色菜单权限
+	 * 
+	 * @param ROLE_ID
+	 *            角色ID
+	 * @param menuIds
+	 *            菜单ID集合
+	 * @param out
+	 * @throws Exception
+	 */
+	@RequestMapping(value = "/saveMenuqx")
+	public void saveMenuqx(@RequestParam String ROLE_ID, @RequestParam String menuIds, PrintWriter out) throws Exception {
+		logger.debug("修改权限：" + DateUtil.getTime() + " 修改人：" + getUserInfo().getUSERNAME());
+
+		PageData pd = new PageData();
+		pd.put("role_id", ROLE_ID);
+		Map<String, String> map = new HashMap<String, String>();
+		List<RolePermission> rolePermissionList = new ArrayList<RolePermission>();
+		RolePermission rolePermission;
+		try {
+			if (null != menuIds && !"".equals(menuIds.trim())) {
+				map.put("ROLE_ID", ROLE_ID);
+				roleService.deleteRolePermission(map);
+				String[] menuIdArray = Tools.str2StrArray(menuIds);
+				List<String> newMenuIds = new ArrayList<String>();
+				for (int i = 0; i < menuIdArray.length; i++) {
+					if (menuIdArray[i].contains("role_menu_")) {
+						rolePermission = new RolePermission();
+						rolePermission.setId(this.get32UUID());
+						rolePermission.setPermission_id(menuIdArray[i].replace("role_menu_", ""));
+						rolePermission.setIs_select("1");
+						rolePermission.setRole_id(ROLE_ID);
+						rolePermissionList.add(rolePermission);
+						ArrayUtils.remove(menuIdArray, i);
+					} else {
+						newMenuIds.add(menuIdArray[i]);
+					}
+				}
+				if (!rolePermissionList.isEmpty()) {
+					roleService.insertRolePermission(rolePermissionList);
+				}
+				String[] result = {};
+				BigInteger rights = RightsHelper.sumRights(newMenuIds.toArray(result));// 用菜单ID做权处理
+				Role role = roleService.getRoleById(ROLE_ID); // 通过id获取角色对象
+				role.setRIGHTS(rights.toString());
+				roleService.updateRoleRights(role); // 更新当前角色菜单权限
+				pd.put("rights", rights.toString());
+			} else {
+				Role role = new Role();
+				role.setRIGHTS("");
+				role.setROLE_ID(ROLE_ID);
+				roleService.updateRoleRights(role); // 更新当前角色菜单权限(没有任何勾选)
+				roleService.iupdateRolePermission(ROLE_ID);// 更新当前角色细化菜单权限(没有任何勾选)
+				pd.put("rights", "");
+			}
+			pd.put("ROLE_ID", ROLE_ID);
+			roleService.setAllRights(pd); // 更新此角色所有子角色的菜单权限
+			out.write("success");
+			out.close();
+		} catch (Exception e) {
+			logger.error(e.toString(), e);
+		}
+	}
+
+	/**
+	 * 显示菜单列表ztree(菜单授权菜单)
+	 * 
+	 * @param model
+	 * @return
+	 */
+	@RequestMapping(value = "/menuqx")
+	public ModelAndView listAllMenu(Model model, String ROLE_ID) throws Exception {
+		ModelAndView mv = this.getModelAndView();
+		try {
+			Role role = roleService.getRoleById(ROLE_ID); // 根据角色ID获取角色对象
+			String roleRights = role.getRIGHTS(); // 取出本角色菜单权限
+			List<Menu> menuList = menuService.listRoleMenuQx("0", ROLE_ID); // 获取所有菜单
+			menuList = this.readMenu(menuList, roleRights); // 根据角色权限处理菜单权限状态(递归处理)
+			JSONArray arr = JSONArray.fromObject(menuList);
+			String json = arr.toString();
+			json = json.replaceAll("MENU_ID", "id").replaceAll("PARENT_ID", "pId").replaceAll("MENU_NAME", "title").replaceAll("subMenu", "children").replaceAll("hasMenu", "isChecked");
+			model.addAttribute("zTreeNodes", json);
+			mv.addObject("ROLE_ID", ROLE_ID);
+			mv.setViewName("system/role/menuqx");
+		} catch (Exception e) {
+			logger.error(e.toString(), e);
+		}
+		return mv;
+	}
+
+	/**
+	 * 显示菜单列表ztree(菜单授权菜单)
+	 * 
+	 * @param model
+	 * @return
+	 */
+	@RequestMapping(value = "/setUser")
+	public ModelAndView setUser(Model model, String ROLE_ID) throws Exception {
+		ModelAndView mv = this.getModelAndView();
+		try {
+
+			// 获取所有用户
+			List<Map> list = roleService.getRoleUser(ROLE_ID);
+
+			JSONArray arr = JSONArray.fromObject(list);
+			String json = arr.toString();
+			json = json.replaceAll("USER_ID", "id").replaceAll("NAME", "title").replaceAll("subMenu", "children").replaceAll("hasMenu", "isChecked").replaceAll("\"true\"", "true")
+					.replaceAll("\"false\"", "false");
+			model.addAttribute("zTreeNodes", json);
+
+			mv.addObject("ROLE_ID", ROLE_ID);
+			mv.setViewName("system/role/setUser");
+		} catch (Exception e) {
+			logger.error(e.toString(), e);
+		}
+		return mv;
+	}
+
+	/**
+	 * 保存用户选择
+	 * 
+	 * @param ROLE_ID
+	 * @param newId
+	 * @param oldId
+	 * @param out
+	 * @throws Exception
+	 */
+	@RequestMapping(value = "/saveSetUser")
+	public void saveSetUser(@RequestParam String ROLE_ID, @RequestParam String newId, @RequestParam String oldId, PrintWriter out) throws Exception {
+
+		try {
+			// 老的选择
+			List<String> clearUser = new ArrayList<String>();
+			List<String> oldList2 = new ArrayList<String>();
+			for (String t : oldId.split(",")) {
+				clearUser.add(t);
+				oldList2.add(t);
+			}
+			// 新的选择
+			List<String> newList = new ArrayList<String>();
+			for (String t : newId.split(",")) {
+				newList.add(t);
+			}
+			clearUser.removeAll(newList);// 删除的用户
+			// 比较出新增选择的用户
+			newList.removeAll(oldList2);// 新增用户
+
+			// 更新用户权限
+			Map<String, Object> map = new HashMap<String, Object>();
+			map.put("id", ROLE_ID + ",");
+			map.put("list", clearUser);
+			if (clearUser.size() > 0) {
+				roleService.clearUserRole(map);
+			}
+			map.put("list", newList);
+			if (newList.size() > 0) {
+				roleService.addUserRole(map);
+			}
+
+			out.write("success");
+			out.close();
+		} catch (Exception e) {
+			logger.error(e.toString(), e);
+		}
+	}
+
+	/**
+	 * 根据角色权限处理权限状态(递归处理)
+	 * 
+	 * @param menuList
+	 *            ：传入的总菜单
+	 * @param roleRights
+	 *            ：加密的权限字符串
+	 * @return
+	 */
+	private List<Menu> readMenu(List<Menu> menuList, String roleRights) throws Exception {
+		for (int i = 0; i < menuList.size(); i++) {
+			// 最末层菜单,菜单对应的权限
+			if ("endFrame".equals(menuList.get(i).getTarget())) {
+				if ("0".equals(menuList.get(i).getMENU_STATE())) {
+					menuList.get(i).setHasMenu(false);
+				} else {
+					menuList.get(i).setHasMenu(true);
+				}
+			} else {
+				menuList.get(i).setHasMenu(RightsHelper.testRights(roleRights, menuList.get(i).getMENU_ID()));
+				this.readMenu(menuList.get(i).getSubMenu(), roleRights); // 是：继续排查其子菜单
+			}
+		}
+		return menuList;
+	}
+
+}

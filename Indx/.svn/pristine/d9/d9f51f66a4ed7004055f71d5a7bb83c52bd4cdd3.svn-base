@@ -1,0 +1,163 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="SchoolMapper">
+	
+	<!--表名 -->
+	<sql id="tableName">
+		edu_school
+	</sql>
+	
+	<!-- 字段 -->
+	<sql id="Field">
+		id,	
+		name,	
+		type,	
+		location,	
+		contact,	
+		tel,	
+		description,	
+		createTime,
+		createName,
+		createId,
+		status,
+		pid
+	</sql>
+	
+	<!-- 字段值 -->
+	<sql id="FieldValue">
+		#{id},	
+		#{name},	
+		#{type},	
+		#{location},	
+		#{contact},	
+		#{tel},	
+		#{description},	
+		#{createTime},
+		#{createName},
+		#{createId},
+		#{status},
+		#{pid}
+	</sql>
+	
+	<!-- 新增-->
+	<insert id="save" parameterType="pd">
+		insert into 
+	<include refid="tableName"></include>
+		(
+	<include refid="Field"></include>
+		) values (
+	<include refid="FieldValue"></include>
+		)
+	</insert>
+	
+	<!-- 删除-->
+	<delete id="delete" parameterType="pd">
+		delete from
+		<include refid="tableName"></include>
+		where 
+			id = #{id}
+	</delete>
+	
+	<!-- 修改 -->
+	<update id="edit" parameterType="pd">
+		update
+		<include refid="tableName"></include>
+		set 
+			name = #{name},
+			type = #{type},
+			location = #{location},
+			contact = #{contact},
+			tel = #{tel},
+			description = #{description},
+			createId=#{createId},
+			createName=#{createName},
+			status=#{status},
+			pid=#{pid}
+		where 
+			id = #{id}
+	</update>
+	
+	<!-- 更新创建者 -->
+	<update id="editAuThor" parameterType="pd">
+		update
+		<include refid="tableName"></include>
+		set 
+			createId=#{createId}
+		where 
+			id = #{id}
+	</update>
+	
+	
+	<!-- 通过ID获取数据 -->
+	<select id="findById" parameterType="pd" resultType="pd">
+		select 
+		<include refid="Field"></include>
+		from 
+		<include refid="tableName"></include>
+		where
+			id = #{id}
+	</select>
+
+	<!-- 通过ID字符串获取数据 -->
+	<select id="findByIdArr" parameterType="pd" resultType="pd">
+		select
+		<include refid="Field"></include>
+		from
+		<include refid="tableName"></include>
+		where
+			id IN
+		<foreach collection="array" separator="," open="(" close=")" item="schoolId">
+			#{schoolId}
+		</foreach>
+	</select>
+	
+	
+	
+	<!-- 通过创建人ID和类型获取学校数据 -->
+	<select id="findByCidType" parameterType="pd" resultType="pd">
+		select 
+		<include refid="Field"></include>
+		from 
+		<include refid="tableName"></include>
+		where 
+			createId = #{createId}
+			<if test="stype != null and stype != ''">
+            	 and type=#{stype}
+           </if>
+	</select>
+
+	<!-- 通过学校父id查找分校区-lwc -->
+	<select id="listSubSchools" parameterType="String" resultType="pd">
+		select
+		<include refid="Field"></include>
+		from
+		<include refid="tableName"></include>
+		where
+			pid = #{pId}
+	</select>
+
+	<!-- 列表 -->
+	<select id="datalistPage" parameterType="page" resultType="pd">
+		select
+		<include refid="Field"></include>
+		from 
+		<include refid="tableName"></include>
+		where
+		<foreach item="item" index="index" collection="pd.schooIds" open="(" separator=" or" close=")">
+			 id  LIKE ('%'+'${item}'+'%')
+		</foreach>
+		<if test="pd.keywords != null and pd.keywords != ''"><!-- 关键词检索 -->
+			and
+				(
+				 name LIKE ('%'+#{pd.keywords}+'%')
+				 or 
+				 type LIKE ('%'+#{pd.keywords}+'%')
+				 or
+				 location LIKE ('%'+#{pd.keywords}+'%')
+				)
+		</if>
+		order by createTime
+	</select>
+	
+	<!--  -->
+</mapper>

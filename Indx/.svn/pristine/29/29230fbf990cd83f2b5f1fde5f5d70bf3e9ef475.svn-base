@@ -1,0 +1,203 @@
+﻿<%@ page language="java" contentType="text/html; charset=UTF-8" pageEncoding="UTF-8" %>
+<%
+    String path = request.getContextPath();
+    String basePath = request.getScheme() + "://" + request.getServerName() + ":" + request.getServerPort() + path + "/";
+%>
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <title>我的课程列表</title>
+    <%@ include file="../../system/index/headcss.jsp" %>
+    <style>
+        td span{
+            display: block;
+        }
+    </style>
+</head>
+<body>
+
+
+<div class="menu-list">
+
+    <div class="layui-col-xs layui-col-sm layui-col-md layui-col-lg tableBox operationBox">
+
+        <div class="operationBox">
+            <form action="list.do" class="layui-form" method="post" name="Form" id="Form">
+
+                <div class="searchBox fl">
+
+                    <select lay-filter='school_id' id="school_id" name="school_id" class="layui-input-inline">
+                        <option value="">请选择请假的学校</option>
+                        <c:forEach var="var" items="${schoolList}" varStatus="vs">
+                            <option value="${var.schoolId}" <c:if test="${var.schoolId==pd.school_id}"> selected="selected" </c:if> >
+                                    ${var.schoolName}
+                            </option>
+                        </c:forEach>
+                    </select>
+
+                </div>
+                <div class="searchBox fl marL-20">
+
+                    <select lay-filter='school_id' id="school_id" name="school_id" class="layui-input-inline">
+                        <option value="">请选择请假的校区</option>
+                        <c:forEach var="var" items="${schoolList}" varStatus="vs">
+                            <option value="${var.schoolId}" <c:if test="${var.schoolId==pd.school_id}"> selected="selected" </c:if> >
+                                    ${var.schoolName}
+                            </option>
+                        </c:forEach>
+                    </select>
+
+                </div>
+
+                <div class="searchBox fl marL-20">
+
+                    <select lay-filter='school_id' id="school_" name="school_id" class="layui-input-inline">
+                        <option value="">请选择教师</option>
+                        <c:forEach var="var" items="${schoolList}" varStatus="vs">
+                            <option value="${var.schoolId}" <c:if test="${var.schoolId==pd.school_id}"> selected="selected" </c:if> >
+                                    ${var.schoolName}
+                            </option>
+                        </c:forEach>
+                    </select>
+
+                </div>
+
+
+                <div class="searchBox fl marL-20">
+                    <input  name="keywords" type="text" value="" placeholder="请输入课程名称" class="layui-input fl search layui-input-color">
+                </div>
+
+                <div class="fl srarchBtn" onclick="gsearch()">
+                    <i class="layui-icon">&#xe615;</i>
+                    <span>搜索</span>
+                </div>
+
+            </form>
+        </div>
+
+        <table class="layui-table center " id="table">
+
+            <thead>
+            <tr style="background-color: #f3f8ff;">
+                <th>上下午</th>
+                <th class="center">周一</th>
+                <th class="center">周二</th>
+                <th class="center">周三</th>
+                <th class="center">周四</th>
+                <th class="center">周五</th>
+            </tr>
+            </thead>
+            <tbody>
+
+            </tbody>
+        </table>
+    </div>
+</div>
+
+<%@ include file="../../system/index/foot.jsp" %>
+<script type="text/javascript">
+
+    $(function () {
+        var html;
+        var num=1;
+        // var data={
+            // am:{
+            //     monday:["11","12","13"],
+            //     tuesday:["21","22","23"],
+            //     wednesday:["31","32","33"],
+            //     thursday:["41","42","43"],
+            //     friday:["51","52","53"],
+            // },
+            // pm:{
+            //     monday:[],
+            //     tuesday:["31","32","33"],
+            //     wednesday:["31","32","33"],
+            //     thursday:["41","42","43"],
+            //     friday:["51","52","53"],
+            // }}
+            console.log(${data})
+            $.each(${data}[0],function (key,val) {
+
+                console.log(key,val);
+
+                var maxLength=0;
+                if(JSON.stringify(val)!="{}"){
+                    $.each(val,function (day,data) {
+                        if(maxLength<data.length){
+                            maxLength=data.length
+                        }
+                    })
+                    if (key == "am") {
+                        html += "<tr><td rowspan=" + maxLength + ">上午</td>";
+                    }
+                    if (key == "pm") {
+                        html += "<tr><td rowspan=" + maxLength + ">下午</td>";
+                    }
+                    console.log(maxLength)
+                    for(var i=0;i<maxLength;i++){
+                        if ( i> 0) {
+                           html+="<tr>"
+                        }
+                        console.log(((val.Monday[i] !=undefined) ? val.Monday[i]:''))
+                        html+= "<td >" + ((val.Monday[i] !=undefined) ? '<span>'+val.Monday[i].kc_name +'</span><span>'+val.Monday[i].start_time+'-'+val.Monday[i].end_time+'</span><span>'+val.Monday[i].shcool_name+'</span><span>'+val.Monday[i].teacher_name+'</span><span>'+val.Monday[i].classroom_name+'</span><span>':'') + "</td>" +
+                            "<td >" + ((val.Tuesday[i] !=undefined) ?  '<span>'+val.Tuesday[i].kc_name +'</span><span>'+val.Tuesday[i].start_time+'-'+val.Tuesday[i].end_time+'</span><span>'+val.Tuesday[i].shcool_name+'</span><span>'+val.Tuesday[i].teacher_name+'</span><span>'+val.Tuesday[i].classroom_name+'</span><span>':'') + "</td>" +
+                            "<td >" + ((val.Wednesday[i] !=undefined) ?  '<span>'+val.Wednesday[i].kc_name +'</span><span>'+val.Wednesday[i].start_time+'-'+val.Wednesday[i].end_time+'</span><span>'+val.Wednesday[i].shcool_name+'</span><span>'+val.Wednesday[i].teacher_name+'</span><span>'+val.Wednesday[i].classroom_name+'</span><span>':'') + "</td>" +
+                            "<td >" + ((val.Thursday[i] !=undefined) ?  '<span>'+val.Thursday[i].kc_name +'</span><span>'+val.Thursday[i].start_time+'-'+val.Thursday[i].end_time+'</span><span>'+val.Thursday[i].shcool_name+'</span><span>'+val.Thursday[i].teacher_name+'</span><span>'+val.Thursday[i].classroom_name+'</span><span>':'') + "</td>" +
+                            "<td >" + ((val.Friday[i] !=undefined) ?  '<span>'+val.Friday[i].kc_name +'</span><span>'+val.Friday[i].start_time+'-'+val.Friday[i].end_time+'</span><span>'+val.Friday[i].shcool_name+'</span><span>'+val.Friday[i].teacher_name+'</span><span>'+val.Friday[i].classroom_name+'</span><span>':'') + "</td></tr>"
+                    }
+                }
+
+            })
+
+        // $.each(data,function(key,val){
+        //     if(JSON.stringify(val) != "{}"){
+        //
+        //         if(val!=undefined) {
+        //             eachList(key,val)
+        //         }
+        //         function eachList(key,val){
+        //             if (key == "am") {
+        //                 html += "<tr><td rowspan=" + val.length + ">上午</td>";
+        //             }
+        //             if (key == "pm") {
+        //                 html += "<tr><td rowspan=" + val.length + ">下午</td>";
+        //             }
+        //             for (var i=0;i<val.length;i++){
+        //                 if ( i> 0) {
+        //                    html+="<tr>"
+        //                 }
+        //                 html+= "<td >" + val[i].monday + "</td>" +
+        //                     "<td >" + val[i].tuesday + "</td>" +
+        //                     "<td >" + val[i].wednesday + "</td>" +
+        //                     "<td >" + val[i].thursday + "</td>" +
+        //                     "<td >" + val[i].friday + "</td></tr>"
+        //
+        //             }
+        //
+        //
+        //         }
+        //
+        //
+        //
+        //     }
+        // })
+
+        $("tbody").append(html)
+    });
+
+    $("#keywords").keydown(function (e) {
+        var ev = e || window.event;
+        if (ev.keyCode == "13") {
+            gsearch();
+        }
+    });
+
+    //检索
+    function gsearch() {
+        $("#Form").submit();
+    }
+
+
+</script>
+</body>
+</html>

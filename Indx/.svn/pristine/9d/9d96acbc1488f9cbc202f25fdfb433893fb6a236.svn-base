@@ -1,0 +1,113 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="TuitionMapper">
+
+    <!--表名 -->
+    <sql id="tableName">
+		edu_tuition
+	</sql>
+
+    <!-- 分页列表 -->
+    <select id="tuitionListData" parameterType="page" resultType="pd">
+
+         SELECT DISTINCT
+                a.id bj_id,
+                a.name bj_name,
+                d.id xq_id,
+                d.name xq_name,
+                ISNULL((SELECT SUM (a.tuition) FROM edu_student e WHERE charindex(a.id, e.c_id) > 0 and a.school_id = e.s_id),0) ys,
+                ISNULL((select sum(f.pay) from edu_tuition f where f.grades_id = a.id and f.semester_id = d.id),0) tf,
+                ISNULL((select sum(f.income) from edu_tuition f where f.grades_id = a.id and f.semester_id = d.id),0) qtss,
+                a.school_id
+           FROM edu_grades a,
+                edu_schedule b,
+                edu_schedule_details c,
+                edu_semester d
+          WHERE a.id = c.grades_id
+            AND b.id = c.schedule_id
+            AND b.semester_id = d.id
+            AND d.id = #{pd.x_id}
+            AND a.school_id in
+          <foreach item="item" index="index" collection="pd.userSchoolIds" open="(" separator="," close=")">
+               '${item}'
+          </foreach>
+          <if test="pd.keywords != null and pd.keywords != ''"><!-- 关键词检索 -->
+            AND a.name LIKE ('%'+#{pd.keywords}+'%')
+          </if>
+          GROUP BY a.id,
+                   a.name,
+                   d.id,
+                   d.name,
+                   a.school_id
+    </select>
+
+    <!--查询多个学校的学期列表-->
+    <select id="selectListAllSemester" parameterType="pd" resultType="pd">
+        select id x_id,
+          name x_name
+          from edu_semester
+         where 1 = 1
+           AND s_id in
+         <foreach item="item" index="index" collection="userSchoolIds" open="(" separator="," close=")">
+            '${item}'
+         </foreach>
+         order by reg_start desc
+    </select>
+
+    <!-- 学期列表-->
+    <select id="selectListSemester" parameterType="String" resultType="pd">
+        select id x_id,
+               name x_name
+          from edu_semester
+         where s_id = #{schoolId}
+         order by create_date desc
+    </select>
+
+    <!--各种详情 -->
+    <select id="selectTuitionList" parameterType="pd" resultType="pd">
+         SELECT x.xh,
+                x.xm,
+                MAX (x.tf) tf,
+                MAX (x.qtss) qtss,
+                MAX (x.ys) ys,
+                (MAX (x.ys) - MAX (x.tf) + MAX (x.qtss))ss,
+                MAX(x.event_time) event_time,
+                MAX(x.event_type) event_type
+           FROM ( SELECT ISNULL(a.stu_number, '无') xh,
+                         a.xm,
+                         ISNULL(b.pay, 0) tf,
+                         ISNULL(b.income, 0) qtss,
+                         0 ys,
+                         b.event_time,
+                         b.event_type
+		            FROM edu_student a,
+			             edu_tuition b
+		           WHERE a.id = b.student_id
+		             AND b.grades_id = #{grades_id}
+		             AND b.semester_id = #{semester_id}
+		           UNION
+			      SELECT ISNULL(a.stu_number, '无') xh,
+				         a.xm,
+				         0 tf,
+				         0 qtss,
+				         ISNULL(b.tuition, 0) ys,
+				         '' event_time,
+				         '' event_type
+			        FROM edu_student a,
+				         edu_grades b
+			       WHERE charindex(b.id, a.c_id) > 0
+			         AND b.id = #{grades_id}
+	              ) x
+           GROUP BY x.xh,
+                    x.xm,
+                    x.event_time,
+                    x.event_type
+    </select>
+
+    <!-- 查询班级名称+学期名称-->
+    <select id="selectOtherName" parameterType="pd" resultType="pd">
+        SELECT name FROM edu_grades WHERE id = #{grades_id}
+         UNION
+	    SELECT name FROM edu_semester WHERE id = #{semester_id}
+    </select>
+</mapper>

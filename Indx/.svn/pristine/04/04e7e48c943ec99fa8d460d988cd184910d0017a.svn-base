@@ -1,0 +1,128 @@
+/**
+ * 学校及教学点
+ * @author wangyong
+ */
+package com.zhimu.service.manager.edu.school;
+
+import java.util.List;
+
+import javax.annotation.Resource;
+
+import org.springframework.stereotype.Service;
+
+import com.zhimu.commons.utils.PageData;
+import com.zhimu.dao.DaoSupport;
+import com.zhimu.dao.entity.system.Page;
+import com.zhimu.service.manager.system.user.impl.UserService;
+
+@Service("schoolService")
+public class SchoolService {
+
+	@Resource(name = "daoSupport")
+	private DaoSupport dao;
+	@Resource(name = "userService")
+	private UserService userService;
+
+	/**
+	 * 新增
+	 * 
+	 * @param pd
+	 * @throws Exception
+	 */
+	public void save(PageData pd) throws Exception {
+		dao.save("SchoolMapper.save", pd);
+	}
+
+	/**
+	 * 删除
+	 * 
+	 * @param pd
+	 * @throws Exception
+	 */
+	public void delete(PageData pd) throws Exception {
+		// PageData schoolPd = this.findById(pd);
+		dao.delete("SchoolMapper.delete", pd);
+		// 删除用户关联学校信息
+		// if (null != schoolPd && schoolPd.size() > 0) {
+		// pd.put("SCHOOL_ID", pd.getString("id"));
+		// List<PageData> users = this.userService.listAllUserBySid(pd);
+		// if (null != users && users.size() > 0) {
+		// for (PageData pda : users) {
+		// String sName = pda.getString("SCHOOL_NAME");
+		// String sId = pda.getString("SCHOOL_ID");
+		// String oldName = schoolPd.getString("name");
+		// if (sName.indexOf(oldName + ",") != -1) {
+		// pd.put("SCHOOL_ID", sId.replaceAll(sId + ",", ""));
+		// pd.put("SCHOOL_NAME", sName.replaceAll(oldName + ",", ""));
+		// } else if (sName.indexOf(oldName) != -1) {
+		// pd.put("SCHOOL_ID", sId.replaceAll(sId, ""));
+		// pd.put("SCHOOL_NAME", sName.replaceAll(oldName, ""));
+		// }
+		// pd.put("USER_ID", pda.getString("USER_ID"));
+		// this.userService.editUserSchool(pd);
+		// }
+		// }
+		// }
+
+	}
+
+	/**
+	 * 修改
+	 * 
+	 * @param pd
+	 * @throws Exception
+	 */
+	public void edit(PageData pd) throws Exception {
+		dao.update("SchoolMapper.edit", pd);
+		// 修改用户关联的学校信息
+		pd.put("SCHOOL_ID", pd.getString("id"));
+		List<PageData> users = this.userService.listAllUserBySid(pd);
+		if (null != users && users.size() > 0) {
+			for (PageData pda : users) {
+				String sName = pda.getString("SCHOOL_NAME");
+				String sId = pda.getString("SCHOOL_ID");
+				String oldName = pd.getString("oldName");
+				if (sName.indexOf(oldName) != -1) {
+					pd.put("SCHOOL_ID", sId);
+					pd.put("SCHOOL_NAME", sName.replaceAll(oldName, pd.getString("name")));
+					pd.put("USER_ID", pda.getString("USER_ID"));
+					this.userService.editUserSchool(pd);
+				}
+			}
+		}
+
+	}
+
+	/**
+	 * 列表
+	 * 
+	 * @param page
+	 * @throws Exception
+	 */
+	@SuppressWarnings("unchecked")
+	public List<PageData> list(Page page) throws Exception {
+		return (List<PageData>) dao.findForList("SchoolMapper.datalistPage", page);
+	}
+
+	/**
+	 * 通过id获取数据
+	 * 
+	 * @param pd
+	 * @throws Exception
+	 */
+	public PageData findById(PageData pd) throws Exception {
+		return (PageData) dao.findForObject("SchoolMapper.findById", pd);
+	}
+
+	/**
+	 * 通过创建人id和学校类型获取数据
+	 * 
+	 * @param pd
+	 * @throws Exception
+	 */
+	@SuppressWarnings("unchecked")
+	public List<PageData> findByCidType(PageData pd) throws Exception {
+		return (List<PageData>) dao.findForList("SchoolMapper.findByCidType", pd);
+	}
+
+}

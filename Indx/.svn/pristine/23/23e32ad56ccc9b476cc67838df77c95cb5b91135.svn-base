@@ -1,0 +1,269 @@
+package com.zhimu.controller.manager.system.department;
+
+import java.util.HashMap;
+import java.util.List;
+import java.util.Map;
+
+import javax.annotation.Resource;
+
+import net.sf.json.JSONArray;
+
+import org.apache.commons.lang.StringUtils;
+import org.springframework.stereotype.Controller;
+import org.springframework.ui.Model;
+import org.springframework.web.bind.annotation.RequestMapping;
+import org.springframework.web.bind.annotation.RequestMethod;
+import org.springframework.web.bind.annotation.ResponseBody;
+import org.springframework.web.servlet.ModelAndView;
+
+import com.zhimu.commons.utils.AppUtil;
+import com.zhimu.commons.utils.AreaCodeUtils;
+import com.zhimu.commons.utils.ErrorUtils;
+import com.zhimu.commons.utils.PageData;
+import com.zhimu.controller.manager.base.BaseController;
+import com.zhimu.dao.entity.system.Page;
+import com.zhimu.service.manager.system.areacode.AreaCodeService;
+import com.zhimu.service.manager.system.department.DepartmentManager;
+import com.zhimu.service.manager.system.section.SectionManager;
+import com.zhimu.service.manager.system.user.UserManager;
+
+/**
+ * 组织机构 创建人：ytz
+ */
+@Controller
+@RequestMapping(value = "/department")
+public class DepartmentController extends BaseController {
+
+	@Resource(name = "departmentService")
+	private DepartmentManager departmentService;
+
+	@Resource(name = "sectionService")
+	private SectionManager sectionService;
+
+	@Resource(name = "areaCodeService")
+	private AreaCodeService areaCodeService;
+
+	@Resource(name = "userService")
+	private UserManager userService;
+
+	/**
+	 * 显示组织机构列表树
+	 */
+	@RequestMapping(value = "/listAllDepartment")
+	public ModelAndView listAllDepartment(Model model, String DEPARTMENT_ID) {
+		ModelAndView mv = this.getModelAndView();
+		PageData pd = getPageData();
+		try {
+			String parentId = getUserInfo().getpId();
+			String areaCode = pd.getString("xzqh");
+			if (StringUtils.isEmpty(areaCode)) {
+				areaCode = getUserInfo().getAreaCode();
+				if ("".equals(DEPARTMENT_ID) || null == DEPARTMENT_ID) {
+					DEPARTMENT_ID = getUserInfo().getpId();
+				}
+			} else {
+				List<PageData> listDep = this.departmentService.findByAreaCode(areaCode);
+				if (null != listDep && listDep.size() > 0) {
+					parentId = listDep.get(0).getString("DEPARTMENT_ID");
+				}
+
+			}
+			JSONArray arr = JSONArray.fromObject(departmentService.listByPid(parentId, "", areaCode));
+			String json = arr.toString();
+			json = json.replaceAll("DEPARTMENT_ID", "id").replaceAll("PARENT_ID", "pid").replaceAll("NAME", "title").replaceAll("subDepartment", "children").replaceAll("hasDepartment", "hasNext");
+			model.addAttribute("zTreeNodes", json);
+
+			pd.put("areaCode", areaCode);
+			mv.addObject("DEPARTMENT_ID", DEPARTMENT_ID);
+			mv.addObject("pd", pd);
+			mv.setViewName("system/department/department_ztree");
+		} catch (Exception e) {
+			mv.setViewName("error");
+			logger.error(ErrorUtils.getErrorMessage(e, "显示列表ztree异常"));
+		}
+		return mv;
+	}
+
+	/**
+	 * 根据pid显示组织机构列表树
+	 */
+	@RequestMapping(value = "/listDepartmentByPid")
+	@ResponseBody
+	public String listDepartmentByPid() {
+		PageData pd = getPageData();
+		String departArray = null;
+		try {
+			String areaCode = pd.getString("xzqh");
+			String pid = pd.getString("pid");
+			if (StringUtils.isEmpty(areaCode)) {
+				areaCode = getUserInfo().getAreaCode();
+			} else {
+				List<PageData> listDep = this.departmentService.findByAreaCode(areaCode);
+				if (null != listDep && listDep.size() > 0) {
+					pid = listDep.get(0).getString("PARENT_ID");
+				}
+			}
+			JSONArray arr = JSONArray.fromObject(departmentService.listDepartmentByPid(pid, "", areaCode));
+			String json = arr.toString();
+			departArray = json.replaceAll("DEPARTMENT_ID", "id").replaceAll("PARENT_ID", "pid").replaceAll("NAME", "title").replaceAll("subDepartment", "children")
+					.replaceAll("hasDepartment", "hasNext");
+
+		} catch (Exception e) {
+			logger.error(ErrorUtils.getErrorMessage(e, "显示列表ztree异常"));
+		}
+		return departArray;
+	}
+
+	/**
+	 * 组织机构列表
+	 */
+	@RequestMapping(value = "/list")
+	public ModelAndView list(Page page) {
+		ModelAndView mv = new ModelAndView();
+		PageData pd = getPageData();
+		try {
+			String areaCode = pd.getString("areaCode");
+			String DEPARTMENT_ID = "";
+			if (StringUtils.isEmpty(areaCode)) {
+				areaCode = getUserInfo().getAreaCode();
+				DEPARTMENT_ID = null == pd.getString("DEPARTMENT_ID") ? "" : pd.getString("DEPARTMENT_ID");
+				if (null != pd.get("id") && !"".equals(pd.get("id").toString())) {
+					DEPARTMENT_ID = pd.get("id").toString();
+				}
+			}
+			String keywords = pd.getString("keywords"); // 检索条件
+			if (null != keywords && !"".equals(keywords)) {
+				pd.put("keywords", keywords.trim());
+				mv.addObject("keywords", keywords);
+			}
+
+			pd.put("type", "1");
+			pd.put("DEPARTMENT_ID", DEPARTMENT_ID); // 上级ID
+			pd.put("areaCode", AreaCodeUtils.returnXzqh(areaCode));
+			page.setPd(pd);
+			List<PageData> varList = departmentService.list(page); // 列表数据
+			mv.addObject("pd", departmentService.findById(pd)); // 上级信息
+			mv.addObject("DEPARTMENT_ID", DEPARTMENT_ID); // 上级ID
+			mv.addObject("pId", getUserInfo().getpId());
+			mv.addObject("varList", varList);
+			mv.addObject("areaCode", areaCode);
+			mv.setViewName("system/department/department_list");
+		} catch (Exception e) {
+			mv.setViewName("error");
+			logger.error(ErrorUtils.getErrorMessage(e, "组织机构列表异常"));
+		}
+		return mv;
+	}
+
+	/**
+	 * 去组织机构新增页面
+	 */
+	@RequestMapping(value = "/goAdd")
+	public ModelAndView goAdd() {
+		ModelAndView mv = this.getModelAndView();
+		PageData pd = getPageData();
+		try {
+			String DEPARTMENT_ID = null == pd.get("DEPARTMENT_ID") ? "" : pd.get("DEPARTMENT_ID").toString();
+			pd.put("DEPARTMENT_ID", DEPARTMENT_ID); // 上级ID
+			mv.addObject("pds", departmentService.findById(pd)); // 传入上级所有信息
+			mv.addObject("DEPARTMENT_ID", DEPARTMENT_ID); // 传入ID，作为子级ID用
+			mv.addObject("msg", "save");
+			mv.addObject("pd", pd);
+			mv.setViewName("system/department/department_edit");
+		} catch (Exception e) {
+			mv.setViewName("error");
+			logger.error(ErrorUtils.getErrorMessage(e, "去组织机构新增页面异常!"));
+		}
+		return mv;
+	}
+
+	/**
+	 * 保存组织机构
+	 */
+	@RequestMapping(value = "/save", method = RequestMethod.POST)
+	@ResponseBody
+	public Object save() {
+		Map<String, String> map = new HashMap<String, String>();
+		PageData pd = getPageData();
+		String msg = "";
+		try {
+			pd.put("DEPARTMENT_ID", this.get32UUID());
+			departmentService.save(pd);
+			msg = "success";
+		} catch (Exception e) {
+			msg = "error";
+			logger.error(ErrorUtils.getErrorMessage(e, "保存组织机构异常!"));
+		}
+		map.put("result", msg);
+		return AppUtil.returnObject(new PageData(), map);
+	}
+
+	/**
+	 * 去修改页面
+	 */
+	@RequestMapping(value = "/goEdit")
+	public ModelAndView goEdit() {
+		ModelAndView mv = this.getModelAndView();
+		PageData pd = getPageData();
+		try {
+			String TYPE = pd.getString("TYPE");
+			String currentPage = pd.getString("currentPage");
+			String DEPARTMENT_ID = pd.getString("DEPARTMENT_ID");
+			pd = departmentService.findById(pd); // 根据ID读取
+			pd.put("currentPage", currentPage);
+			pd.put("TYPE", TYPE);
+			mv.addObject("pd", pd); // 放入视图容器
+			pd.put("DEPARTMENT_ID", pd.get("PARENT_ID").toString()); // 用作上级信息
+			mv.addObject("pds", departmentService.findById(pd)); // 传入上级所有信息
+			mv.addObject("DEPARTMENT_ID", pd.get("PARENT_ID").toString()); // 传入上级ID，作为子ID用
+			pd.put("DEPARTMENT_ID", DEPARTMENT_ID); // 复原本ID
+			mv.addObject("msg", "edit");
+			mv.setViewName("system/department/department_edit");
+		} catch (Exception e) {
+			mv.setViewName("error");
+			logger.error(ErrorUtils.getErrorMessage(e, "去组织机构页面异常!"));
+		}
+		return mv;
+	}
+
+	/**
+	 * 修改
+	 */
+	@RequestMapping(value = "/edit", method = RequestMethod.POST)
+	@ResponseBody
+	public Object edit() {
+		Map<String, String> map = new HashMap<String, String>();
+		PageData pd = getPageData();
+		String msg = "";
+		try {
+			departmentService.edit(pd);
+			msg = "success";
+		} catch (Exception e) {
+			msg = "error";
+			logger.error(ErrorUtils.getErrorMessage(e, "修改组织机构异常!"));
+		}
+		map.put("result", msg);
+		return AppUtil.returnObject(new PageData(), map);
+	}
+
+	/**
+	 * 删除
+	 */
+	@RequestMapping(value = "/delete")
+	@ResponseBody
+	public Object delete() {
+		Map<String, String> map = new HashMap<String, String>();
+		PageData pd = getPageData();
+		String resultInfo = "";
+		try {
+			departmentService.delete(pd); // 执行删除
+			resultInfo = "success";
+		} catch (Exception e) {
+			resultInfo = "error";
+			logger.error(ErrorUtils.getErrorMessage(e, "删除组织机构异常!"));
+		}
+		map.put("result", resultInfo);
+		return AppUtil.returnObject(new PageData(), map);
+	}
+
+}

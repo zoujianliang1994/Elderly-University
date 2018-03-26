@@ -1,0 +1,207 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<beans xmlns="http://www.springframework.org/schema/beans"
+       xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+       xmlns:context="http://www.springframework.org/schema/context"
+       xsi:schemaLocation="http://www.springframework.org/schema/beans
+			http://www.springframework.org/schema/beans/spring-beans-4.2.xsd
+			http://www.springframework.org/schema/context 
+			http://www.springframework.org/schema/context/spring-context-4.2.xsd"
+       default-lazy-init="true">
+
+    <description>Shiro Configuration</description>
+
+    <!-- SecurityManager全局配置  开始 -->
+    <bean id="securityManager" class="org.apache.shiro.web.mgt.DefaultWebSecurityManager">
+        <property name="authenticator" ref="authenticator"/>
+        <property name="authorizer" ref="authorizer"/>
+        <property name="realms" ref="loginRealm"/>
+        <property name="sessionManager" ref="sessionManager"/>
+        <property name="rememberMeManager" ref="rememberMeManager"/>
+        <property name="cacheManager" ref="cacheManager"/>
+    </bean>
+    <!--  SecurityManager全局配置  结束 -->
+
+    <!-- 第一步配置认证器    开始-->
+    <bean id="authenticator" class="org.apache.shiro.authc.pam.ModularRealmAuthenticator">
+        <property name="authenticationStrategy" ref="atLeastOneSuccessfulStrategy"/>
+    </bean>
+    <!-- 配置认证规则  有三种方式  你可以任选一种-->
+    <bean id="allSuccessfulStrategy" class="org.apache.shiro.authc.pam.AllSuccessfulStrategy"/>
+    <bean id="firstSuccessfulStrategy" class="org.apache.shiro.authc.pam.FirstSuccessfulStrategy"/>
+    <bean id="atLeastOneSuccessfulStrategy" class="org.apache.shiro.authc.pam.AtLeastOneSuccessfulStrategy"/>
+    <!-- 第一步配置认证器    结束-->
+
+    <!-- 第二步配置授权器和权限解析器  开始 -->
+    <bean id="authorizer" class="org.apache.shiro.authz.ModularRealmAuthorizer">
+        <property name="permissionResolver" ref="permissionResolver"/>
+    </bean>
+    <bean id="permissionResolver" class="org.apache.shiro.authz.permission.WildcardPermissionResolver"/>
+    <!-- 第二步配置授权器和权限解析器   结束 -->
+
+    <!-- 第三步配置加密和解密Matcher    开始-->
+    <bean id="hashMatcher" class="org.apache.shiro.authc.credential.HashedCredentialsMatcher">
+        <property name="hashAlgorithmName" value="md5"/>
+    </bean>
+    <!-- 第三步配置加密和解密Matcher    结束-->
+
+    <!-- 第四步配置Realm    开始-->
+    <bean id="authorizingRealm" class="org.apache.shiro.realm.AuthorizingRealm"/>
+    <bean id="loginRealm" class="com.zhimu.shiro.ShiroRealm" parent="authorizingRealm">
+        <!-- <property name="credentialsMatcher" ref="hashMatcher"/>
+         <property name="cachingEnabled" value="true"/>
+        <property name="authenticationCachingEnabled" value="true"/>
+        <property name="authenticationCacheName" value="authenticationCache"/>
+        <property name="authorizationCachingEnabled" value="true"/>
+        <property name="authorizationCacheName" value="authorizationCache"/> -->
+    </bean>
+    <!-- 第四步配置Realm    结束-->
+
+    <!-- 第五步配置会话管理   开始  配置的是默认值-->
+    <!--
+    DefaultSessionManager：DefaultSecurityManager 使用的默认实现，用于 JavaSE 环境；
+    ServletContainerSessionManager：DefaultWebSecurityManager 使用的默认实现，用于 Web 环境，其直接使用 Servlet 容器的会话；
+    DefaultWebSessionManager：用于 Web 环境的实现，可以替代 ServletContainerSessionManager，自己维护着会话，直接废弃了 Servlet 容器的会话管理。
+    另外如果使用 ServletContainerSessionManager 进行会话管理，Session 的超时依赖于底层 Servlet 容器的超时时间，
+    可以在 web.xml 中配置其会话的超时时间（分钟为单位）：
+    <session-config>
+      <session-timeout>30</session-timeout>
+    </session-config>
+     -->
+    <bean id="sessionManager" class="org.apache.shiro.web.session.mgt.DefaultWebSessionManager">
+        <property name="globalSessionTimeout" value="180000000"/>
+        <property name="sessionIdCookieEnabled" value="true"/>
+        <property name="sessionIdCookie" ref="sessionIdCookie"/>
+        <property name="deleteInvalidSessions" value="true"/><!-- 如果在会话过期时不想删除过期的会话  设置该属性为false -->
+        <property name="sessionDAO" ref="sessionDAO"/>
+        <property name="sessionValidationSchedulerEnabled" value="true"/>
+        <property name="sessionValidationScheduler" ref="sessionValidationScheduler"/>
+    </bean>
+
+    <!-- 创建会话 Cookie 的模板 -->
+    <bean id="sessionIdCookie" class="org.apache.shiro.web.servlet.SimpleCookie">
+        <property name="name" value="JSESSIONID_SHIRO"/>
+        <property name="maxAge" value="-1"/><!--  设置 Cookie 的过期时间，秒为单位，默认 - 1 表示关闭浏览器时过期 Cookie-->
+        <property name="httpOnly" value="true"/>
+    </bean>
+
+    <!-- SessionDAO 用于会话的 CRUD -->
+    <bean id="sessionDAO" class="org.apache.shiro.session.mgt.eis.EnterpriseCacheSessionDAO">
+        <property name="activeSessionsCacheName" value="shiro-activeSessionCache"/>
+        <property name="sessionIdGenerator" ref="sessionIdGenerator"/>
+    </bean>
+    <!-- 会话 ID 生成器 -->
+    <bean id="sessionIdGenerator" class="org.apache.shiro.session.mgt.eis.JavaUuidSessionIdGenerator"></bean>
+
+    <!-- 会话验证调度器   定期检查是否有过期的会话 -->
+    <bean id="sessionValidationScheduler"
+          class="org.apache.shiro.session.mgt.ExecutorServiceSessionValidationScheduler">
+        <property name="interval" value="3600000"/>
+        <property name="sessionManager" ref="sessionManager"/>
+    </bean>
+
+    <!-- 使用 Ehcache 进行会话存储，Ehcache 可以配合 TerraCotta 实现容器无关的分布式集群 -->
+    <!--  如果配置了缓存登陆成功后去修改密码用新密码去登陆则会认证失败因为密码缓存中还是原来的密码，如果logout之后登陆正常-->
+    <bean id="cacheManager" class="org.apache.shiro.cache.ehcache.EhCacheManager">
+        <!--
+            <property name="cacheManagerConfigFile" value="classpath:ehcache.xml"/> -->
+    </bean>
+    <!--cacheManager  要加入ehcache-1.2.3.jar包  -->
+    <!-- 第五步配置会话管理   结束 -->
+
+    <!-- 第六步 RememberMeCookie  配置  开始-->
+    <!-- rememberMe管理器 -->
+    <bean id="rememberMeManager" class="org.apache.shiro.web.mgt.CookieRememberMeManager">
+        <property name="cipherKey" value="\#{T(org.apache.shiro.codec.Base64).decode('4AvVhmFLUs0KTA3Kprsdag==')}"/>
+        <property name="cookie" ref="rememberMeCookie"/>
+    </bean>
+    <bean id="rememberMeCookie" class="org.apache.shiro.web.servlet.SimpleCookie">
+        <constructor-arg value="rememberMe"/>
+        <property name="httpOnly" value="true"/>
+        <property name="maxAge" value="2592000"/><!-- 30天 -->
+    </bean>
+    <!-- “/authenticated.jsp = authc” 表示访问该地址用户必须身份验证通过（Subject. isAuthenticated()==true）；
+    而 “/** = user” 表示访问该地址的用户是身份验证通过或 RememberMe 登录的都可以。 -->
+    <!-- 第六步 RememberMeCookie  配置  结束-->
+
+    <!-- 相当于调用SecurityUtils.setSecurityManager(securityManager) -->
+    <bean class="org.springframework.beans.factory.config.MethodInvokingFactoryBean">
+        <property name="staticMethod" value="org.apache.shiro.SecurityUtils.setSecurityManager"/>
+        <property name="arguments" ref="securityManager"/>
+    </bean>
+
+    <!-- Shiro生命周期处理器-->
+    <bean id="lifecycleBeanPostProcessor" class="org.apache.shiro.spring.LifecycleBeanPostProcessor"/>
+    <!--
+    <bean class="org.springframework.aop.framework.autoproxy.DefaultAdvisorAutoProxyCreator" depends-on="lifecycleBeanPostProcessor">
+    <property name="proxyTargetClass" value="true"/>
+    </bean>-->
+
+    <!-- 基于Form表单的身份验证过滤器 -->
+    <bean id="formAuthenticationFilter" class="org.apache.shiro.web.filter.authc.FormAuthenticationFilter">
+        <property name="usernameParam" value="username"/>
+        <property name="passwordParam" value="password"/>
+        <property name="rememberMeParam" value="rememberMe"/>
+        <property name="loginUrl" value="/views/jsp/system/index/login.jsp"/>
+    </bean>
+    <!-- shiro的主过滤器  配置   开始-->
+    <!--  bean 的 id 和 web.xml中配置的filter name需要保持一致 -->
+    <bean id="shiroFilter" class="org.apache.shiro.spring.web.ShiroFilterFactoryBean">
+        <!-- 安全管理器 -->
+        <property name="securityManager" ref="securityManager"/>
+        <!-- 登陆的URL -->
+        <property name="loginUrl" value="/login_guide"/>
+        <!-- 登陆成功后跳转的url -->
+        <property name="successUrl" value="/login_toLogin/main/index"/>
+        <!-- 没有权限跳转的url -->
+        <property name="unauthorizedUrl" value="/login_toLogin"/>
+
+        <!-- <property name="filters">
+           <map>
+               <entry key="authc" value-ref="formAuthenticationFilter"/>
+           </map>
+       </property> -->
+
+        <property name="filterChainDefinitions">
+            <value>
+            	/customReport/**=anon
+                /admin/**=anon
+                /plugins/**=anon
+                /static/**=anon
+                /cms/**=anon
+	        	/article/**=anon
+	        	/folder/**=anon
+                /uploadFiles/**=anon
+                /doc/**=anon
+                /layer/**=anon
+                /code=anon
+                /to_iedownload=anon
+                /login_toLogin.do=anon
+                /login_app.do=anon
+                /getBaiduToken.do=anon
+                /faceRecognition/save.do=anon
+                /login_login=anon
+                /logout = logout
+                /personalInfo/**=anon
+                /officeEdit/openOffice=anon
+                /poserver.zz=anon
+                /adminseal.do=anon
+                /loginseal.do=anon
+                /websocket=anon
+                /dictionaries/getDictionaries=anon
+                /user/goPasswordBack.do=anon
+                /user/validateUserName.do=anon
+                /user/resetPwd.do=anon
+                /studentRegister/goRegister.do=anon
+                /studentRegister/save.do=anon
+                /schoolaptitude/goRegister.do=anon
+                /schoolaptitude/save.do=anon
+                /studentRegister/sendSms.do=anon
+                /studentRegister/save.do=anon
+                /app/version=anon
+                /** = authc
+            </value>
+        </property>
+    </bean>
+    <!-- shiro的主过滤器  配置   结束-->
+
+</beans>

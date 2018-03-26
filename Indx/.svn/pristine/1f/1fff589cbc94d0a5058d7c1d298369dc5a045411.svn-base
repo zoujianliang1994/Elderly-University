@@ -1,0 +1,113 @@
+/**
+ * 学员
+ * @author wangyong
+ */
+package com.zhimu.service.manager.edu.student;
+
+import java.util.List;
+
+import javax.annotation.Resource;
+
+import org.springframework.stereotype.Service;
+
+import com.zhimu.commons.utils.PageData;
+import com.zhimu.dao.DaoSupport;
+import com.zhimu.dao.entity.system.Page;
+import com.zhimu.service.manager.system.user.impl.UserService;
+
+@Service("studentService")
+public class StudentService {
+
+	@Resource(name = "daoSupport")
+	private DaoSupport dao;
+	@Resource(name = "userService")
+	private UserService userService;
+
+	/**
+	 * 新增
+	 * 
+	 * @param pd
+	 * @throws Exception
+	 */
+	public void save(PageData pd) throws Exception {
+		dao.save("StudentMapper.save", pd);
+	}
+
+	/**
+	 * 删除
+	 * 
+	 * @param pd
+	 * @throws Exception
+	 */
+	public void delete(PageData pd) throws Exception {
+		dao.delete("StudentMapper.delete", pd);
+	}
+
+	/**
+	 * 修改
+	 * 
+	 * @param pd
+	 * @throws Exception
+	 */
+	public void edit(PageData pd) throws Exception {
+		dao.update("StudentMapper.edit", pd);
+
+	}
+
+	/**
+	 * 列表
+	 * 
+	 * @param page
+	 * @throws Exception
+	 */
+	@SuppressWarnings("unchecked")
+	public List<PageData> list(Page page) throws Exception {
+		return (List<PageData>) dao.findForList("StudentMapper.datalistPage", page);
+	}
+
+	/**
+	 * 通过id获取数据
+	 * 
+	 * @param pd
+	 * @throws Exception
+	 */
+	public PageData findById(PageData pd) throws Exception {
+		return (PageData) dao.findForObject("StudentMapper.findById", pd);
+	}
+
+	/**
+	 * 根据用户id查找对应学生数据--lwc
+	 * 
+	 * @param userId
+	 * @return
+	 * @throws Exception
+	 */
+	public PageData findByUser(String userId) throws Exception {
+		return (PageData) dao.findForObject("StudentMapper.findByUser", userId);
+	}
+
+	/**
+	 * 根据学校id查找对应所有的学生用户id--lwc
+	 * 
+	 * @param sIds
+	 * @return
+	 * @throws Exception
+	 */
+	@SuppressWarnings("unchecked")
+	public List<String> findUidBySid(String[] sIds) throws Exception {
+		return (List<String>) dao.findForList("StudentMapper.findUidBySid", sIds);
+	}
+
+	/**
+	 * 获取所选学校的所有学生--lwc
+	 * 
+	 * @param pd
+	 * @return
+	 * @throws Exception
+	 */
+	@SuppressWarnings("unchecked")
+	public List<PageData> findBySid(PageData pd) throws Exception {
+		return (List<PageData>) dao.findForList("StudentMapper.findBySid", pd);
+	}
+
+}

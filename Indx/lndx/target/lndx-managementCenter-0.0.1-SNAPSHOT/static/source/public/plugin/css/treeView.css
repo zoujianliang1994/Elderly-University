@@ -1,0 +1,123 @@
+.treeView {
+  position: relative;
+
+}
+.treeView .itemBox {
+  font-family: PingFangSC-Regular;
+  font-size: 14px;
+  font-weight: normal;
+  font-stretch: normal;
+  line-height: 0px;
+  letter-spacing: 0px;
+  color: #333333;
+  font-size: 14px;
+  position: relative;
+  right: 0;
+}
+.treeView .treeBox {
+  width: 100%;
+  top: 37px;
+  cursor: pointer;
+  overflow: hidden;
+}
+.treeView .treeItem {
+  width: 100%;
+  line-height: 35px;
+  color: #000;
+  font-size: 14px;
+  margin: 5px 0;
+  text-indent: 10px;
+}
+.treeView .treeItem .title {
+  margin-left: 30px;
+  display: inline-block;
+  white-space: normal;
+  /*overflow:hidden;*/
+  text-overflow:ellipsis;
+  width:130px;
+  text-indent:0;
+
+  font-family: PingFangSC-Medium;
+  font-size: 14px;
+  font-weight: normal;
+  font-stretch: normal;
+  color: #333333;
+}
+.treeView .icon-icon{
+  position:absolute;
+  text-indent: 0;
+  left: 15px;
+  top: 0px;
+}
+.treeView .treeItem .item-switch {
+  font-size:12px;
+  position: absolute;
+  color:#000;
+  right: 10px;
+  text-indent: 0;
+  -moz-user-select: none;
+  -khtml-user-select: none;
+  user-select: none;
+  padding:0 10px;
+}
+.treeView .treeItem:hover {
+  background: #CAE5FF;
+  color:#108ee9;
+}
+.treeView .treeItem:hover .item-switch{
+  color:#108ee9;
+}
+.treeView .active:hover{
+    /*background:#0C64B5;*/
+    /*color:#fff*/
+}
+.treeView .active .item-switch{
+  color:#fff
+}
+.treeView .active:hover .item-switch{
+  color:#fff;
+}
+.treeView .item-label {
+  position: absolute;
+  right: 10px;
+  top: 5px;
+  width: 20px;
+  height: 20px;
+  border-radius: 1px;
+  border: 1px solid #DAE2EA;
+}
+.treeView .checked {
+  display: none;
+  position: absolute;
+  left: -28px;
+  top: 3px;
+  color: #2196F3;
+}
+.treeView .active .item-label {
+  border-color: #2196F3;
+}
+.treeView .active .checked {
+  display: block;
+}
+.treeView .active{
+  color: #333333;
+  background-color:rgba(56,121,247,0.1);
+
+  border-left: solid 5px #25cbfc;;
+
+}
+.treeView .active span{
+  margin-left: 33px;
+}
+.treeView .icon-icon{
+  color: #b9c1cc;
+}
+.treeView .title{
+  color: #393838;
+}
+.treeView .active .icon-icon{
+  color: #236dfc;
+}
+.treeView .active .title{
+  color: #333;
+}

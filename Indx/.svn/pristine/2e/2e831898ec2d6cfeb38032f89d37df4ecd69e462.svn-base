@@ -1,0 +1,222 @@
+<%@ page language="java" contentType="text/html; charset=UTF-8" pageEncoding="UTF-8"%>
+
+<%
+	String path = request.getContextPath();
+	String basePath = request.getScheme() + "://" + request.getServerName() + ":" + request.getServerPort() + path + "/";
+%>
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<base href="<%=basePath%>">
+<!-- jsp文件头和头部 -->
+	<%@ include file="../../system/index/headcss.jsp"%>
+
+    <style>
+		.imgBox{
+			position:relative;
+		}
+		#imgfile{
+			position:absolute;
+			z-index: -1;
+			top: 0px;
+			left:0
+		}
+		.layui-upload-drag{
+			background-size:cover;
+		}
+
+	</style>
+</head>
+<body >
+<div class="edit_menu" class="disnone">
+
+	<form action="activityGroup/check.do" class="layui-form" name="form1" id="form1" method="post">
+		<input type="hidden" name="id" id="id" value="${pd.id}" />
+		<div class="layui-form-item">
+			<div class="layui-row">
+
+				<div class="form-item-inline">
+					<label class="form-label">姓名：</label>
+					<div class="layui-input-block">
+						<input name="xm" id="xm" value="${personalInfo.xm}" readonly type="text" class="layui-input layui-input-color">
+					</div>
+				</div>
+				<div class="form-item-inline">
+					<label class="form-label">身份证号：</label>
+					<div class="layui-input-block">
+						<input name="sfz" id="sfz" value="${personalInfo.sfz}" readonly type="text" class="layui-input layui-input-color">
+					</div>
+				</div>
+			</div>
+		</div>
+
+		<div class="layui-form-item">
+			<div class="layui-row">
+				<div class="form-item-inline">
+					<label class="form-label">年龄：</label>
+					<div class="layui-input-block">
+						<input name="nl" id="nl" value="${personalInfo.nl}" readonly type="text" class="layui-input layui-input-color">
+					</div>
+				</div>
+				<div class="form-item-inline">
+					<label class="form-label">联系电话：</label>
+					<div class="layui-input-block">
+						<input name="phone" id="phone" value="${personalInfo.phone}" readonly type="text" class="layui-input layui-input-color">
+					</div>
+				</div>
+			</div>
+
+		</div>
+
+		<div class="layui-form-item">
+			<div class="layui-row">
+				<div class="form-item-inline">
+					<label class="form-label">报名填表日期：</label>
+					<div class="layui-input-block">
+						<input name="regis_time" id="regis_time" value="${personalInfo.regis_time}" readonly type="text" class="layui-input layui-input-color">
+					</div>
+				</div>
+				<div class="form-item-inline">
+					<label class="form-label">疾病史：</label>
+					<div class="layui-input-block">
+						<input name="disease" id="disease" value="${personalInfo.disease}" type="text" readonly class="layui-input layui-input-color">
+					</div>
+				</div>
+			</div>
+		</div>
+
+		<div class="layui-form-item">
+			<div class="layui-row">
+				<div class="form-item-inline" style="width:98%">
+					<label class="form-label">居住地址：</label>
+					<div class="layui-input-block">
+						<input name="address" id="address" value="${personalInfo.address}" type="text" readonly class="layui-input layui-input-color">
+					</div>
+				</div>
+			</div>
+		</div>
+
+		<div class="layui-form-item">
+			<div class="layui-row">
+				<div class="form-item-inline">
+					<label class="form-label">家庭联系人：</label>
+					<div class="layui-input-block">
+						<input name="family_con_name" id="family_con_name" value="${personalInfo.family_con_name}" readonly type="text" class="layui-input layui-input-color">
+					</div>
+				</div>
+				<div class="form-item-inline">
+					<label class="form-label">联系人电话：</label>
+					<div class="layui-input-block">
+						<input name="family_con_tel" id="family_con_tel" value="${personalInfo.family_con_tel}" type="text" readonly class="layui-input layui-input-color">
+					</div>
+				</div>
+			</div>
+		</div>
+
+		<div class="layui-form-item">
+			<div class="layui-row">
+				<div class="form-item-inline">
+					<label class="form-label">第二联系人：</label>
+					<div class="layui-input-block">
+						<input name="sec_con" id="sec_con" value="${personalInfo.sec_con}" type="text" readonly class="layui-input layui-input-color">
+					</div>
+				</div>
+				<div class="form-item-inline">
+					<label class="form-label">联系人电话：</label>
+					<div class="layui-input-block">
+						<input name="sec_con_tel" id="sec_con_tel" value="${personalInfo.sec_con_tel}" type="text" readonly class="layui-input layui-input-color">
+					</div>
+				</div>
+			</div>
+		</div>
+
+	<c:if test="${pd.operation == 'check'}">
+		<div class="layui-form-item">
+			<div class="layui-row">
+				<div class="form-item-inline" style="width:98%;">
+					<label class="form-label" >审核意见：</label>
+					<div class="layui-input-block" >
+						<textarea class="layui-textarea layui-input-color" name="check_opinion" id="check_opinion" maxlength="250">${personalInfo.check_opinion}</textarea>
+					</div>
+				</div>
+			</div>
+		</div>
+	</c:if>
+
+	</form>
+
+	<div class="btnbox" >
+		<c:if test="${pd.operation == 'check'}">
+			<button id="sure" is-pass="2" class="layui-btn layui-btn-primary layui-btn-small">通过</button>
+			<button id="notsure" is-pass="3" class="layui-btn layui-btn-publish layui-btn-small">不通过</button>
+		</c:if>
+		<c:if test="${pd.operation != 'select'}">
+			<button id="cancel" class="layui-btn layui-btn-primary layui-btn-small">取消</button>
+		</c:if>
+	</div>
+</div>
+
+
+	<!-- 页面底部js¨ -->
+	<%@ include file="../../system/index/foot.jsp"%>
+	<!--提示框-->
+	<script type="text/javascript">
+
+
+        var form = layui.form;
+
+        $(document).ready(function(){
+            layui.use('laydate', function () {
+                var laydate = layui.laydate;
+
+                //执行一个laydate实例
+                laydate.render({
+                    elem: '#activity_start_time' //指定元素
+                });
+                laydate.render({
+                    elem: '#activity_end_time' //指定元素
+                });
+                laydate.render({
+                    elem: '#apply_start_time' //指定元素
+                });
+                laydate.render({
+                    elem: '#apply_end_time' //指定元素
+                });
+            });
+
+            $("#sure,#notsure").on("click",function(){
+
+                var page ="${pd.currentPage}";
+                var sum ="&keywords=${pd.keywords}";
+                var activity_id ="${personalInfo.activity_id}";
+                var is_pass =  $(this).attr("is-pass");
+
+                $("#form1").ajaxSubmit({
+                    type: 'post',
+                    dataType:"html",
+					data:{'check_state':is_pass},
+                    success: function(data) {
+                        var jso = JSON.parse(data);
+                        if ("success" == jso.msg) {
+                            parent.parent.layer.transmit.location.href = "activityGroup/list.do?activity_id="+activity_id;
+                            parent.layer.closeAll();
+                        } else {
+                            layer.msg('系统异常,审核失败!', {icon: 5});
+                        }
+                    }
+                });
+            });
+
+            $("#cancel").on("click",function(){
+                parent.layer.closeAll();
+            })
+        });
+
+        function test(file_name,symbol){
+            var result = file_name.split(symbol);
+            return result[result.length-1];
+        }
+	</script>
+</body>
+</html>
+

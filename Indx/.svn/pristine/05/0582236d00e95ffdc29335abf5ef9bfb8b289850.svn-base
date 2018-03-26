@@ -1,0 +1,192 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="GradesMapper">
+	
+	<!--表名 -->
+	<sql id="tableName">
+		edu_grades
+	</sql>
+	
+	<!-- 字段 -->
+	<sql id="Field">
+		id,
+		name,
+		class_size,
+		sex_woman_number,
+		sex_man_number,
+		lesson_id,
+		lesson_periods,
+		teacher_id,
+		teacher_name,
+		class_time,
+		tuition,
+		details,
+		headmaster_name,
+		headmaster_phone,
+		school_id,
+		classroom_type,
+		createTime,
+		teacher_wages
+
+	</sql>
+	
+	<!-- 字段值 -->
+	<sql id="FieldValue">
+		#{id},
+		#{name},
+		#{class_size},
+		#{sex_woman_number},
+		#{sex_man_number},
+		#{lesson_id},
+		#{lesson_periods},
+		#{teacher_id},
+		#{teacher_name},
+		#{class_time},
+		#{tuition},
+		#{details},
+		#{headmaster_name},
+		#{headmaster_phone},
+		#{school_id},
+		#{classroom_type},
+		getdate(),
+		teacher_wages
+
+	</sql>
+	
+	<!-- 新增-->
+	<insert id="save" parameterType="pd">
+		insert into 
+	<include refid="tableName"></include>
+		(
+	<include refid="Field"></include>
+		) values (
+	<include refid="FieldValue"></include>
+		)
+	</insert>
+
+	<update id="deleteById" parameterType="String">
+		UPDATE <include refid="tableName"></include> set is_del =0 WHERE id = #{id}
+	</update>
+	
+	<!-- 修改 -->
+	<update id="edit" parameterType="pd">
+		update
+		<include refid="tableName"></include>
+		set
+		name=#{name},
+		class_size=#{class_size},
+		sex_woman_number=#{sex_woman_number},
+		sex_man_number=#{sex_man_number},
+		lesson_id=#{lesson_id},
+		lesson_periods=#{lesson_periods},
+		teacher_id=#{teacher_id},
+		teacher_name=#{teacher_name},
+		class_time=#{class_time},
+		tuition=#{tuition},
+		details=#{details},
+		headmaster_name=#{headmaster_name},
+		headmaster_phone=#{headmaster_phone},
+		classroom_type=#{classroom_type},
+		teacher_wages=#{teacher_wages}
+		where
+			id = #{id}
+	</update>
+	
+	<!-- 通过ID获取数据 -->
+	<select id="findById" parameterType="pd" resultType="pd">
+		select 
+		<include refid="Field"></include>
+		from 
+		<include refid="tableName"></include>
+		where 
+			id = #{id}
+	</select>
+	
+	<!-- 列表 -->
+	<select id="gradeslistPage" parameterType="page" resultType="pd">
+		select
+		g.id,
+		g.name,
+		g.class_size,
+		g.sex_woman_number,
+		g.sex_man_number,
+		g.lesson_id,
+		g.lesson_periods,
+		g.teacher_id,
+		g.teacher_name,
+		g.class_time,
+		g.tuition,
+		g.details,
+		g.headmaster_name,
+		g.headmaster_phone,
+		g.school_id,
+		g.createTime,
+		teacher_wages,
+		l.name lesson_name
+		from 
+		<include refid="tableName"></include> as g
+		INNER JOIN edu_lesson l on l.id=g.lesson_id
+		where
+		g.is_del = 1
+		and g.school_id in
+		<foreach item="item" index="index" collection="pd.userSchoolIds" open="(" separator="," close=")">
+			'${item}'
+		</foreach>
+		<if test="pd.keywords != null and pd.keywords != ''"><!-- 关键词检索 -->
+			and
+				(
+				l.name LIKE ('%'+#{pd.keywords}+'%')
+				 or
+				g.name LIKE ('%'+#{pd.keywords}+'%')
+				)
+		</if>
+	</select>
+
+
+	<!-- 列表 -->
+	<select id="getUserLesson" parameterType="page" resultType="pd">
+		SELECT
+		l.id,
+		l.name,
+		l.qs,
+		s.name AS school_name
+
+		FROM
+		dbo.edu_lesson AS l
+		INNER JOIN dbo.edu_school AS s ON l.school_id = s.id
+		WHERE
+		l.school_id in
+		<foreach item="item" index="index" collection="userSchoolIds" open="(" separator="," close=")">
+			'${item}'
+		</foreach>
+	</select>
+
+
+	<!-- 列表 -->
+	<select id="getUserTeacher" parameterType="page" resultType="pd">
+		SELECT
+			id,
+			name,
+			school_id
+		FROM
+		edu_teacher
+		WHERE
+		school_id in
+		<foreach item="item" index="index" collection="userSchoolIds" open="(" separator="," close=")">
+			'${item}'
+		</foreach>
+	</select>
+
+	<!-- 列表 -->
+	<select id="isCheak" parameterType="pd" resultType="pd">
+		SELECT
+		MAX(classroom_size) classSize
+		FROM
+		edu_classroom
+		WHERE
+		school_id = #{school_id} and classroom_type =#{classroom_type}
+	</select>
+
+
+	<!--  -->
+</mapper>

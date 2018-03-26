@@ -1,0 +1,26 @@
+package com.zhimu.service.manager.edu.classroom.impl;
+
+
+import com.zhimu.commons.utils.PageData;
+import com.zhimu.dao.DaoSupport;
+import com.zhimu.dao.entity.system.Page;
+import com.zhimu.service.manager.edu.classroom.ClassroomManager;
+import org.springframework.stereotype.Service;
+
+import javax.annotation.Resource;
+import java.util.List;
+
+@Service("classroomService")
+public class ClassroomService implements ClassroomManager {
+
+  @Resource(name = "daoSupport")
+  private DaoSupport dao;
+
+
+  @Override
+  public List<PageData> classroomlistPage(Page pd) throws Exception {
+
+    return (List<PageData>) dao.findForList("ClassroomMapper.classroomlistPage", pd);
+
+  }
+}

@@ -1,0 +1,28 @@
+package com.zhimu.service.manager.stu.leave.impl;
+
+import com.zhimu.commons.utils.PageData;
+import com.zhimu.dao.DaoSupport;
+import com.zhimu.dao.entity.system.Page;
+import com.zhimu.service.manager.stu.leave.LeaveManager;
+import org.springframework.stereotype.Service;
+
+import javax.annotation.Resource;
+import java.util.List;
+
+/**
+ * 请假单服务层
+ *
+ * @author Liang Wenchao
+ * @create 2018/1/15 16:32
+ **/
+@Service("leaveService")
+public class LeaveService implements LeaveManager {
+
+    @Resource(name = "daoSupport")
+    private DaoSupport dao;
+
+    @Override
+    public List<PageData> listPage(Page page) throws Exception {
+        return (List<PageData>)dao.findForList("LeaveMapper.listPage", page);
+    }
+}

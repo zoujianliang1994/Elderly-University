@@ -1,0 +1,236 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="AreaCodeMapper">
+
+	<resultMap type="AreaCode" id="areaResultMap">
+		<id column="id" property="id" />
+		<result column="parent_id" property="parentId" />
+		<result column="level" property="level" />
+		<result column="area_code" property="areaCode" />
+		<result column="zip_code" property="zipCode" />
+		<result column="city_code" property="cityCode" />
+		<result column="name" property="name" />
+		<result column="short_name" property="shortName" />
+		<result column="merger_name" property="mergerName" />
+		<result column="pinyin" property="pinyin" />
+		<result column="lng" property="lng" />
+		<result column="lat" property="lat" />
+	</resultMap>
+	
+	<!--表名 -->
+	<sql id="tableName">
+		sys_area
+	</sql>
+
+	<!-- 字段 -->
+	<sql id="Field">
+		id,
+		parent_id,
+		level,
+		area_code,
+		zip_code,
+		city_code,
+		name,
+		short_name,
+		merger_name,
+		pinyin,
+		lng,
+		lat
+	</sql>
+	<!-- 字段值 -->
+	<sql id="FieldValue">
+		#{id},
+		#{parentId},
+		#{level},
+		#{areaCode},
+		#{zipCode},
+		#{cityCode},
+		#{name},
+		#{shortName},
+		#{mergerName},
+		#{pinyin},
+		#{lng},
+		#{lat}
+	</sql>
+
+	
+	 <!-- 新增 -->
+    <insert id="save" parameterType="pd">
+        insert into
+        <include refid="tableName"></include>
+        (
+        <include refid="Field"></include>
+        ) values (
+        <include refid="FieldValue"></include>
+        )
+    </insert>
+
+	<!-- 获取所有数据 -->
+	<select id="findAll"  resultMap="areaResultMap">
+		select
+		<include refid="Field"></include>
+		from
+		<include refid="tableName"></include>
+		where
+		1=1
+	</select>
+	
+	<!-- 获取区县以上所有数据 -->
+	<select id="findLevel2"  parameterType="String" resultMap="areaResultMap">
+		select
+		<include refid="Field"></include>
+		from
+		<include refid="tableName"></include>
+		where
+		1=1
+		and level not in('3','4')
+		and area_code LIKE (#{areaCode}+'%')
+		order by city_code 
+	</select>
+	
+	<!-- 获取区县以及以下新增数据 -->
+	<select id="findLevel3" resultMap="areaResultMap">
+		select
+		<include refid="Field"></include>
+		from
+		<include refid="tableName"></include>
+		where
+		1=1
+		and level  in('2','3','4')
+		and lng='0' or lng='1'
+		order by city_code 
+	</select>
+	
+	<!-- 通过ID获取数据 -->
+	<select id="findById" parameterType="String" resultMap="areaResultMap">
+		select
+		<include refid="Field"></include>
+		from
+		<include refid="tableName"></include>
+		where
+		id = #{id}
+	</select>
+
+	<!-- 通过area_code获取数据 -->
+	<select id="findByCode" parameterType="String" resultType="pd">
+		select
+		<include refid="Field"></include>
+		from
+		<include refid="tableName"></include>
+		where
+		area_code = #{areaCode}
+	</select>
+
+	<!-- 通过拼音获取数据 -->
+	<select id="findByPinyin" parameterType="String" resultType="pd">
+		select
+		<include refid="Field"></include>
+		from
+		<include refid="tableName"></include>
+		where
+		UPPER(pinyin)=UPPER(#{pinyin})
+
+	</select>
+	
+	<!--获取ID最大数据 -->
+	<select id="getMaxId"  resultType="pd">
+		select
+		max(id) id
+		from
+		<include refid="tableName"></include>
+	</select>
+
+	<!-- 通过ID获取其子级列表 -->
+	<select id="listSubAreaCodeByParentId" parameterType="String" resultMap="areaResultMap">
+		select
+		<include refid="Field"></include>
+		from
+		<include refid="tableName"></include>
+		where
+		parent_id = #{parentId} order by level
+	</select>
+
+
+	<!-- 通过子id获取父数据 -->
+	<select id="findBySubId" parameterType="String" resultMap="areaResultMap">
+		select
+		<include refid="Field"></include>
+		from
+		<include refid="tableName"></include>
+		where
+		id in (select s.parent_id from sys_area s where s.id in (#{id}))
+	</select>
+
+	<!-- 通过ID数组查询 -->
+	<select id="findByIds" parameterType="String" resultMap="areaResultMap">
+		select
+		<include refid="Field"></include>
+		from
+		<include refid="tableName"></include>
+		where
+		id in
+		<foreach item="item" index="index" collection="array" open="(" separator="," close=")">
+			#{item}
+		</foreach>
+	</select>
+	<select id="findByName" parameterType="java.lang.String" resultType="java.lang.String">
+		SELECT area_code FROM sys_area WHERE name=#{areaName}
+	</select>
+
+	<!-- 更新行政区划名称-->
+	<update id="updateName" parameterType="pd">
+       update sys_area set name = #{name} where area_code = #{areaCode}
+	</update>
+
+
+	<select id="getAreaByName" parameterType="page" resultType="pd" >
+			SELECT
+	a.id,
+	a.parent_id,
+	a.[level],
+	a.area_code,
+	a.zip_code,
+	a.city_code,
+	a.name,
+	a.short_name,
+	a.merger_name,
+	a.pinyin,
+	a.lng,
+	a.lat,
+	s.area_code as scode,
+	s.name as sname
+	FROM
+	dbo.sys_area AS a
+	INNER JOIN dbo.sys_area AS s ON a.parent_id = s.id
+		where (a.name LIKE '%'+#{pd.keywords}+'%' OR  a.short_name LIKE '%'+#{pd.keywords}+'%')
+
+	</select>
+
+
+	<select id="getMaxAreaCode" parameterType="pd" resultType="pd" >
+		SELECT max(area_code) code FROM sys_area where area_code LIKE #{code}+'%'+#{zreo};
+	</select>
+
+	<!-- 保存修改 -->
+	<update id="edit" parameterType="pd">
+		update
+		<include refid="tableName"></include>
+		set
+		  name = #{name},
+		merger_name =#{mergerName},
+		short_name=#{shortName}
+		where id = #{id}
+	</update>
+	<!-- 保存修改 -->
+	<update id="updateMove" parameterType="com.zhimu.dao.entity.system.AreaCode">
+		update
+		<include refid="tableName"></include>
+		set
+		merger_name=#{mergerName},
+		area_code=#{areaCode},
+		parent_id=#{parentId}
+
+		where id = #{id}
+	</update>
+
+</mapper>
